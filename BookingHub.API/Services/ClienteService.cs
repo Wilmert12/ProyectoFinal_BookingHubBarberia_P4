@@ -63,7 +63,6 @@ public class ClienteService(
             .ToListAsync();
     }
 
-    // Baja lógica: no se borra el registro porque puede tener citas en su historial
     public async Task<Result> Eliminar(int clienteId)
     {
         await using var contexto = await contextFactory.CreateDbContextAsync();

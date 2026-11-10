@@ -8,7 +8,6 @@ namespace BookingHub.API.Controllers;
 [Route("api/[controller]")]
 public class BarberosController(BarberoService barberoService) : ControllerBase
 {
-    // GET: api/Barberos?incluirInactivos=true
     [HttpGet]
     public async Task<ActionResult<List<Barbero>>> GetBarberos(bool incluirInactivos = false)
     {
@@ -20,7 +19,6 @@ public class BarberosController(BarberoService barberoService) : ControllerBase
         return Ok(result.Value);
     }
 
-    // GET: api/Barberos/5
     [HttpGet("{id}")]
     public async Task<ActionResult<Barbero>> GetBarbero(int id)
     {
@@ -35,7 +33,6 @@ public class BarberosController(BarberoService barberoService) : ControllerBase
         return Ok(result.Value);
     }
 
-    // POST: api/Barberos
     [HttpPost]
     public async Task<ActionResult<Barbero>> PostBarbero(Barbero barbero)
     {
@@ -49,7 +46,6 @@ public class BarberosController(BarberoService barberoService) : ControllerBase
         return CreatedAtAction(nameof(GetBarbero), new { id = barbero.BarberoId }, barbero);
     }
 
-    // PUT: api/Barberos/5
     [HttpPut("{id}")]
     public async Task<IActionResult> PutBarbero(int id, Barbero barbero)
     {
@@ -68,7 +64,6 @@ public class BarberosController(BarberoService barberoService) : ControllerBase
         return NoContent();
     }
 
-    // DELETE: api/Barberos/5  (baja lógica: Activo = false)
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteBarbero(int id)
     {

@@ -8,7 +8,6 @@ namespace BookingHub.API.Controllers;
 [Route("api/[controller]")]
 public class ClientesController(ClienteService clienteService) : ControllerBase
 {
-    // GET: api/Clientes?incluirInactivos=true
     [HttpGet]
     public async Task<ActionResult<List<Cliente>>> GetClientes(bool incluirInactivos = false)
     {
@@ -20,7 +19,6 @@ public class ClientesController(ClienteService clienteService) : ControllerBase
         return Ok(result.Value);
     }
 
-    // GET: api/Clientes/5
     [HttpGet("{id}")]
     public async Task<ActionResult<Cliente>> GetCliente(int id)
     {
@@ -35,7 +33,6 @@ public class ClientesController(ClienteService clienteService) : ControllerBase
         return Ok(result.Value);
     }
 
-    // POST: api/Clientes
     [HttpPost]
     public async Task<ActionResult<Cliente>> PostCliente(Cliente cliente)
     {
@@ -49,7 +46,6 @@ public class ClientesController(ClienteService clienteService) : ControllerBase
         return CreatedAtAction(nameof(GetCliente), new { id = cliente.ClienteId }, cliente);
     }
 
-    // PUT: api/Clientes/5
     [HttpPut("{id}")]
     public async Task<IActionResult> PutCliente(int id, Cliente cliente)
     {
@@ -68,7 +64,6 @@ public class ClientesController(ClienteService clienteService) : ControllerBase
         return NoContent();
     }
 
-    // DELETE: api/Clientes/5  (baja lógica: Activo = false)
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteCliente(int id)
     {

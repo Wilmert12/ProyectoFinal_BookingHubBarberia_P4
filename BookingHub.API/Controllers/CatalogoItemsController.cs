@@ -8,7 +8,6 @@ namespace BookingHub.API.Controllers;
 [Route("api/[controller]")]
 public class CatalogoItemsController(CatalogoItemService catalogoItemService) : ControllerBase
 {
-    // GET: api/CatalogoItems?incluirInactivos=true
     [HttpGet]
     public async Task<ActionResult<List<CatalogoItem>>> GetCatalogoItems(bool incluirInactivos = false)
     {
@@ -20,7 +19,6 @@ public class CatalogoItemsController(CatalogoItemService catalogoItemService) : 
         return Ok(result.Value);
     }
 
-    // GET: api/CatalogoItems/5
     [HttpGet("{id}")]
     public async Task<ActionResult<CatalogoItem>> GetCatalogoItem(int id)
     {
@@ -35,7 +33,6 @@ public class CatalogoItemsController(CatalogoItemService catalogoItemService) : 
         return Ok(result.Value);
     }
 
-    // POST: api/CatalogoItems
     [HttpPost]
     public async Task<ActionResult<CatalogoItem>> PostCatalogoItem(CatalogoItem catalogoItem)
     {
@@ -49,7 +46,6 @@ public class CatalogoItemsController(CatalogoItemService catalogoItemService) : 
         return CreatedAtAction(nameof(GetCatalogoItem), new { id = catalogoItem.CatalogoItemId }, catalogoItem);
     }
 
-    // PUT: api/CatalogoItems/5
     [HttpPut("{id}")]
     public async Task<IActionResult> PutCatalogoItem(int id, CatalogoItem catalogoItem)
     {
@@ -68,7 +64,6 @@ public class CatalogoItemsController(CatalogoItemService catalogoItemService) : 
         return NoContent();
     }
 
-    // DELETE: api/CatalogoItems/5  (baja lógica: Activo = false)
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteCatalogoItem(int id)
     {

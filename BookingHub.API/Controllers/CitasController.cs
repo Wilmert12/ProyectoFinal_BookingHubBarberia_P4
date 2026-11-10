@@ -8,7 +8,6 @@ namespace BookingHub.API.Controllers;
 [Route("api/[controller]")]
 public class CitasController(CitaService citaService) : ControllerBase
 {
-    // GET: api/Citas?clienteId=1&barberoId=2&fecha=2026-11-10
     [HttpGet]
     public async Task<ActionResult<List<Cita>>> GetCitas(int? clienteId, int? barberoId, DateOnly? fecha)
     {
@@ -26,7 +25,6 @@ public class CitasController(CitaService citaService) : ControllerBase
         return Ok(result.Value);
     }
 
-    // GET: api/Citas/5
     [HttpGet("{id}")]
     public async Task<ActionResult<Cita>> GetCita(int id)
     {
@@ -41,7 +39,6 @@ public class CitasController(CitaService citaService) : ControllerBase
         return Ok(result.Value);
     }
 
-    // POST: api/Citas
     [HttpPost]
     public async Task<ActionResult<Cita>> PostCita(Cita cita)
     {
@@ -56,7 +53,6 @@ public class CitasController(CitaService citaService) : ControllerBase
         return CreatedAtAction(nameof(GetCita), new { id = cita.CitaId }, cita);
     }
 
-    // PUT: api/Citas/5
     [HttpPut("{id}")]
     public async Task<IActionResult> PutCita(int id, Cita cita)
     {
@@ -75,7 +71,6 @@ public class CitasController(CitaService citaService) : ControllerBase
         return NoContent();
     }
 
-    // DELETE: api/Citas/5
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteCita(int id)
     {

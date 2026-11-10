@@ -7,7 +7,6 @@ using System.Text.Json.Serialization.Metadata;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Leer la cadena de conexión desde appsettings.json
 var connectionString = builder.Configuration.GetConnectionString("BookingHubConnection");
 
 builder.Services.AddDbContextFactory<BookingHubContext>(options =>
@@ -19,14 +18,11 @@ builder.Services.AddScoped<ClienteService>();
 builder.Services.AddScoped<CatalogoItemService>();
 
 builder.Services.AddControllers(options =>
-    // Las propiedades de navegación (Cliente, Barbero...) no son obligatorias al enviar una cita
     options.SuppressImplicitRequiredAttributeForNonNullableReferenceTypes = true)
     .AddJsonOptions(options =>
     {
-        // Evita el error de ciclo Cita -> Cliente -> Citas -> ...
         options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
 
-        // Nunca devolver el PasswordHash en las respuestas (sí se puede recibir al registrar)
         options.JsonSerializerOptions.TypeInfoResolver = new DefaultJsonTypeInfoResolver
         {
             Modifiers =
@@ -48,7 +44,7 @@ var app = builder.Build();
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
-    app.MapScalarApiReference(); // Interfaz visual en /scalar
+    app.MapScalarApiReference();
 }
 
 app.UseHttpsRedirection();
