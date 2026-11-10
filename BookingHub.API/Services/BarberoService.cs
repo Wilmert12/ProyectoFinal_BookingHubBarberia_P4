@@ -70,7 +70,7 @@ public class BarberoService(
         await using var contexto = await contextFactory.CreateDbContextAsync();
         var eliminado = await contexto.Barberos
             .Where(b => b.BarberoId == barberoId)
-            .ExecuteUpdateAsync(s => s.SetProperty(b => b.Activo, false)) > 0;
+            .ExecuteDeleteAsync() > 0;
         return Result.Success(eliminado);
     }
 }

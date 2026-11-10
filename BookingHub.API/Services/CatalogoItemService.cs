@@ -68,7 +68,7 @@ public class CatalogoItemService(
         await using var contexto = await contextFactory.CreateDbContextAsync();
         var eliminado = await contexto.CatalogoItems
             .Where(i => i.CatalogoItemId == catalogoItemId)
-            .ExecuteUpdateAsync(s => s.SetProperty(i => i.Activo, false)) > 0;
+            .ExecuteDeleteAsync() > 0;
         return Result.Success(eliminado);
     }
 }

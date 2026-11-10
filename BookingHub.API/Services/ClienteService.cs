@@ -68,7 +68,7 @@ public class ClienteService(
         await using var contexto = await contextFactory.CreateDbContextAsync();
         var eliminado = await contexto.Clientes
             .Where(c => c.ClienteId == clienteId)
-            .ExecuteUpdateAsync(s => s.SetProperty(c => c.Activo, false)) > 0;
+            .ExecuteDeleteAsync() > 0;
         return Result.Success(eliminado);
     }
 }
