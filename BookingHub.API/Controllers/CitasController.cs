@@ -1,3 +1,4 @@
+using BookingHub.API.DTOs;
 using BookingHub.API.Models;
 using BookingHub.API.Services;
 using Microsoft.AspNetCore.Mvc;
@@ -9,7 +10,7 @@ namespace BookingHub.API.Controllers;
 public class CitasController(CitaService citaService) : ControllerBase
 {
     [HttpGet]
-    public async Task<ActionResult<List<Cita>>> GetCitas(int? clienteId, int? barberoId, DateOnly? fecha)
+    public async Task<ActionResult<List<CitaDto>>> GetCitas(int? clienteId, int? barberoId, DateOnly? fecha)
     {
         var desde = fecha?.ToDateTime(TimeOnly.MinValue);
         var hasta = desde?.AddDays(1);
@@ -22,11 +23,19 @@ public class CitasController(CitaService citaService) : ControllerBase
         if (result.IsFailure)
             return BadRequest(result.Error);
 
-        return Ok(result.Value);
+        var citasDto = result.Value
+            .Select(c => new CitaDto
+            {
+                CitaId = c.CitaId,
+                Notas = c.Notas
+            })
+            .ToList();
+
+        return Ok(citasDto);
     }
 
     [HttpGet("{id}")]
-    public async Task<ActionResult<Cita>> GetCita(int id)
+    public async Task<ActionResult<CitaDto>> GetCita(int id)
     {
         var result = await citaService.Buscar(id);
 
@@ -36,7 +45,13 @@ public class CitasController(CitaService citaService) : ControllerBase
         if (result.Value == null)
             return NotFound();
 
-        return Ok(result.Value);
+        var citaDto = new CitaDto
+        {
+            CitaId = result.Value.CitaId,
+            Notas = result.Value.Notas
+        };
+
+        return Ok(citaDto);
     }
 
     [HttpPost]
