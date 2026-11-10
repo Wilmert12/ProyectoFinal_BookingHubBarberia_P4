@@ -2,6 +2,7 @@ using Aplicada1.Core;
 using BookingHub.API.Models;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
+using BookingHub.API.DTOs;
 
 namespace BookingHub.API.Services;
 
@@ -54,6 +55,15 @@ public class BarberoService(
             .FirstOrDefaultAsync(b => b.BarberoId == barberoId);
     }
 
+    public async Task<Result<BarberoDto?>> BuscarDto(int barberoId)
+    {
+        await using var contexto = await contextFactory.CreateDbContextAsync();
+        return await contexto.Barberos
+            .AsNoTracking()
+            .Where(b => b.BarberoId == barberoId)
+            .Select(b => new BarberoDto(b.BarberoId, b.Apodo))
+            .FirstOrDefaultAsync();
+    }
     public async Task<Result<List<Barbero>>> GetList(Expression<Func<Barbero, bool>> criterio)
     {
         await using var contexto = await contextFactory.CreateDbContextAsync();
@@ -64,7 +74,6 @@ public class BarberoService(
             .AsNoTracking()
             .ToListAsync();
     }
-
     public async Task<Result> Eliminar(int barberoId)
     {
         await using var contexto = await contextFactory.CreateDbContextAsync();
