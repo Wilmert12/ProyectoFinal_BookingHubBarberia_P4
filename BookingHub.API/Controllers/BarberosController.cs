@@ -1,6 +1,7 @@
 using BookingHub.API.Models;
 using BookingHub.API.Services;
 using Microsoft.AspNetCore.Mvc;
+using BookingHub.API.DTOs;
 
 namespace BookingHub.API.Controllers;
 
@@ -20,9 +21,9 @@ public class BarberosController(BarberoService barberoService) : ControllerBase
     }
 
     [HttpGet("{id}")]
-    public async Task<ActionResult<Barbero>> GetBarbero(int id)
+    public async Task<ActionResult<BarberoDto>> GetBarbero(int id)
     {
-        var result = await barberoService.Buscar(id);
+        var result = await barberoService.BuscarDto(id);
 
         if (result.IsFailure)
             return BadRequest(result.Error);
