@@ -1,4 +1,4 @@
-using BookingHub.API.Services;
+using BookingHub.Application;
 using BookingHub.Infrastructure;
 using Scalar.AspNetCore;
 
@@ -8,10 +8,7 @@ var connectionString = builder.Configuration.GetConnectionString("BookingHubConn
 
 builder.Services.AddInfrastructure(connectionString);
 
-builder.Services.AddScoped<CitaService>();
-builder.Services.AddScoped<BarberoService>();
-builder.Services.AddScoped<ClienteService>();
-builder.Services.AddScoped<CatalogoItemService>();
+builder.Services.AddApplication();
 
 builder.Services.AddControllers(options =>
     options.SuppressImplicitRequiredAttributeForNonNullableReferenceTypes = true);

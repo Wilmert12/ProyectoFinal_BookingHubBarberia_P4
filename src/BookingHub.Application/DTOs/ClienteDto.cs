@@ -1,4 +1,4 @@
-namespace BookingHub.API.DTOs;
+namespace BookingHub.Application.DTOs;
 
 public record ClienteDto
 {

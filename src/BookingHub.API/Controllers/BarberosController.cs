@@ -1,5 +1,5 @@
-using BookingHub.API.DTOs;
-using BookingHub.API.Services;
+using BookingHub.Application.DTOs;
+using BookingHub.Application.Services;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BookingHub.API.Controllers;

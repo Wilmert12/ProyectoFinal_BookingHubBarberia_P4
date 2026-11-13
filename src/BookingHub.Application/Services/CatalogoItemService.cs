@@ -1,11 +1,11 @@
 using Aplicada1.Core;
-using BookingHub.API.DTOs;
+using BookingHub.Application.DTOs;
 using BookingHub.Infrastructure.Data;
 using BookingHub.Infrastructure.Models;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
 
-namespace BookingHub.API.Services;
+namespace BookingHub.Application.Services;
 
 public class CatalogoItemService(
     IDbContextFactory<BookingHubContext> contextFactory

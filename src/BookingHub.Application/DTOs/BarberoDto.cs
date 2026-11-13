@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 
-namespace BookingHub.API.DTOs;
+namespace BookingHub.Application.DTOs;
 
 public record BarberoDto
 {
