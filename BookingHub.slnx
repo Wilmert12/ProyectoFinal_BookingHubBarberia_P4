@@ -1,3 +1,6 @@
 <Solution>
-  <Project Path="BookingHub.API/BookingHub.API.csproj" />
+  <Folder Name="/src/">
+    <Project Path="src/BookingHub.API/BookingHub.API.csproj" />
+    <Project Path="src/BookingHub.Infrastructure/BookingHub.Infrastructure.csproj" />
+  </Folder>
 </Solution>

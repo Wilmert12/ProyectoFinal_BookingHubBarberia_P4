@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace BookingHub.API.Models;
+namespace BookingHub.Infrastructure.Models;
 
 public partial class Cliente
 {

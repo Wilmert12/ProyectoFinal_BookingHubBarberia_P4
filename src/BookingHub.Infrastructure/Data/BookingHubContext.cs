@@ -1,8 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using BookingHub.Infrastructure.Models;
 using Microsoft.EntityFrameworkCore;
 
-namespace BookingHub.API.Models;
+namespace BookingHub.Infrastructure.Data;
 
 public partial class BookingHubContext : DbContext
 {

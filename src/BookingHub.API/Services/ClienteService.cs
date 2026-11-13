@@ -1,6 +1,7 @@
 using Aplicada1.Core;
 using BookingHub.API.DTOs;
-using BookingHub.API.Models;
+using BookingHub.Infrastructure.Data;
+using BookingHub.Infrastructure.Models;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
 
