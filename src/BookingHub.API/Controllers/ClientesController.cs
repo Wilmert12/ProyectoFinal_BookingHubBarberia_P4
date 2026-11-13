@@ -1,0 +1,81 @@
+using BookingHub.Application.DTOs;
+using BookingHub.Application.Services;
+using Microsoft.AspNetCore.Mvc;
+
+namespace BookingHub.API.Controllers;
+
+[ApiController]
+[Route("api/[controller]")]
+public class ClientesController(ClienteService clienteService) : ControllerBase
+{
+    [HttpGet]
+    public async Task<ActionResult<List<ClienteDto>>> GetClientes(bool incluirInactivos = false)
+    {
+        var result = await clienteService.GetList(c => incluirInactivos || c.Activo);
+
+        if (result.IsFailure)
+            return BadRequest(result.Error);
+
+        return Ok(result.Value);
+    }
+
+    [HttpGet("{id}")]
+    public async Task<ActionResult<ClienteDto>> GetCliente(int id)
+    {
+        var result = await clienteService.Buscar(id);
+
+        if (result.IsFailure)
+            return BadRequest(result.Error);
+
+        if (result.Value == null)
+            return NotFound();
+
+        return Ok(result.Value);
+    }
+
+    [HttpPost]
+    public async Task<ActionResult<ClienteDto>> PostCliente(ClienteDto cliente)
+    {
+        cliente.ClienteId = 0;
+
+        var result = await clienteService.Guardar(cliente);
+
+        if (result.IsFailure)
+            return BadRequest(result.Error);
+
+        return CreatedAtAction(nameof(GetCliente), new { id = cliente.ClienteId }, cliente);
+    }
+
+    [HttpPut("{id}")]
+    public async Task<IActionResult> PutCliente(int id, ClienteDto cliente)
+    {
+        if (id != cliente.ClienteId)
+            return BadRequest("El id de la URL no coincide con el del registro.");
+
+        var existe = await clienteService.Buscar(id);
+        if (existe.Value == null)
+            return NotFound();
+
+        var result = await clienteService.Guardar(cliente);
+
+        if (result.IsFailure)
+            return BadRequest(result.Error);
+
+        return NoContent();
+    }
+
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> DeleteCliente(int id)
+    {
+        var existe = await clienteService.Buscar(id);
+        if (existe.Value == null)
+            return NotFound();
+
+        var result = await clienteService.Eliminar(id);
+
+        if (result.IsFailure)
+            return BadRequest(result.Error);
+
+        return NoContent();
+    }
+}
