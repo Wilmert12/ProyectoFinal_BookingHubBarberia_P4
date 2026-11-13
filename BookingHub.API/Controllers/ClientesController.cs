@@ -1,4 +1,4 @@
-using BookingHub.API.Models;
+using BookingHub.API.DTOs;
 using BookingHub.API.Services;
 using Microsoft.AspNetCore.Mvc;
 
@@ -9,7 +9,7 @@ namespace BookingHub.API.Controllers;
 public class ClientesController(ClienteService clienteService) : ControllerBase
 {
     [HttpGet]
-    public async Task<ActionResult<List<Cliente>>> GetClientes(bool incluirInactivos = false)
+    public async Task<ActionResult<List<ClienteDto>>> GetClientes(bool incluirInactivos = false)
     {
         var result = await clienteService.GetList(c => incluirInactivos || c.Activo);
 
@@ -20,7 +20,7 @@ public class ClientesController(ClienteService clienteService) : ControllerBase
     }
 
     [HttpGet("{id}")]
-    public async Task<ActionResult<Cliente>> GetCliente(int id)
+    public async Task<ActionResult<ClienteDto>> GetCliente(int id)
     {
         var result = await clienteService.Buscar(id);
 
@@ -34,7 +34,7 @@ public class ClientesController(ClienteService clienteService) : ControllerBase
     }
 
     [HttpPost]
-    public async Task<ActionResult<Cliente>> PostCliente(Cliente cliente)
+    public async Task<ActionResult<ClienteDto>> PostCliente(ClienteDto cliente)
     {
         cliente.ClienteId = 0;
 
@@ -47,7 +47,7 @@ public class ClientesController(ClienteService clienteService) : ControllerBase
     }
 
     [HttpPut("{id}")]
-    public async Task<IActionResult> PutCliente(int id, Cliente cliente)
+    public async Task<IActionResult> PutCliente(int id, ClienteDto cliente)
     {
         if (id != cliente.ClienteId)
             return BadRequest("El id de la URL no coincide con el del registro.");

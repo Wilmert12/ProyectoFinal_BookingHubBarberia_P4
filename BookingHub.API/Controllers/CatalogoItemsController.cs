@@ -1,4 +1,4 @@
-using BookingHub.API.Models;
+using BookingHub.API.DTOs;
 using BookingHub.API.Services;
 using Microsoft.AspNetCore.Mvc;
 
@@ -9,7 +9,7 @@ namespace BookingHub.API.Controllers;
 public class CatalogoItemsController(CatalogoItemService catalogoItemService) : ControllerBase
 {
     [HttpGet]
-    public async Task<ActionResult<List<CatalogoItem>>> GetCatalogoItems(bool incluirInactivos = false)
+    public async Task<ActionResult<List<CatalogoItemDto>>> GetCatalogoItems(bool incluirInactivos = false)
     {
         var result = await catalogoItemService.GetList(i => incluirInactivos || i.Activo);
 
@@ -20,7 +20,7 @@ public class CatalogoItemsController(CatalogoItemService catalogoItemService) : 
     }
 
     [HttpGet("{id}")]
-    public async Task<ActionResult<CatalogoItem>> GetCatalogoItem(int id)
+    public async Task<ActionResult<CatalogoItemDto>> GetCatalogoItem(int id)
     {
         var result = await catalogoItemService.Buscar(id);
 
@@ -34,7 +34,7 @@ public class CatalogoItemsController(CatalogoItemService catalogoItemService) : 
     }
 
     [HttpPost]
-    public async Task<ActionResult<CatalogoItem>> PostCatalogoItem(CatalogoItem catalogoItem)
+    public async Task<ActionResult<CatalogoItemDto>> PostCatalogoItem(CatalogoItemDto catalogoItem)
     {
         catalogoItem.CatalogoItemId = 0;
 
@@ -47,7 +47,7 @@ public class CatalogoItemsController(CatalogoItemService catalogoItemService) : 
     }
 
     [HttpPut("{id}")]
-    public async Task<IActionResult> PutCatalogoItem(int id, CatalogoItem catalogoItem)
+    public async Task<IActionResult> PutCatalogoItem(int id, CatalogoItemDto catalogoItem)
     {
         if (id != catalogoItem.CatalogoItemId)
             return BadRequest("El id de la URL no coincide con el del registro.");

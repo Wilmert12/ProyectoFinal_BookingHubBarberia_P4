@@ -1,17 +1,26 @@
 using Aplicada1.Core;
+using BookingHub.API.DTOs;
 using BookingHub.API.Models;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
-using BookingHub.API.DTOs;
 
 namespace BookingHub.API.Services;
 
 public class BarberoService(
     IDbContextFactory<BookingHubContext> contextFactory
-) : Aplicada1.Core.IServiceResult<Barbero, int>
+) : Aplicada1.Core.IServiceResult<BarberoDto, int>
 {
+    private static readonly Expression<Func<Barbero, BarberoDto>> ABarberoDto = b => new BarberoDto
+    {
+        BarberoId = b.BarberoId,
+        UsuarioId = b.UsuarioId,
+        Nombre = b.Usuario.Nombre,
+        Apodo = b.Apodo,
+        ColorHex = b.ColorHex,
+        Activo = b.Activo
+    };
 
-    public async Task<Result> Guardar(Barbero barbero)
+    public async Task<Result> Guardar(BarberoDto barbero)
     {
         if (!await Existe(barbero.BarberoId))
         {
@@ -32,48 +41,60 @@ public class BarberoService(
             .AnyAsync(b => b.BarberoId == barberoId);
     }
 
-    private async Task<bool> Insertar(Barbero barbero)
+    private async Task<bool> Insertar(BarberoDto barberoDto)
     {
         await using var contexto = await contextFactory.CreateDbContextAsync();
+        var barbero = new Barbero
+        {
+            UsuarioId = barberoDto.UsuarioId,
+            Apodo = barberoDto.Apodo,
+            Cedula = barberoDto.Cedula ?? string.Empty,
+            ColorHex = barberoDto.ColorHex,
+            Activo = barberoDto.Activo
+        };
         contexto.Barberos.Add(barbero);
-        return await contexto.SaveChangesAsync() > 0;
+        var inserto = await contexto.SaveChangesAsync() > 0;
+        barberoDto.BarberoId = barbero.BarberoId;
+        barberoDto.Cedula = null;
+        return inserto;
     }
 
-    private async Task<bool> Modificar(Barbero barbero)
+    private async Task<bool> Modificar(BarberoDto barberoDto)
     {
         await using var contexto = await contextFactory.CreateDbContextAsync();
-        contexto.Update(barbero);
-        return await contexto
-            .SaveChangesAsync() > 0;
+        var modifico = await contexto.Barberos
+            .Where(b => b.BarberoId == barberoDto.BarberoId)
+            .ExecuteUpdateAsync(s => s
+                .SetProperty(b => b.UsuarioId, barberoDto.UsuarioId)
+                .SetProperty(b => b.Apodo, barberoDto.Apodo)
+                .SetProperty(b => b.Cedula, b => barberoDto.Cedula ?? b.Cedula)
+                .SetProperty(b => b.ColorHex, barberoDto.ColorHex)
+                .SetProperty(b => b.Activo, barberoDto.Activo)) > 0;
+        barberoDto.Cedula = null;
+        return modifico;
     }
 
-    public async Task<Result<Barbero?>> Buscar(int barberoId)
-    {
-        await using var contexto = await contextFactory.CreateDbContextAsync();
-        return await contexto.Barberos
-            .Include(b => b.Usuario)
-            .FirstOrDefaultAsync(b => b.BarberoId == barberoId);
-    }
-
-    public async Task<Result<BarberoDto?>> BuscarDto(int barberoId)
+    public async Task<Result<BarberoDto?>> Buscar(int barberoId)
     {
         await using var contexto = await contextFactory.CreateDbContextAsync();
         return await contexto.Barberos
             .AsNoTracking()
             .Where(b => b.BarberoId == barberoId)
-            .Select(b => new BarberoDto(b.BarberoId, b.Apodo))
+            .Select(ABarberoDto)
             .FirstOrDefaultAsync();
     }
-    public async Task<Result<List<Barbero>>> GetList(Expression<Func<Barbero, bool>> criterio)
+
+    public async Task<Result<List<BarberoDto>>> GetList(Expression<Func<BarberoDto, bool>> criterio)
     {
         await using var contexto = await contextFactory.CreateDbContextAsync();
         return await contexto.Barberos
-            .Include(b => b.Usuario)
-            .Where(criterio)
-            .OrderBy(b => b.Usuario.Nombre)
             .AsNoTracking()
+            .Select(ABarberoDto)
+            .Where(criterio)
+            .OrderBy(b => b.Nombre)
             .ToListAsync();
     }
+
     public async Task<Result> Eliminar(int barberoId)
     {
         await using var contexto = await contextFactory.CreateDbContextAsync();

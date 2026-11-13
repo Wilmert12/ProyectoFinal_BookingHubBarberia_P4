@@ -1,4 +1,5 @@
 using Aplicada1.Core;
+using BookingHub.API.DTOs;
 using BookingHub.API.Models;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
@@ -7,10 +8,18 @@ namespace BookingHub.API.Services;
 
 public class ClienteService(
     IDbContextFactory<BookingHubContext> contextFactory
-) : Aplicada1.Core.IServiceResult<Cliente, int>
+) : Aplicada1.Core.IServiceResult<ClienteDto, int>
 {
+    private static readonly Expression<Func<Cliente, ClienteDto>> AClienteDto = c => new ClienteDto
+    {
+        ClienteId = c.ClienteId,
+        Nombre = c.Nombre,
+        Telefono = c.Telefono,
+        Email = c.Email,
+        Activo = c.Activo
+    };
 
-    public async Task<Result> Guardar(Cliente cliente)
+    public async Task<Result> Guardar(ClienteDto cliente)
     {
         if (!await Existe(cliente.ClienteId))
         {
@@ -31,35 +40,52 @@ public class ClienteService(
             .AnyAsync(c => c.ClienteId == clienteId);
     }
 
-    private async Task<bool> Insertar(Cliente cliente)
+    private async Task<bool> Insertar(ClienteDto clienteDto)
     {
         await using var contexto = await contextFactory.CreateDbContextAsync();
+        var cliente = new Cliente
+        {
+            Nombre = clienteDto.Nombre,
+            Telefono = clienteDto.Telefono,
+            Email = clienteDto.Email,
+            Activo = clienteDto.Activo
+        };
         contexto.Clientes.Add(cliente);
-        return await contexto.SaveChangesAsync() > 0;
+        var inserto = await contexto.SaveChangesAsync() > 0;
+        clienteDto.ClienteId = cliente.ClienteId;
+        return inserto;
     }
 
-    private async Task<bool> Modificar(Cliente cliente)
-    {
-        await using var contexto = await contextFactory.CreateDbContextAsync();
-        contexto.Update(cliente);
-        return await contexto
-            .SaveChangesAsync() > 0;
-    }
-
-    public async Task<Result<Cliente?>> Buscar(int clienteId)
+    private async Task<bool> Modificar(ClienteDto clienteDto)
     {
         await using var contexto = await contextFactory.CreateDbContextAsync();
         return await contexto.Clientes
-            .FirstOrDefaultAsync(c => c.ClienteId == clienteId);
+            .Where(c => c.ClienteId == clienteDto.ClienteId)
+            .ExecuteUpdateAsync(s => s
+                .SetProperty(c => c.Nombre, clienteDto.Nombre)
+                .SetProperty(c => c.Telefono, clienteDto.Telefono)
+                .SetProperty(c => c.Email, clienteDto.Email)
+                .SetProperty(c => c.Activo, clienteDto.Activo)) > 0;
     }
 
-    public async Task<Result<List<Cliente>>> GetList(Expression<Func<Cliente, bool>> criterio)
+    public async Task<Result<ClienteDto?>> Buscar(int clienteId)
     {
         await using var contexto = await contextFactory.CreateDbContextAsync();
         return await contexto.Clientes
+            .AsNoTracking()
+            .Where(c => c.ClienteId == clienteId)
+            .Select(AClienteDto)
+            .FirstOrDefaultAsync();
+    }
+
+    public async Task<Result<List<ClienteDto>>> GetList(Expression<Func<ClienteDto, bool>> criterio)
+    {
+        await using var contexto = await contextFactory.CreateDbContextAsync();
+        return await contexto.Clientes
+            .AsNoTracking()
+            .Select(AClienteDto)
             .Where(criterio)
             .OrderBy(c => c.Nombre)
-            .AsNoTracking()
             .ToListAsync();
     }
 

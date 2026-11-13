@@ -1,7 +1,6 @@
-using BookingHub.API.Models;
+using BookingHub.API.DTOs;
 using BookingHub.API.Services;
 using Microsoft.AspNetCore.Mvc;
-using BookingHub.API.DTOs;
 
 namespace BookingHub.API.Controllers;
 
@@ -10,7 +9,7 @@ namespace BookingHub.API.Controllers;
 public class BarberosController(BarberoService barberoService) : ControllerBase
 {
     [HttpGet]
-    public async Task<ActionResult<List<Barbero>>> GetBarberos(bool incluirInactivos = false)
+    public async Task<ActionResult<List<BarberoDto>>> GetBarberos(bool incluirInactivos = false)
     {
         var result = await barberoService.GetList(b => incluirInactivos || b.Activo);
 
@@ -23,7 +22,7 @@ public class BarberosController(BarberoService barberoService) : ControllerBase
     [HttpGet("{id}")]
     public async Task<ActionResult<BarberoDto>> GetBarbero(int id)
     {
-        var result = await barberoService.BuscarDto(id);
+        var result = await barberoService.Buscar(id);
 
         if (result.IsFailure)
             return BadRequest(result.Error);
@@ -35,7 +34,7 @@ public class BarberosController(BarberoService barberoService) : ControllerBase
     }
 
     [HttpPost]
-    public async Task<ActionResult<Barbero>> PostBarbero(Barbero barbero)
+    public async Task<ActionResult<BarberoDto>> PostBarbero(BarberoDto barbero)
     {
         barbero.BarberoId = 0;
 
@@ -44,11 +43,13 @@ public class BarberosController(BarberoService barberoService) : ControllerBase
         if (result.IsFailure)
             return BadRequest(result.Error);
 
-        return CreatedAtAction(nameof(GetBarbero), new { id = barbero.BarberoId }, barbero);
+        var creado = await barberoService.Buscar(barbero.BarberoId);
+
+        return CreatedAtAction(nameof(GetBarbero), new { id = barbero.BarberoId }, creado.Value);
     }
 
     [HttpPut("{id}")]
-    public async Task<IActionResult> PutBarbero(int id, Barbero barbero)
+    public async Task<IActionResult> PutBarbero(int id, BarberoDto barbero)
     {
         if (id != barbero.BarberoId)
             return BadRequest("El id de la URL no coincide con el del registro.");

@@ -1,5 +1,4 @@
 using BookingHub.API.DTOs;
-using BookingHub.API.Models;
 using BookingHub.API.Services;
 using Microsoft.AspNetCore.Mvc;
 
@@ -23,15 +22,7 @@ public class CitasController(CitaService citaService) : ControllerBase
         if (result.IsFailure)
             return BadRequest(result.Error);
 
-        var citasDto = result.Value
-            .Select(c => new CitaDto
-            {
-                CitaId = c.CitaId,
-                Notas = c.Notas
-            })
-            .ToList();
-
-        return Ok(citasDto);
+        return Ok(result.Value);
     }
 
     [HttpGet("{id}")]
@@ -45,31 +36,26 @@ public class CitasController(CitaService citaService) : ControllerBase
         if (result.Value == null)
             return NotFound();
 
-        var citaDto = new CitaDto
-        {
-            CitaId = result.Value.CitaId,
-            Notas = result.Value.Notas
-        };
-
-        return Ok(citaDto);
+        return Ok(result.Value);
     }
 
     [HttpPost]
-    public async Task<ActionResult<Cita>> PostCita(Cita cita)
+    public async Task<ActionResult<CitaDto>> PostCita(CitaDto cita)
     {
         cita.CitaId = 0;
-        cita.FechaRegistro = DateTime.Now;
 
         var result = await citaService.Guardar(cita);
 
         if (result.IsFailure)
             return BadRequest(result.Error);
 
-        return CreatedAtAction(nameof(GetCita), new { id = cita.CitaId }, cita);
+        var creada = await citaService.Buscar(cita.CitaId);
+
+        return CreatedAtAction(nameof(GetCita), new { id = cita.CitaId }, creada.Value);
     }
 
     [HttpPut("{id}")]
-    public async Task<IActionResult> PutCita(int id, Cita cita)
+    public async Task<IActionResult> PutCita(int id, CitaDto cita)
     {
         if (id != cita.CitaId)
             return BadRequest("El id de la URL no coincide con el de la cita.");
