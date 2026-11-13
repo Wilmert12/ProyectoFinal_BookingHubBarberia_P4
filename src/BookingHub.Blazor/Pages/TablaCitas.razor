@@ -1,0 +1,42 @@
+@if (Citas.Count == 0)
+{
+    <p class="mensaje">@Vacio</p>
+}
+else
+{
+    <table class="tabla-citas">
+        <thead>
+            <tr>
+                <th>Fecha</th>
+                <th>Horario</th>
+                <th>Barbero</th>
+                <th>Estado</th>
+                <th class="numero">Total</th>
+                <th>Notas</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var cita in Citas)
+            {
+                <tr>
+                    <td>@cita.FechaInicio.ToString("dd/MM/yyyy")</td>
+                    <td>@cita.FechaInicio.ToString("HH:mm") - @cita.FechaFin.ToString("HH:mm")</td>
+                    <td>@cita.BarberoNombre</td>
+                    <td><span class="estado estado-@cita.Estado?.ToLowerInvariant()">@cita.Estado</span></td>
+                    <td class="numero">@cita.Total.ToString("C2", Moneda)</td>
+                    <td>@cita.Notas</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private static readonly System.Globalization.CultureInfo Moneda = System.Globalization.CultureInfo.GetCultureInfo("en-US");
+
+    [Parameter, EditorRequired]
+    public List<CitaDto> Citas { get; set; } = [];
+
+    [Parameter]
+    public string Vacio { get; set; } = "Sin citas.";
+}

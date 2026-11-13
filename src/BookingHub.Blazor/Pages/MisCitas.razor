@@ -1,0 +1,66 @@
+@page "/"
+@page "/mis-citas"
+@inject CitaApiService CitaApiService
+
+<PageTitle>Mis Citas</PageTitle>
+
+<h1>Mis Citas</h1>
+
+<form class="buscador" @onsubmit="Buscar">
+    <label for="clienteId">Número de cliente</label>
+    <input id="clienteId" type="number" min="1" @bind="clienteId" />
+    <button type="submit" disabled="@cargando">Buscar</button>
+</form>
+
+@if (cargando)
+{
+    <p class="mensaje">Cargando citas...</p>
+}
+else if (error is not null)
+{
+    <p class="mensaje error">@error</p>
+}
+else if (citas is not null)
+{
+    @if (citas.Count == 0)
+    {
+        <p class="mensaje">Este cliente no tiene citas.</p>
+    }
+    else
+    {
+        <h2>Próximas</h2>
+        <TablaCitas Citas="@citas.Where(c => c.FechaInicio >= DateTime.Now).ToList()" Vacio="No tienes citas próximas." />
+
+        <h2>Historial</h2>
+        <TablaCitas Citas="@citas.Where(c => c.FechaInicio < DateTime.Now).OrderByDescending(c => c.FechaInicio).ToList()" Vacio="Aún no tienes visitas pasadas." />
+    }
+}
+
+@code {
+    private int clienteId = 1;
+    private List<CitaDto>? citas;
+    private bool cargando;
+    private string? error;
+
+    protected override Task OnInitializedAsync() => Buscar();
+
+    private async Task Buscar()
+    {
+        cargando = true;
+        error = null;
+
+        try
+        {
+            citas = await CitaApiService.GetCitasDelCliente(clienteId);
+        }
+        catch (HttpRequestException)
+        {
+            citas = null;
+            error = "No se pudo conectar con la API. Verifica que esté en ejecución.";
+        }
+        finally
+        {
+            cargando = false;
+        }
+    }
+}
