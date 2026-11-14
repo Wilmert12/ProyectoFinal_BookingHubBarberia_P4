@@ -1,7 +1,9 @@
 using Aplicada1.Core;
 using BookingHub.Application.DTOs;
+using BookingHub.Application.Mapeos;
 using BookingHub.Infrastructure.Data;
 using BookingHub.Infrastructure.Models;
+using Mapster;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
 
@@ -11,17 +13,6 @@ public class CatalogoItemService(
     IDbContextFactory<BookingHubContext> contextFactory
 ) : Aplicada1.Core.IServiceResult<CatalogoItemDto, int>
 {
-    private static readonly Expression<Func<CatalogoItem, CatalogoItemDto>> ACatalogoItemDto = i => new CatalogoItemDto
-    {
-        CatalogoItemId = i.CatalogoItemId,
-        Nombre = i.Nombre,
-        Descripcion = i.Descripcion,
-        EsServicio = i.EsServicio,
-        Precio = i.Precio,
-        DuracionMin = i.DuracionMin,
-        Activo = i.Activo
-    };
-
     public async Task<Result> Guardar(CatalogoItemDto catalogoItem)
     {
         if (!await Existe(catalogoItem.CatalogoItemId))
@@ -46,15 +37,7 @@ public class CatalogoItemService(
     private async Task<bool> Insertar(CatalogoItemDto catalogoItemDto)
     {
         await using var contexto = await contextFactory.CreateDbContextAsync();
-        var catalogoItem = new CatalogoItem
-        {
-            Nombre = catalogoItemDto.Nombre,
-            Descripcion = catalogoItemDto.Descripcion,
-            EsServicio = catalogoItemDto.EsServicio,
-            Precio = catalogoItemDto.Precio,
-            DuracionMin = catalogoItemDto.DuracionMin,
-            Activo = catalogoItemDto.Activo
-        };
+        var catalogoItem = catalogoItemDto.Adapt<CatalogoItem>(MapeoConfig.Config);
         contexto.CatalogoItems.Add(catalogoItem);
         var inserto = await contexto.SaveChangesAsync() > 0;
         catalogoItemDto.CatalogoItemId = catalogoItem.CatalogoItemId;
@@ -81,7 +64,7 @@ public class CatalogoItemService(
         return await contexto.CatalogoItems
             .AsNoTracking()
             .Where(i => i.CatalogoItemId == catalogoItemId)
-            .Select(ACatalogoItemDto)
+            .ProjectToType<CatalogoItemDto>(MapeoConfig.Config)
             .FirstOrDefaultAsync();
     }
 
@@ -90,7 +73,7 @@ public class CatalogoItemService(
         await using var contexto = await contextFactory.CreateDbContextAsync();
         return await contexto.CatalogoItems
             .AsNoTracking()
-            .Select(ACatalogoItemDto)
+            .ProjectToType<CatalogoItemDto>(MapeoConfig.Config)
             .Where(criterio)
             .OrderBy(i => i.Nombre)
             .ToListAsync();

@@ -1,7 +1,9 @@
 using Aplicada1.Core;
 using BookingHub.Application.DTOs;
+using BookingHub.Application.Mapeos;
 using BookingHub.Infrastructure.Data;
 using BookingHub.Infrastructure.Models;
+using Mapster;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
 
@@ -11,16 +13,6 @@ public class BarberoService(
     IDbContextFactory<BookingHubContext> contextFactory
 ) : Aplicada1.Core.IServiceResult<BarberoDto, int>
 {
-    private static readonly Expression<Func<Barbero, BarberoDto>> ABarberoDto = b => new BarberoDto
-    {
-        BarberoId = b.BarberoId,
-        UsuarioId = b.UsuarioId,
-        Nombre = b.Usuario.Nombre,
-        Apodo = b.Apodo,
-        ColorHex = b.ColorHex,
-        Activo = b.Activo
-    };
-
     public async Task<Result> Guardar(BarberoDto barbero)
     {
         if (!await Existe(barbero.BarberoId))
@@ -45,14 +37,7 @@ public class BarberoService(
     private async Task<bool> Insertar(BarberoDto barberoDto)
     {
         await using var contexto = await contextFactory.CreateDbContextAsync();
-        var barbero = new Barbero
-        {
-            UsuarioId = barberoDto.UsuarioId,
-            Apodo = barberoDto.Apodo,
-            Cedula = barberoDto.Cedula ?? string.Empty,
-            ColorHex = barberoDto.ColorHex,
-            Activo = barberoDto.Activo
-        };
+        var barbero = barberoDto.Adapt<Barbero>(MapeoConfig.Config);
         contexto.Barberos.Add(barbero);
         var inserto = await contexto.SaveChangesAsync() > 0;
         barberoDto.BarberoId = barbero.BarberoId;
@@ -81,7 +66,7 @@ public class BarberoService(
         return await contexto.Barberos
             .AsNoTracking()
             .Where(b => b.BarberoId == barberoId)
-            .Select(ABarberoDto)
+            .ProjectToType<BarberoDto>(MapeoConfig.Config)
             .FirstOrDefaultAsync();
     }
 
@@ -90,7 +75,7 @@ public class BarberoService(
         await using var contexto = await contextFactory.CreateDbContextAsync();
         return await contexto.Barberos
             .AsNoTracking()
-            .Select(ABarberoDto)
+            .ProjectToType<BarberoDto>(MapeoConfig.Config)
             .Where(criterio)
             .OrderBy(b => b.Nombre)
             .ToListAsync();

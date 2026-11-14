@@ -1,7 +1,9 @@
 using Aplicada1.Core;
 using BookingHub.Application.DTOs;
+using BookingHub.Application.Mapeos;
 using BookingHub.Infrastructure.Data;
 using BookingHub.Infrastructure.Models;
+using Mapster;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
 
@@ -11,15 +13,6 @@ public class ClienteService(
     IDbContextFactory<BookingHubContext> contextFactory
 ) : Aplicada1.Core.IServiceResult<ClienteDto, int>
 {
-    private static readonly Expression<Func<Cliente, ClienteDto>> AClienteDto = c => new ClienteDto
-    {
-        ClienteId = c.ClienteId,
-        Nombre = c.Nombre,
-        Telefono = c.Telefono,
-        Email = c.Email,
-        Activo = c.Activo
-    };
-
     public async Task<Result> Guardar(ClienteDto cliente)
     {
         if (!await Existe(cliente.ClienteId))
@@ -44,13 +37,7 @@ public class ClienteService(
     private async Task<bool> Insertar(ClienteDto clienteDto)
     {
         await using var contexto = await contextFactory.CreateDbContextAsync();
-        var cliente = new Cliente
-        {
-            Nombre = clienteDto.Nombre,
-            Telefono = clienteDto.Telefono,
-            Email = clienteDto.Email,
-            Activo = clienteDto.Activo
-        };
+        var cliente = clienteDto.Adapt<Cliente>(MapeoConfig.Config);
         contexto.Clientes.Add(cliente);
         var inserto = await contexto.SaveChangesAsync() > 0;
         clienteDto.ClienteId = cliente.ClienteId;
@@ -75,7 +62,7 @@ public class ClienteService(
         return await contexto.Clientes
             .AsNoTracking()
             .Where(c => c.ClienteId == clienteId)
-            .Select(AClienteDto)
+            .ProjectToType<ClienteDto>(MapeoConfig.Config)
             .FirstOrDefaultAsync();
     }
 
@@ -84,7 +71,7 @@ public class ClienteService(
         await using var contexto = await contextFactory.CreateDbContextAsync();
         return await contexto.Clientes
             .AsNoTracking()
-            .Select(AClienteDto)
+            .ProjectToType<ClienteDto>(MapeoConfig.Config)
             .Where(criterio)
             .OrderBy(c => c.Nombre)
             .ToListAsync();
