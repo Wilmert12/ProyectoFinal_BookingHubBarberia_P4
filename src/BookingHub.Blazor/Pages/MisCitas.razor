@@ -1,6 +1,6 @@
 @page "/"
 @page "/mis-citas"
-@inject CitaApiService CitaApiService
+@inject ICitaApi CitaApi
 
 <PageTitle>Mis Citas</PageTitle>
 
@@ -51,9 +51,9 @@ else if (citas is not null)
 
         try
         {
-            citas = await CitaApiService.GetCitasDelCliente(clienteId);
+            citas = await CitaApi.GetCitas(clienteId: clienteId);
         }
-        catch (HttpRequestException)
+        catch (Exception ex) when (ex is HttpRequestException or Refit.ApiException or Refit.ApiRequestException)
         {
             citas = null;
             error = "No se pudo conectar con la API. Verifica que esté en ejecución.";
