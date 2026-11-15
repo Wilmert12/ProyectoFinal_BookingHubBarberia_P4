@@ -1,6 +1,6 @@
-@page "/"
 @page "/mis-citas"
 @inject ICitaApi CitaApi
+@inject SesionCliente Sesion
 
 <PageTitle>Mis Citas</PageTitle>
 
@@ -42,7 +42,11 @@ else if (citas is not null)
     private bool cargando;
     private string? error;
 
-    protected override Task OnInitializedAsync() => Buscar();
+    protected override Task OnInitializedAsync()
+    {
+        clienteId = Sesion.ClienteId ?? clienteId;
+        return Buscar();
+    }
 
     private async Task Buscar()
     {
@@ -52,8 +56,9 @@ else if (citas is not null)
         try
         {
             citas = await CitaApi.GetCitas(clienteId: clienteId);
+            Sesion.ClienteId = clienteId;
         }
-        catch (Exception ex) when (ex is HttpRequestException or Refit.ApiException or Refit.ApiRequestException)
+        catch (Exception ex) when (Formato.EsErrorDeApi(ex))
         {
             citas = null;
             error = "No se pudo conectar con la API. Verifica que esté en ejecución.";

@@ -1,0 +1,197 @@
+@page "/reservar"
+@inject ICatalogoItemApi CatalogoItemApi
+@inject IBarberoApi BarberoApi
+@inject ICitaApi CitaApi
+@inject SesionCliente Sesion
+
+<PageTitle>Reservar</PageTitle>
+
+<h1>Reservar una cita</h1>
+
+@if (cargando)
+{
+    <p class="mensaje">Cargando servicios y barberos...</p>
+}
+else if (errorCarga is not null)
+{
+    <p class="mensaje error">@errorCarga</p>
+}
+else if (reservada is not null)
+{
+    <div class="confirmacion">
+        <p>¡Cita reservada! <strong>@reservada.Notas</strong> con @reservada.BarberoNombre</p>
+        <p>@reservada.FechaInicio.ToString("dd/MM/yyyy") de @reservada.FechaInicio.ToString("HH:mm") a @reservada.FechaFin.ToString("HH:mm") · @Formato.Precio(reservada.Total) · Estado: @reservada.Estado</p>
+        <p class="acciones">
+            <a class="boton" href="mis-citas">Ver mis citas</a>
+            <button type="button" class="enlace" @onclick="NuevaReserva">Reservar otra</button>
+        </p>
+    </div>
+}
+else
+{
+    <form class="formulario" @onsubmit="ConfirmarReserva">
+        <label for="cliente">Número de cliente</label>
+        <input id="cliente" type="number" min="1" @bind="clienteId" />
+        <small>¿No tienes uno? <a href="registro">Regístrate</a>.</small>
+
+        <label for="servicio">Servicio</label>
+        <select id="servicio" @bind="ServicioId">
+            <option value="">Elige un servicio</option>
+            @foreach (var servicio in servicios)
+            {
+                <option value="@servicio.CatalogoItemId">@servicio.Nombre · @Formato.Precio(servicio.Precio) · @servicio.DuracionMin min</option>
+            }
+        </select>
+
+        <label for="barbero">Barbero</label>
+        <select id="barbero" @bind="BarberoId">
+            <option value="">Elige un barbero</option>
+            @foreach (var barbero in barberos)
+            {
+                <option value="@barbero.BarberoId">@barbero.Nombre</option>
+            }
+        </select>
+
+        <label for="fecha">Fecha</label>
+        <input id="fecha" type="date" min="@Hoy.ToString("yyyy-MM-dd")" @bind="fecha" />
+
+        <label for="hora">Hora</label>
+        <select id="hora" @bind="hora">
+            <option value="">Elige una hora</option>
+            @foreach (var opcion in Horas)
+            {
+                <option value="@opcion">@opcion</option>
+            }
+        </select>
+
+        <label for="notas">Notas (opcional)</label>
+        <input id="notas" @bind="notas" maxlength="200" />
+
+        @if (ServicioSeleccionado is { } seleccionado && hora is not null)
+        {
+            <p class="resumen">
+                Total: <strong>@Formato.Precio(seleccionado.Precio)</strong> ·
+                Termina a las @TimeOnly.Parse(hora).AddMinutes(seleccionado.DuracionMin ?? 0).ToString("HH:mm")
+            </p>
+        }
+
+        @if (error is not null)
+        {
+            <p class="mensaje error">@error</p>
+        }
+
+        <button type="submit" disabled="@enviando">@(enviando ? "Reservando..." : "Reservar")</button>
+    </form>
+}
+
+@code {
+    private const int EstadoPendienteId = 1;
+    private static readonly string[] Horas = Enumerable.Range(0, 18)
+        .Select(i => new TimeOnly(9, 0).AddMinutes(i * 30).ToString("HH:mm"))
+        .ToArray();
+
+    [SupplyParameterFromQuery]
+    public int? ServicioId { get; set; }
+
+    [SupplyParameterFromQuery]
+    public int? BarberoId { get; set; }
+
+    private List<CatalogoItemDto> servicios = [];
+    private List<BarberoDto> barberos = [];
+    private int? clienteId;
+    private DateOnly fecha = DateOnly.FromDateTime(DateTime.Today.AddDays(1));
+    private string? hora;
+    private string? notas;
+    private CitaDto? reservada;
+    private bool cargando = true;
+    private bool enviando;
+    private string? errorCarga;
+    private string? error;
+
+    private static DateOnly Hoy => DateOnly.FromDateTime(DateTime.Today);
+
+    private CatalogoItemDto? ServicioSeleccionado =>
+        servicios.FirstOrDefault(s => s.CatalogoItemId == ServicioId);
+
+    protected override async Task OnInitializedAsync()
+    {
+        clienteId = Sesion.ClienteId;
+
+        try
+        {
+            var itemsTarea = CatalogoItemApi.GetCatalogoItems();
+            var barberosTarea = BarberoApi.GetBarberos();
+            await Task.WhenAll(itemsTarea, barberosTarea);
+
+            servicios = itemsTarea.Result.Where(i => i.EsServicio).ToList();
+            barberos = barberosTarea.Result;
+        }
+        catch (Exception ex) when (Formato.EsErrorDeApi(ex))
+        {
+            errorCarga = "No se pudieron cargar los servicios. Verifica que la API esté en ejecución.";
+        }
+        finally
+        {
+            cargando = false;
+        }
+    }
+
+    private async Task ConfirmarReserva()
+    {
+        error = Validar();
+        if (error is not null)
+            return;
+
+        var servicio = ServicioSeleccionado!;
+        var inicio = fecha.ToDateTime(TimeOnly.Parse(hora!));
+
+        var cita = new CitaDto
+        {
+            ClienteId = clienteId!.Value,
+            BarberoId = BarberoId!.Value,
+            EstadoCitaId = EstadoPendienteId,
+            FechaInicio = inicio,
+            FechaFin = inicio.AddMinutes(servicio.DuracionMin ?? 30),
+            Total = servicio.Precio,
+            Notas = string.IsNullOrWhiteSpace(notas) ? servicio.Nombre : $"{servicio.Nombre} - {notas.Trim()}"
+        };
+
+        enviando = true;
+
+        try
+        {
+            reservada = await CitaApi.CrearCita(cita);
+            Sesion.ClienteId = clienteId;
+        }
+        catch (Exception ex) when (Formato.EsErrorDeApi(ex))
+        {
+            error = "No se pudo reservar la cita. Verifica tu número de cliente e intenta de nuevo.";
+        }
+        finally
+        {
+            enviando = false;
+        }
+    }
+
+    private string? Validar()
+    {
+        if (clienteId is null or < 1)
+            return "Escribe tu número de cliente.";
+        if (ServicioSeleccionado is null)
+            return "Elige un servicio.";
+        if (BarberoId is null)
+            return "Elige un barbero.";
+        if (hora is null)
+            return "Elige una hora.";
+        if (fecha.ToDateTime(TimeOnly.Parse(hora)) <= DateTime.Now)
+            return "Elige una fecha y hora futuras.";
+        return null;
+    }
+
+    private void NuevaReserva()
+    {
+        reservada = null;
+        hora = null;
+        notas = null;
+    }
+}

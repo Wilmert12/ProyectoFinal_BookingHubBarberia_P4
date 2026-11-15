@@ -23,7 +23,7 @@ else
                     <td>@cita.FechaInicio.ToString("HH:mm") - @cita.FechaFin.ToString("HH:mm")</td>
                     <td>@cita.BarberoNombre</td>
                     <td><span class="estado estado-@cita.Estado?.ToLowerInvariant()">@cita.Estado</span></td>
-                    <td class="numero">@cita.Total.ToString("C2", Moneda)</td>
+                    <td class="numero">@Formato.Precio(cita.Total)</td>
                     <td>@cita.Notas</td>
                 </tr>
             }
@@ -32,8 +32,6 @@ else
 }
 
 @code {
-    private static readonly System.Globalization.CultureInfo Moneda = System.Globalization.CultureInfo.GetCultureInfo("en-US");
-
     [Parameter, EditorRequired]
     public List<CitaDto> Citas { get; set; } = [];
 
