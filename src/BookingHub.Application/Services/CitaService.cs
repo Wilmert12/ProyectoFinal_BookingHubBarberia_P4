@@ -1,7 +1,9 @@
 using Aplicada1.Core;
 using BookingHub.Application.DTOs;
+using BookingHub.Application.Mapeos;
 using BookingHub.Infrastructure.Data;
 using BookingHub.Infrastructure.Models;
+using Mapster;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
 
@@ -11,21 +13,6 @@ public class CitaService(
     IDbContextFactory<BookingHubContext> contextFactory
 ) : Aplicada1.Core.IServiceResult<CitaDto, int>
 {
-    private static readonly Expression<Func<Cita, CitaDto>> ACitaDto = c => new CitaDto
-    {
-        CitaId = c.CitaId,
-        ClienteId = c.ClienteId,
-        ClienteNombre = c.Cliente.Nombre,
-        BarberoId = c.BarberoId,
-        BarberoNombre = c.Barbero.Usuario.Nombre,
-        EstadoCitaId = c.EstadoCitaId,
-        Estado = c.EstadoCita.Descripcion,
-        FechaInicio = c.FechaInicio,
-        FechaFin = c.FechaFin,
-        Total = c.Total,
-        Notas = c.Notas
-    };
-
     public async Task<Result> Guardar(CitaDto cita)
     {
         if (!await Existe(cita.CitaId))
@@ -50,16 +37,7 @@ public class CitaService(
     private async Task<bool> Insertar(CitaDto citaDto)
     {
         await using var contexto = await contextFactory.CreateDbContextAsync();
-        var cita = new Cita
-        {
-            ClienteId = citaDto.ClienteId,
-            BarberoId = citaDto.BarberoId,
-            EstadoCitaId = citaDto.EstadoCitaId,
-            FechaInicio = citaDto.FechaInicio,
-            FechaFin = citaDto.FechaFin,
-            Total = citaDto.Total,
-            Notas = citaDto.Notas
-        };
+        var cita = citaDto.Adapt<Cita>(MapeoConfig.Config);
         contexto.Citas.Add(cita);
         var inserto = await contexto.SaveChangesAsync() > 0;
         citaDto.CitaId = cita.CitaId;
@@ -87,7 +65,7 @@ public class CitaService(
         return await contexto.Citas
             .AsNoTracking()
             .Where(c => c.CitaId == citaId)
-            .Select(ACitaDto)
+            .ProjectToType<CitaDto>(MapeoConfig.Config)
             .FirstOrDefaultAsync();
     }
 
@@ -96,7 +74,7 @@ public class CitaService(
         await using var contexto = await contextFactory.CreateDbContextAsync();
         return await contexto.Citas
             .AsNoTracking()
-            .Select(ACitaDto)
+            .ProjectToType<CitaDto>(MapeoConfig.Config)
             .Where(criterio)
             .OrderBy(c => c.FechaInicio)
             .ToListAsync();
