@@ -6,83 +6,100 @@
 
 <PageTitle>Reservar</PageTitle>
 
-<h1>Reservar una cita</h1>
+<h1 class="mb-4">Reservar una cita</h1>
 
-@if (cargando)
-{
-    <p class="mensaje">Cargando servicios y barberos...</p>
-}
-else if (errorCarga is not null)
-{
-    <p class="mensaje error">@errorCarga</p>
-}
-else if (reservada is not null)
-{
-    <div class="confirmacion">
-        <p>¡Cita reservada! <strong>@reservada.Notas</strong> con @reservada.BarberoNombre</p>
-        <p>@reservada.FechaInicio.ToString("dd/MM/yyyy") de @reservada.FechaInicio.ToString("HH:mm") a @reservada.FechaFin.ToString("HH:mm") · @Formato.Precio(reservada.Total) · Estado: @reservada.Estado</p>
-        <p class="acciones">
-            <a class="boton" href="mis-citas">Ver mis citas</a>
-            <button type="button" class="enlace" @onclick="NuevaReserva">Reservar otra</button>
-        </p>
+<div class="row">
+    <div class="col-md-8 col-lg-6">
+        @if (cargando)
+        {
+            <p class="text-body-secondary">Cargando servicios y barberos...</p>
+        }
+        else if (errorCarga is not null)
+        {
+            <div class="alert alert-danger">@errorCarga</div>
+        }
+        else if (reservada is not null)
+        {
+            <div class="alert alert-success">
+                <p class="mb-1">¡Cita reservada! <strong>@reservada.Notas</strong> con @reservada.BarberoNombre</p>
+                <p class="mb-3">@reservada.FechaInicio.ToString("dd/MM/yyyy") de @reservada.FechaInicio.ToString("HH:mm") a @reservada.FechaFin.ToString("HH:mm") · @Formato.Precio(reservada.Total) · Estado: @reservada.Estado</p>
+                <div class="d-flex flex-wrap align-items-center gap-3">
+                    <a class="btn btn-primary" href="mis-citas">Ver mis citas</a>
+                    <button type="button" class="btn btn-link p-0" @onclick="NuevaReserva">Reservar otra</button>
+                </div>
+            </div>
+        }
+        else
+        {
+            <form class="d-flex flex-column gap-3" @onsubmit="ConfirmarReserva">
+                <div class="d-flex flex-column gap-1">
+                    <label class="form-label fw-semibold mb-0" for="cliente">Número de cliente</label>
+                    <input id="cliente" class="form-control" type="number" min="1" @bind="clienteId" />
+                    <small class="text-body-secondary">¿No tienes uno? <a href="registro">Regístrate</a>.</small>
+                </div>
+
+                <div class="d-flex flex-column gap-1">
+                    <label class="form-label fw-semibold mb-0" for="servicio">Servicio</label>
+                    <select id="servicio" class="form-select" @bind="ServicioId">
+                        <option value="">Elige un servicio</option>
+                        @foreach (var servicio in servicios)
+                        {
+                            <option value="@servicio.CatalogoItemId">@servicio.Nombre · @Formato.Precio(servicio.Precio) · @servicio.DuracionMin min</option>
+                        }
+                    </select>
+                </div>
+
+                <div class="d-flex flex-column gap-1">
+                    <label class="form-label fw-semibold mb-0" for="barbero">Barbero</label>
+                    <select id="barbero" class="form-select" @bind="BarberoId">
+                        <option value="">Elige un barbero</option>
+                        @foreach (var barbero in barberos)
+                        {
+                            <option value="@barbero.BarberoId">@barbero.Nombre</option>
+                        }
+                    </select>
+                </div>
+
+                <div class="d-flex flex-column flex-sm-row gap-3">
+                    <div class="d-flex flex-column gap-1 flex-grow-1">
+                        <label class="form-label fw-semibold mb-0" for="fecha">Fecha</label>
+                        <input id="fecha" class="form-control" type="date" min="@Hoy.ToString("yyyy-MM-dd")" @bind="fecha" />
+                    </div>
+                    <div class="d-flex flex-column gap-1 flex-grow-1">
+                        <label class="form-label fw-semibold mb-0" for="hora">Hora</label>
+                        <select id="hora" class="form-select" @bind="hora">
+                            <option value="">Elige una hora</option>
+                            @foreach (var opcion in Horas)
+                            {
+                                <option value="@opcion">@opcion</option>
+                            }
+                        </select>
+                    </div>
+                </div>
+
+                <div class="d-flex flex-column gap-1">
+                    <label class="form-label fw-semibold mb-0" for="notas">Notas (opcional)</label>
+                    <input id="notas" class="form-control" @bind="notas" maxlength="200" />
+                </div>
+
+                @if (ServicioSeleccionado is { } seleccionado && hora is not null)
+                {
+                    <div class="alert alert-info d-flex justify-content-between align-items-center py-2 mb-0">
+                        <span>Total: <strong>@Formato.Precio(seleccionado.Precio)</strong></span>
+                        <span>Termina a las @TimeOnly.Parse(hora).AddMinutes(seleccionado.DuracionMin ?? 0).ToString("HH:mm")</span>
+                    </div>
+                }
+
+                @if (error is not null)
+                {
+                    <div class="alert alert-danger mb-0">@error</div>
+                }
+
+                <button class="btn btn-primary align-self-start" type="submit" disabled="@enviando">@(enviando ? "Reservando..." : "Reservar")</button>
+            </form>
+        }
     </div>
-}
-else
-{
-    <form class="formulario" @onsubmit="ConfirmarReserva">
-        <label for="cliente">Número de cliente</label>
-        <input id="cliente" type="number" min="1" @bind="clienteId" />
-        <small>¿No tienes uno? <a href="registro">Regístrate</a>.</small>
-
-        <label for="servicio">Servicio</label>
-        <select id="servicio" @bind="ServicioId">
-            <option value="">Elige un servicio</option>
-            @foreach (var servicio in servicios)
-            {
-                <option value="@servicio.CatalogoItemId">@servicio.Nombre · @Formato.Precio(servicio.Precio) · @servicio.DuracionMin min</option>
-            }
-        </select>
-
-        <label for="barbero">Barbero</label>
-        <select id="barbero" @bind="BarberoId">
-            <option value="">Elige un barbero</option>
-            @foreach (var barbero in barberos)
-            {
-                <option value="@barbero.BarberoId">@barbero.Nombre</option>
-            }
-        </select>
-
-        <label for="fecha">Fecha</label>
-        <input id="fecha" type="date" min="@Hoy.ToString("yyyy-MM-dd")" @bind="fecha" />
-
-        <label for="hora">Hora</label>
-        <select id="hora" @bind="hora">
-            <option value="">Elige una hora</option>
-            @foreach (var opcion in Horas)
-            {
-                <option value="@opcion">@opcion</option>
-            }
-        </select>
-
-        <label for="notas">Notas (opcional)</label>
-        <input id="notas" @bind="notas" maxlength="200" />
-
-        @if (ServicioSeleccionado is { } seleccionado && hora is not null)
-        {
-            <p class="resumen">
-                Total: <strong>@Formato.Precio(seleccionado.Precio)</strong> ·
-                Termina a las @TimeOnly.Parse(hora).AddMinutes(seleccionado.DuracionMin ?? 0).ToString("HH:mm")
-            </p>
-        }
-
-        @if (error is not null)
-        {
-            <p class="mensaje error">@error</p>
-        }
-
-        <button type="submit" disabled="@enviando">@(enviando ? "Reservando..." : "Reservar")</button>
-    </form>
-}
+</div>
 
 @code {
     private const int EstadoPendienteId = 1;

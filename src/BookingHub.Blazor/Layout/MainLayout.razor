@@ -1,15 +1,18 @@
 ﻿@inherits LayoutComponentBase
 
-<header class="encabezado">
-    <a class="marca" href="">BookingHub <span class="subtitulo">Barbería</span></a>
-    <nav class="menu">
-        <NavLink href="catalogo">Catálogo</NavLink>
-        <NavLink href="reservar">Reservar</NavLink>
-        <NavLink href="mis-citas">Mis citas</NavLink>
-        <NavLink href="registro">Registro</NavLink>
+<header class="d-flex flex-column flex-md-row justify-content-md-between align-items-md-center gap-2 px-4 py-3 bg-dark">
+    <a class="d-flex align-items-baseline gap-2 text-white text-decoration-none" href="">
+        <span class="fs-5 fw-bold">BookingHub</span>
+        <span class="opacity-75">Barbería</span>
+    </a>
+    <nav class="nav nav-pills d-flex flex-wrap gap-1">
+        <NavLink class="nav-link link-light py-1" href="catalogo">Catálogo</NavLink>
+        <NavLink class="nav-link link-light py-1" href="reservar">Reservar</NavLink>
+        <NavLink class="nav-link link-light py-1" href="mis-citas">Mis citas</NavLink>
+        <NavLink class="nav-link link-light py-1" href="registro">Registro</NavLink>
     </nav>
 </header>
 
-<main class="contenido">
+<main class="container py-4">
     @Body
 </main>
