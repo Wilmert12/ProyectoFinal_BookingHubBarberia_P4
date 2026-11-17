@@ -4,6 +4,6 @@ Proyecto: BookingHub
 
 Integrantes: 
 
-Wilmert De Luna Gómez
-Stiven Ramos Duarte
+Wilmert De Luna Gómez.
+Stiven Ramos Duarte.
 
