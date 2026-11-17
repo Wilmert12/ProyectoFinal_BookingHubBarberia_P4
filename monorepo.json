@@ -1,0 +1,9 @@
+[{
+    "projectKey": "BookingHub.api",
+    "projectName": "API"
+  },
+  {
+    "projectKey": "BookingHub.blazor",
+    "projectName": "Web App"
+  }
+]
