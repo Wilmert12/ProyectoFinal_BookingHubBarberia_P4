@@ -1,0 +1,131 @@
+@page "/"
+@page "/catalogo"
+@inject ICatalogoItemApi CatalogoItemApi
+@inject IBarberoApi BarberoApi
+
+<PageTitle>Catálogo</PageTitle>
+
+<h1>Catálogo</h1>
+
+@if (cargando)
+{
+    <p class="mensaje">Cargando catálogo...</p>
+}
+else if (error is not null)
+{
+    <p class="mensaje error">@error</p>
+}
+else
+{
+    <h2>Servicios</h2>
+    @if (servicios.Count == 0)
+    {
+        <p class="mensaje">Aún no hay servicios disponibles.</p>
+    }
+    else
+    {
+        <div class="tarjetas">
+            @foreach (var servicio in servicios)
+            {
+                <article class="tarjeta">
+                    <h3>@servicio.Nombre</h3>
+                    @if (!string.IsNullOrWhiteSpace(servicio.Descripcion))
+                    {
+                        <p>@servicio.Descripcion</p>
+                    }
+                    <p class="detalle">
+                        <span class="precio">@Formato.Precio(servicio.Precio)</span>
+                        <span>@servicio.DuracionMin min</span>
+                    </p>
+                    <a class="boton" href="reservar?servicioId=@servicio.CatalogoItemId">Reservar</a>
+                </article>
+            }
+        </div>
+    }
+
+    <h2>Productos</h2>
+    @if (productos.Count == 0)
+    {
+        <p class="mensaje">Aún no hay productos disponibles.</p>
+    }
+    else
+    {
+        <div class="tarjetas">
+            @foreach (var producto in productos)
+            {
+                <article class="tarjeta">
+                    <h3>@producto.Nombre</h3>
+                    @if (!string.IsNullOrWhiteSpace(producto.Descripcion))
+                    {
+                        <p>@producto.Descripcion</p>
+                    }
+                    <p class="detalle">
+                        <span class="precio">@Formato.Precio(producto.Precio)</span>
+                        <span>Disponible en el local</span>
+                    </p>
+                </article>
+            }
+        </div>
+    }
+
+    <h2>Nuestro equipo</h2>
+    @if (barberos.Count == 0)
+    {
+        <p class="mensaje">Aún no hay barberos registrados.</p>
+    }
+    else
+    {
+        <div class="tarjetas">
+            @foreach (var barbero in barberos)
+            {
+                <article class="tarjeta barbero">
+                    <span class="avatar" style="background:@barbero.ColorHex">@Inicial(barbero.Nombre)</span>
+                    <div>
+                        <h3>@barbero.Nombre</h3>
+                        @if (!string.IsNullOrWhiteSpace(barbero.Apodo))
+                        {
+                            <p>"@barbero.Apodo"</p>
+                        }
+                        <a class="enlace" href="reservar?barberoId=@barbero.BarberoId">Reservar con @PrimerNombre(barbero.Nombre)</a>
+                    </div>
+                </article>
+            }
+        </div>
+    }
+}
+
+@code {
+    private List<CatalogoItemDto> servicios = [];
+    private List<CatalogoItemDto> productos = [];
+    private List<BarberoDto> barberos = [];
+    private bool cargando = true;
+    private string? error;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var itemsTarea = CatalogoItemApi.GetCatalogoItems();
+            var barberosTarea = BarberoApi.GetBarberos();
+            await Task.WhenAll(itemsTarea, barberosTarea);
+
+            servicios = itemsTarea.Result.Where(i => i.EsServicio).ToList();
+            productos = itemsTarea.Result.Where(i => !i.EsServicio).ToList();
+            barberos = barberosTarea.Result;
+        }
+        catch (Exception ex) when (Formato.EsErrorDeApi(ex))
+        {
+            error = "No se pudo cargar el catálogo. Verifica que la API esté en ejecución.";
+        }
+        finally
+        {
+            cargando = false;
+        }
+    }
+
+    private static string Inicial(string? nombre) =>
+        string.IsNullOrWhiteSpace(nombre) ? "?" : nombre[..1].ToUpperInvariant();
+
+    private static string PrimerNombre(string? nombre) =>
+        nombre?.Split(' ', StringSplitOptions.RemoveEmptyEntries).FirstOrDefault() ?? "este barbero";
+}

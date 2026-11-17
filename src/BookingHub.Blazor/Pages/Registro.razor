@@ -1,0 +1,73 @@
+@page "/registro"
+@inject IClienteApi ClienteApi
+@inject SesionCliente Sesion
+
+<PageTitle>Registro</PageTitle>
+
+<h1>Registro</h1>
+
+@if (registrado is not null)
+{
+    <div class="confirmacion">
+        <p>¡Listo, @registrado.Nombre! Tu número de cliente es <strong>@registrado.ClienteId</strong>.</p>
+        <p>Guárdalo: lo necesitas para reservar y ver tus citas.</p>
+        <p class="acciones">
+            <a class="boton" href="reservar">Reservar una cita</a>
+            <a class="enlace" href="mis-citas">Ver mis citas</a>
+        </p>
+    </div>
+}
+else
+{
+    <form class="formulario" @onsubmit="Registrar">
+        <label for="nombre">Nombre completo</label>
+        <input id="nombre" @bind="cliente.Nombre" maxlength="200" />
+
+        <label for="telefono">Teléfono</label>
+        <input id="telefono" type="tel" @bind="cliente.Telefono" maxlength="20" />
+
+        <label for="email">Correo (opcional)</label>
+        <input id="email" type="email" @bind="cliente.Email" maxlength="255" />
+
+        @if (error is not null)
+        {
+            <p class="mensaje error">@error</p>
+        }
+
+        <button type="submit" disabled="@enviando">@(enviando ? "Registrando..." : "Registrarme")</button>
+    </form>
+}
+
+@code {
+    private ClienteDto cliente = new();
+    private ClienteDto? registrado;
+    private bool enviando;
+    private string? error;
+
+    private async Task Registrar()
+    {
+        if (string.IsNullOrWhiteSpace(cliente.Nombre) || string.IsNullOrWhiteSpace(cliente.Telefono))
+        {
+            error = "El nombre y el teléfono son obligatorios.";
+            return;
+        }
+
+        enviando = true;
+        error = null;
+
+        try
+        {
+            cliente.Email = string.IsNullOrWhiteSpace(cliente.Email) ? null : cliente.Email.Trim();
+            registrado = await ClienteApi.CrearCliente(cliente);
+            Sesion.ClienteId = registrado.ClienteId;
+        }
+        catch (Exception ex) when (Formato.EsErrorDeApi(ex))
+        {
+            error = "No se pudo completar el registro. Intenta de nuevo.";
+        }
+        finally
+        {
+            enviando = false;
+        }
+    }
+}

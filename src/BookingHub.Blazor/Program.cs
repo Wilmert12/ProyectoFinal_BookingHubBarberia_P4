@@ -12,5 +12,13 @@ var apiBaseUrl = builder.Configuration["ApiBaseUrl"] ?? builder.HostEnvironment.
 
 builder.Services.AddRefitGeneratedClient<ICitaApi>()
     .ConfigureHttpClient(cliente => cliente.BaseAddress = new Uri(apiBaseUrl));
+builder.Services.AddRefitGeneratedClient<IBarberoApi>()
+    .ConfigureHttpClient(cliente => cliente.BaseAddress = new Uri(apiBaseUrl));
+builder.Services.AddRefitGeneratedClient<IClienteApi>()
+    .ConfigureHttpClient(cliente => cliente.BaseAddress = new Uri(apiBaseUrl));
+builder.Services.AddRefitGeneratedClient<ICatalogoItemApi>()
+    .ConfigureHttpClient(cliente => cliente.BaseAddress = new Uri(apiBaseUrl));
+
+builder.Services.AddScoped<SesionCliente>();
 
 await builder.Build().RunAsync();

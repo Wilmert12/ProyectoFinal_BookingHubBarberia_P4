@@ -10,4 +10,7 @@ public interface ICitaApi
 
     [Get("/api/Citas/{id}")]
     Task<CitaDto> GetCita(int id);
+
+    [Post("/api/Citas")]
+    Task<CitaDto> CrearCita([Body] CitaDto cita);
 }
