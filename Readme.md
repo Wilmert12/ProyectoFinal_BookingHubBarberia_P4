@@ -1,4 +1,4 @@
-Proyecto Final Programacion 4 UASD
+Proyecto Final Programación 4 UASD
 
 Proyecto: BookingHub
 
