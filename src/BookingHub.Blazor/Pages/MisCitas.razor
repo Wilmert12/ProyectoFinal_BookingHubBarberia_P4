@@ -4,34 +4,34 @@
 
 <PageTitle>Mis Citas</PageTitle>
 
-<h1>Mis Citas</h1>
+<h1 class="mb-4">Mis Citas</h1>
 
-<form class="buscador" @onsubmit="Buscar">
-    <label for="clienteId">Número de cliente</label>
-    <input id="clienteId" type="number" min="1" @bind="clienteId" />
-    <button type="submit" disabled="@cargando">Buscar</button>
+<form class="d-flex flex-wrap align-items-center gap-2 mb-4" @onsubmit="Buscar">
+    <label class="form-label fw-semibold mb-0" for="clienteId">Número de cliente</label>
+    <input id="clienteId" class="form-control w-auto" type="number" min="1" @bind="clienteId" />
+    <button class="btn btn-primary" type="submit" disabled="@cargando">Buscar</button>
 </form>
 
 @if (cargando)
 {
-    <p class="mensaje">Cargando citas...</p>
+    <p class="text-body-secondary">Cargando citas...</p>
 }
 else if (error is not null)
 {
-    <p class="mensaje error">@error</p>
+    <div class="alert alert-danger">@error</div>
 }
 else if (citas is not null)
 {
     @if (citas.Count == 0)
     {
-        <p class="mensaje">Este cliente no tiene citas.</p>
+        <p class="text-body-secondary">Este cliente no tiene citas.</p>
     }
     else
     {
-        <h2>Próximas</h2>
+        <h2 class="h4 mb-3">Próximas</h2>
         <TablaCitas Citas="@citas.Where(c => c.FechaInicio >= DateTime.Now).ToList()" Vacio="No tienes citas próximas." />
 
-        <h2>Historial</h2>
+        <h2 class="h4 mb-3">Historial</h2>
         <TablaCitas Citas="@citas.Where(c => c.FechaInicio < DateTime.Now).OrderByDescending(c => c.FechaInicio).ToList()" Vacio="Aún no tienes visitas pasadas." />
     }
 }

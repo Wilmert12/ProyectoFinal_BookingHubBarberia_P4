@@ -1,34 +1,37 @@
+
 @if (Citas.Count == 0)
 {
-    <p class="mensaje">@Vacio</p>
+    <p class="text-body-secondary mb-4">@Vacio</p>
 }
 else
 {
-    <table class="tabla-citas">
-        <thead>
-            <tr>
-                <th>Fecha</th>
-                <th>Horario</th>
-                <th>Barbero</th>
-                <th>Estado</th>
-                <th class="numero">Total</th>
-                <th>Notas</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var cita in Citas)
-            {
+    <div class="table-responsive mb-4">
+        <table class="table table-hover align-middle bg-white border mb-0">
+            <thead class="table-light">
                 <tr>
-                    <td>@cita.FechaInicio.ToString("dd/MM/yyyy")</td>
-                    <td>@cita.FechaInicio.ToString("HH:mm") - @cita.FechaFin.ToString("HH:mm")</td>
-                    <td>@cita.BarberoNombre</td>
-                    <td><span class="estado estado-@cita.Estado?.ToLowerInvariant()">@cita.Estado</span></td>
-                    <td class="numero">@Formato.Precio(cita.Total)</td>
-                    <td>@cita.Notas</td>
+                    <th>Fecha</th>
+                    <th>Horario</th>
+                    <th>Barbero</th>
+                    <th>Estado</th>
+                    <th class="text-end">Total</th>
+                    <th class="d-none d-md-table-cell">Notas</th>
                 </tr>
-            }
-        </tbody>
-    </table>
+            </thead>
+            <tbody>
+                @foreach (var cita in Citas)
+                {
+                    <tr>
+                        <td>@cita.FechaInicio.ToString("dd/MM/yyyy")</td>
+                        <td>@cita.FechaInicio.ToString("HH:mm") - @cita.FechaFin.ToString("HH:mm")</td>
+                        <td>@cita.BarberoNombre</td>
+                        <td><span class="badge rounded-pill @ClaseEstado(cita.Estado)">@cita.Estado</span></td>
+                        <td class="text-end">@Formato.Precio(cita.Total)</td>
+                        <td class="d-none d-md-table-cell">@cita.Notas</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
 }
 
 @code {
@@ -37,4 +40,14 @@ else
 
     [Parameter]
     public string Vacio { get; set; } = "Sin citas.";
+
+    private static string ClaseEstado(string? estado) => estado switch
+    {
+        "Pendiente" => "text-bg-warning",
+        "Confirmada" => "text-bg-info",
+        "EnProceso" => "text-bg-primary",
+        "Completada" => "text-bg-success",
+        "Cancelada" or "NoShow" => "text-bg-danger",
+        _ => "text-bg-secondary"
+    };
 }

@@ -4,39 +4,49 @@
 
 <PageTitle>Registro</PageTitle>
 
-<h1>Registro</h1>
+<h1 class="mb-4">Registro</h1>
 
-@if (registrado is not null)
-{
-    <div class="confirmacion">
-        <p>¡Listo, @registrado.Nombre! Tu número de cliente es <strong>@registrado.ClienteId</strong>.</p>
-        <p>Guárdalo: lo necesitas para reservar y ver tus citas.</p>
-        <p class="acciones">
-            <a class="boton" href="reservar">Reservar una cita</a>
-            <a class="enlace" href="mis-citas">Ver mis citas</a>
-        </p>
-    </div>
-}
-else
-{
-    <form class="formulario" @onsubmit="Registrar">
-        <label for="nombre">Nombre completo</label>
-        <input id="nombre" @bind="cliente.Nombre" maxlength="200" />
-
-        <label for="telefono">Teléfono</label>
-        <input id="telefono" type="tel" @bind="cliente.Telefono" maxlength="20" />
-
-        <label for="email">Correo (opcional)</label>
-        <input id="email" type="email" @bind="cliente.Email" maxlength="255" />
-
-        @if (error is not null)
+<div class="row">
+    <div class="col-md-8 col-lg-6">
+        @if (registrado is not null)
         {
-            <p class="mensaje error">@error</p>
+            <div class="alert alert-success">
+                <p class="mb-1">¡Listo, @registrado.Nombre! Tu número de cliente es <strong>@registrado.ClienteId</strong>.</p>
+                <p class="mb-3">Guárdalo: lo necesitas para reservar y ver tus citas.</p>
+                <div class="d-flex flex-wrap align-items-center gap-3">
+                    <a class="btn btn-primary" href="reservar">Reservar una cita</a>
+                    <a class="link-primary" href="mis-citas">Ver mis citas</a>
+                </div>
+            </div>
         }
+        else
+        {
+            <form class="d-flex flex-column gap-3" @onsubmit="Registrar">
+                <div class="d-flex flex-column gap-1">
+                    <label class="form-label fw-semibold mb-0" for="nombre">Nombre completo</label>
+                    <input id="nombre" class="form-control" @bind="cliente.Nombre" maxlength="200" />
+                </div>
 
-        <button type="submit" disabled="@enviando">@(enviando ? "Registrando..." : "Registrarme")</button>
-    </form>
-}
+                <div class="d-flex flex-column gap-1">
+                    <label class="form-label fw-semibold mb-0" for="telefono">Teléfono</label>
+                    <input id="telefono" class="form-control" type="tel" @bind="cliente.Telefono" maxlength="20" />
+                </div>
+
+                <div class="d-flex flex-column gap-1">
+                    <label class="form-label fw-semibold mb-0" for="email">Correo (opcional)</label>
+                    <input id="email" class="form-control" type="email" @bind="cliente.Email" maxlength="255" />
+                </div>
+
+                @if (error is not null)
+                {
+                    <div class="alert alert-danger mb-0">@error</div>
+                }
+
+                <button class="btn btn-primary align-self-start" type="submit" disabled="@enviando">@(enviando ? "Registrando..." : "Registrarme")</button>
+            </form>
+        }
+    </div>
+</div>
 
 @code {
     private ClienteDto cliente = new();
