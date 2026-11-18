@@ -26,6 +26,18 @@ SELECT v.n, v.e, 'HASH_DE_PRUEBA', v.t, v.r FROM (VALUES
     ('Luis Gómez',    'luis@bookinghub.com',   '8090000002', @rolBarbero)) v(n, e, t, r)
 WHERE NOT EXISTS (SELECT 1 FROM Usuarios u WHERE u.email = v.e);
 
+DECLARE @rolRecepcion INT = (SELECT rolId FROM Roles WHERE descripcion = 'Recepcion');
+
+UPDATE Usuarios SET passwordHash = 'AQAAAAIAAYagAAAAEItv+1WJiSvnSyxSbZfaHuFv6AyXIgfLilbLNqI3EUK1Vzg1t2LjiXelSDEi+P2N0Q=='
+WHERE email = 'admin@bookinghub.com' AND passwordHash = 'HASH_DE_PRUEBA';
+
+INSERT INTO Usuarios (nombre, email, passwordHash, telefono, rolId)
+SELECT N'Recepción', 'recepcion@bookinghub.com', 'HASH_DE_PRUEBA', '8090000003', @rolRecepcion
+WHERE NOT EXISTS (SELECT 1 FROM Usuarios u WHERE u.email = 'recepcion@bookinghub.com');
+
+UPDATE Usuarios SET passwordHash = 'AQAAAAIAAYagAAAAEA15VgqwIimMZ90XYUjVMk4oPtCEq/fosm2FfNrtEgxUMb38/h/8y9MeKhPMYuptuQ=='
+WHERE email = 'recepcion@bookinghub.com' AND passwordHash = 'HASH_DE_PRUEBA';
+
 INSERT INTO Barberos (usuarioId, apodo, cedula, colorHex)
 SELECT u.usuarioId, v.apodo, v.cedula, v.color
 FROM (VALUES

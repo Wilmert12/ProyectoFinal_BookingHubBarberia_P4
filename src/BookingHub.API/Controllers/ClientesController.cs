@@ -1,5 +1,7 @@
+using BookingHub.API.Seguridad;
 using BookingHub.Application.DTOs;
 using BookingHub.Application.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BookingHub.API.Controllers;
@@ -8,6 +10,7 @@ namespace BookingHub.API.Controllers;
 [Route("api/[controller]")]
 public class ClientesController(ClienteService clienteService) : ControllerBase
 {
+    [Authorize(Roles = RolesSistema.Personal)]
     [HttpGet]
     public async Task<ActionResult<List<ClienteDto>>> GetClientes(bool incluirInactivos = false)
     {
@@ -19,6 +22,7 @@ public class ClientesController(ClienteService clienteService) : ControllerBase
         return Ok(result.Value);
     }
 
+    [Authorize(Roles = RolesSistema.Personal)]
     [HttpGet("{id}")]
     public async Task<ActionResult<ClienteDto>> GetCliente(int id)
     {
@@ -46,6 +50,7 @@ public class ClientesController(ClienteService clienteService) : ControllerBase
         return CreatedAtAction(nameof(GetCliente), new { id = cliente.ClienteId }, cliente);
     }
 
+    [Authorize(Roles = RolesSistema.Personal)]
     [HttpPut("{id}")]
     public async Task<IActionResult> PutCliente(int id, ClienteDto cliente)
     {
@@ -64,6 +69,7 @@ public class ClientesController(ClienteService clienteService) : ControllerBase
         return NoContent();
     }
 
+    [Authorize(Roles = RolesSistema.Personal)]
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteCliente(int id)
     {

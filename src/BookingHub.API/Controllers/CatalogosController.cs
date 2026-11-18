@@ -1,5 +1,7 @@
+using BookingHub.API.Seguridad;
 using BookingHub.Application.DTOs;
 using BookingHub.Application.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BookingHub.API.Controllers;
@@ -23,6 +25,18 @@ public class CatalogosController(CatalogosService catalogosService) : Controller
     public async Task<ActionResult<List<MetodoPagoDto>>> GetMetodosPago()
     {
         var result = await catalogosService.GetMetodosPago();
+
+        if (result.IsFailure)
+            return BadRequest(result.Error);
+
+        return Ok(result.Value);
+    }
+
+    [Authorize(Roles = RolesSistema.Admin)]
+    [HttpGet("Roles")]
+    public async Task<ActionResult<List<RolDto>>> GetRoles()
+    {
+        var result = await catalogosService.GetRoles();
 
         if (result.IsFailure)
             return BadRequest(result.Error);

@@ -29,4 +29,14 @@ public class CatalogosService(
             .Select(m => new MetodoPagoDto(m.MetodoPagoId, m.Descripcion))
             .ToListAsync();
     }
+
+    public async Task<Result<List<RolDto>>> GetRoles()
+    {
+        await using var contexto = await contextFactory.CreateDbContextAsync();
+        return await contexto.Roles
+            .AsNoTracking()
+            .OrderBy(r => r.RolId)
+            .Select(r => new RolDto(r.RolId, r.Descripcion))
+            .ToListAsync();
+    }
 }

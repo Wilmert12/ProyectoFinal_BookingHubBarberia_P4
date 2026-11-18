@@ -1,5 +1,7 @@
+using BookingHub.API.Seguridad;
 using BookingHub.Application.DTOs;
 using BookingHub.Application.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BookingHub.API.Controllers;
@@ -33,6 +35,7 @@ public class BarberosController(BarberoService barberoService) : ControllerBase
         return Ok(result.Value);
     }
 
+    [Authorize(Roles = RolesSistema.Admin)]
     [HttpPost]
     public async Task<ActionResult<BarberoDto>> PostBarbero(BarberoDto barbero)
     {
@@ -48,6 +51,7 @@ public class BarberosController(BarberoService barberoService) : ControllerBase
         return CreatedAtAction(nameof(GetBarbero), new { id = barbero.BarberoId }, creado.Value);
     }
 
+    [Authorize(Roles = RolesSistema.Admin)]
     [HttpPut("{id}")]
     public async Task<IActionResult> PutBarbero(int id, BarberoDto barbero)
     {
@@ -66,6 +70,7 @@ public class BarberosController(BarberoService barberoService) : ControllerBase
         return NoContent();
     }
 
+    [Authorize(Roles = RolesSistema.Admin)]
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteBarbero(int id)
     {
