@@ -170,7 +170,8 @@
             FechaInicio = inicio,
             FechaFin = inicio.AddMinutes(servicio.DuracionMin ?? 30),
             Total = servicio.Precio,
-            Notas = string.IsNullOrWhiteSpace(notas) ? servicio.Nombre : $"{servicio.Nombre} - {notas.Trim()}"
+            Notas = string.IsNullOrWhiteSpace(notas) ? servicio.Nombre : $"{servicio.Nombre} - {notas.Trim()}",
+            Detalles = [new CitaDetalleDto { CatalogoItemId = servicio.CatalogoItemId, Cantidad = 1, PrecioUnitario = servicio.Precio }]
         };
 
         enviando = true;
