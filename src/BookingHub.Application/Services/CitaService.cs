@@ -15,6 +15,12 @@ public class CitaService(
 {
     public async Task<Result> Guardar(CitaDto cita)
     {
+        if (Validar(cita) is { } error)
+            return Result.Failure(error);
+
+        if (cita.Detalles is { Count: > 0 })
+            cita.Total = cita.Detalles.Sum(d => d.Cantidad * d.PrecioUnitario - d.Descuento);
+
         if (!await Existe(cita.CitaId))
         {
             var inserto = await Insertar(cita);
@@ -25,6 +31,24 @@ public class CitaService(
             var modifico = await Modificar(cita);
             return Result.Success(modifico);
         }
+    }
+
+    private static Error? Validar(CitaDto cita)
+    {
+        if (cita.FechaFin <= cita.FechaInicio)
+            return new Error("CITA_FECHAS", "La hora de fin debe ser posterior a la de inicio.");
+
+        foreach (var detalle in cita.Detalles ?? [])
+        {
+            if (detalle.Cantidad <= 0)
+                return new Error("DETALLE_CANTIDAD", "La cantidad de cada detalle debe ser mayor que 0.");
+            if (detalle.PrecioUnitario < 0)
+                return new Error("DETALLE_PRECIO", "El precio de un detalle no puede ser negativo.");
+            if (detalle.Descuento < 0 || detalle.Descuento > detalle.Cantidad * detalle.PrecioUnitario)
+                return new Error("DETALLE_DESCUENTO", "El descuento no puede ser negativo ni mayor que el subtotal.");
+        }
+
+        return null;
     }
 
     private async Task<bool> Existe(int citaId)
@@ -38,6 +62,7 @@ public class CitaService(
     {
         await using var contexto = await contextFactory.CreateDbContextAsync();
         var cita = citaDto.Adapt<Cita>(MapeoConfig.Config);
+        cita.CitaDetalles = CrearDetalles(citaDto.Detalles);
         contexto.Citas.Add(cita);
         var inserto = await contexto.SaveChangesAsync() > 0;
         citaDto.CitaId = cita.CitaId;
@@ -47,7 +72,9 @@ public class CitaService(
     private async Task<bool> Modificar(CitaDto citaDto)
     {
         await using var contexto = await contextFactory.CreateDbContextAsync();
-        return await contexto.Citas
+        await using var transaccion = await contexto.Database.BeginTransactionAsync();
+
+        var modifico = await contexto.Citas
             .Where(c => c.CitaId == citaDto.CitaId)
             .ExecuteUpdateAsync(s => s
                 .SetProperty(c => c.ClienteId, citaDto.ClienteId)
@@ -57,7 +84,29 @@ public class CitaService(
                 .SetProperty(c => c.FechaFin, citaDto.FechaFin)
                 .SetProperty(c => c.Total, citaDto.Total)
                 .SetProperty(c => c.Notas, citaDto.Notas)) > 0;
+
+        if (citaDto.Detalles is not null)
+        {
+            await contexto.CitaDetalles
+                .Where(d => d.CitaId == citaDto.CitaId)
+                .ExecuteDeleteAsync();
+
+            foreach (var detalle in CrearDetalles(citaDto.Detalles))
+            {
+                detalle.CitaId = citaDto.CitaId;
+                contexto.CitaDetalles.Add(detalle);
+            }
+            await contexto.SaveChangesAsync();
+        }
+
+        await transaccion.CommitAsync();
+        return modifico;
     }
+
+    private static List<CitaDetalle> CrearDetalles(List<CitaDetalleDto>? detalles) =>
+        (detalles ?? [])
+            .Select(d => d.Adapt<CitaDetalle>(MapeoConfig.Config))
+            .ToList();
 
     public async Task<Result<CitaDto?>> Buscar(int citaId)
     {
@@ -83,9 +132,19 @@ public class CitaService(
     public async Task<Result> Eliminar(int citaId)
     {
         await using var contexto = await contextFactory.CreateDbContextAsync();
+
+        if (await contexto.Pagos.AnyAsync(p => p.CitaId == citaId))
+            return Result.Failure(new Error("CITA_CON_PAGOS", "La cita tiene pagos registrados; cámbiala a Cancelada en lugar de eliminarla."));
+
+        await using var transaccion = await contexto.Database.BeginTransactionAsync();
+        await contexto.CitaDetalles
+            .Where(d => d.CitaId == citaId)
+            .ExecuteDeleteAsync();
         var eliminado = await contexto.Citas
             .Where(c => c.CitaId == citaId)
             .ExecuteDeleteAsync() > 0;
+        await transaccion.CommitAsync();
+
         return Result.Success(eliminado);
     }
 }

@@ -48,9 +48,31 @@ public sealed class BaseDeDatosDePrueba : IDisposable
 
         contexto.EstadosCita.AddRange(
             new EstadosCitum { Descripcion = "Pendiente" },
-            new EstadosCitum { Descripcion = "Cancelada", LiberaHorario = true });
+            new EstadosCitum { Descripcion = "Cancelada", LiberaHorario = true },
+            new EstadosCitum { Descripcion = "Completada" });
+
+        contexto.MetodosPagos.AddRange(
+            new MetodosPago { Descripcion = "Efectivo", Activo = true },
+            new MetodosPago { Descripcion = "Tarjeta", Activo = true },
+            new MetodosPago { Descripcion = "Cheque", Activo = false });
 
         contexto.SaveChanges();
+    }
+
+    public int CrearItem(string nombre, decimal precio, bool esServicio = true)
+    {
+        using var contexto = CrearContexto();
+        var item = new CatalogoItem
+        {
+            Nombre = nombre,
+            Precio = precio,
+            EsServicio = esServicio,
+            DuracionMin = esServicio ? 30 : null,
+            Activo = true
+        };
+        contexto.CatalogoItems.Add(item);
+        contexto.SaveChanges();
+        return item.CatalogoItemId;
     }
 
     public void Dispose() => _conexion.Dispose();

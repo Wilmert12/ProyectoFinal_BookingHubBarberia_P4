@@ -13,4 +13,5 @@ public record CitaDto
     public DateTime FechaFin { get; set; }
     public decimal Total { get; set; }
     public string? Notas { get; set; }
+    public List<CitaDetalleDto>? Detalles { get; set; }
 }
