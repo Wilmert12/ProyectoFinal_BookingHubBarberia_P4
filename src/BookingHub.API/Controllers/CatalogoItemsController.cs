@@ -1,5 +1,7 @@
+using BookingHub.API.Seguridad;
 using BookingHub.Application.DTOs;
 using BookingHub.Application.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BookingHub.API.Controllers;
@@ -33,6 +35,7 @@ public class CatalogoItemsController(CatalogoItemService catalogoItemService) : 
         return Ok(result.Value);
     }
 
+    [Authorize(Roles = RolesSistema.Admin)]
     [HttpPost]
     public async Task<ActionResult<CatalogoItemDto>> PostCatalogoItem(CatalogoItemDto catalogoItem)
     {
@@ -46,6 +49,7 @@ public class CatalogoItemsController(CatalogoItemService catalogoItemService) : 
         return CreatedAtAction(nameof(GetCatalogoItem), new { id = catalogoItem.CatalogoItemId }, catalogoItem);
     }
 
+    [Authorize(Roles = RolesSistema.Admin)]
     [HttpPut("{id}")]
     public async Task<IActionResult> PutCatalogoItem(int id, CatalogoItemDto catalogoItem)
     {
@@ -64,6 +68,7 @@ public class CatalogoItemsController(CatalogoItemService catalogoItemService) : 
         return NoContent();
     }
 
+    [Authorize(Roles = RolesSistema.Admin)]
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteCatalogoItem(int id)
     {

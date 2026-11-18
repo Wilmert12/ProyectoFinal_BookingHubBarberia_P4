@@ -1,5 +1,7 @@
+using BookingHub.API.Seguridad;
 using BookingHub.Application.DTOs;
 using BookingHub.Application.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BookingHub.API.Controllers;
@@ -11,6 +13,9 @@ public class CitasController(CitaService citaService) : ControllerBase
     [HttpGet]
     public async Task<ActionResult<List<CitaDto>>> GetCitas(int? clienteId, int? barberoId, DateOnly? fecha)
     {
+        if (clienteId is null && !User.IsInRole(RolesSistema.Admin) && !User.IsInRole(RolesSistema.Recepcion))
+            return Unauthorized("Para ver la agenda completa hay que iniciar sesión como personal.");
+
         var desde = fecha?.ToDateTime(TimeOnly.MinValue);
         var hasta = desde?.AddDays(1);
 
@@ -25,6 +30,7 @@ public class CitasController(CitaService citaService) : ControllerBase
         return Ok(result.Value);
     }
 
+    [Authorize(Roles = RolesSistema.Personal)]
     [HttpGet("{id}")]
     public async Task<ActionResult<CitaDto>> GetCita(int id)
     {
@@ -54,6 +60,7 @@ public class CitasController(CitaService citaService) : ControllerBase
         return CreatedAtAction(nameof(GetCita), new { id = cita.CitaId }, creada.Value);
     }
 
+    [Authorize(Roles = RolesSistema.Personal)]
     [HttpPut("{id}")]
     public async Task<IActionResult> PutCita(int id, CitaDto cita)
     {
@@ -72,6 +79,7 @@ public class CitasController(CitaService citaService) : ControllerBase
         return NoContent();
     }
 
+    [Authorize(Roles = RolesSistema.Personal)]
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteCita(int id)
     {
