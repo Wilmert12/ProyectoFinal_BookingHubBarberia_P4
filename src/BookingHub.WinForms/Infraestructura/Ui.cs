@@ -1,15 +1,22 @@
-using System.Globalization;
+﻿using System.Globalization;
 
 namespace BookingHub.WinForms.Infraestructura;
 
 public static class Ui
 {
-    public static readonly Color Marino = Color.FromArgb(33, 37, 41);
-    public static readonly Color Primario = Color.FromArgb(13, 110, 253);
-    public static readonly Color Fondo = Color.FromArgb(248, 249, 250);
+    public const string Marca = "CerquilloApp";
+
+    public static readonly Color Tinta = Color.FromArgb(23, 21, 15);
+    public static readonly Color Acento = Color.FromArgb(201, 161, 91);
+    public static readonly Color Fondo = Color.FromArgb(250, 248, 243);
+    public static readonly Color Superficie = Color.White;
+    public static readonly Color Borde = Color.FromArgb(230, 227, 220);
+    public static readonly Color TextoSuave = Color.FromArgb(120, 115, 105);
+    public static readonly Color Seleccion = Color.FromArgb(243, 237, 225);
     public static readonly Font Fuente = new("Segoe UI", 10f);
-    public static readonly Font Titulo = new("Segoe UI Semibold", 15f);
+    public static readonly Font Titulo = new("Segoe UI Semibold", 16f);
     public static readonly Font Destacado = new("Segoe UI Semibold", 11f);
+    public static readonly Font Pequena = new("Segoe UI", 9f);
 
     private static readonly CultureInfo Moneda = CultureInfo.GetCultureInfo("en-US");
 
@@ -17,17 +24,33 @@ public static class Ui
     {
         Text = texto,
         Font = Titulo,
+        ForeColor = Tinta,
         AutoSize = true,
         Dock = DockStyle.Top,
-        Padding = new Padding(0, 0, 0, 10)
+        Padding = new Padding(0, 0, 0, 14)
     };
+
+    public static Icon Icono() => new(Recurso("cerquilloapp.ico"));
+
+    public static PictureBox Logo(int lado) => new()
+    {
+        Image = Image.FromStream(Recurso("cerquilloapp-logo-192.png")),
+        SizeMode = PictureBoxSizeMode.Zoom,
+        Size = new Size(lado, lado),
+        Margin = Padding.Empty
+    };
+
+    private static Stream Recurso(string nombre) =>
+        typeof(Ui).Assembly.GetManifestResourceStream($"BookingHub.WinForms.Recursos.{nombre}")
+        ?? throw new InvalidOperationException($"No se encontró el recurso {nombre}.");
 
     public static Label Etiqueta(string texto) => new()
     {
         Text = texto,
         AutoSize = true,
         Anchor = AnchorStyles.Left,
-        Margin = new Padding(0, 8, 10, 4)
+        ForeColor = TextoSuave,
+        Margin = new Padding(0, 8, 12, 4)
     };
 
     public static Button Boton(string texto, bool primario = false)
@@ -37,14 +60,27 @@ public static class Ui
             Text = texto,
             AutoSize = true,
             AutoSizeMode = AutoSizeMode.GrowAndShrink,
-            Padding = new Padding(10, 4, 10, 4),
+            MinimumSize = new Size(0, 34),
+            Padding = new Padding(12, 2, 12, 2),
             Margin = new Padding(0, 4, 8, 4),
             FlatStyle = FlatStyle.Flat,
-            BackColor = primario ? Primario : Color.White,
-            ForeColor = primario ? Color.White : Color.Black,
-            Cursor = Cursors.Hand
+            BackColor = primario ? Tinta : Superficie,
+            ForeColor = primario ? Color.White : Tinta,
+            Cursor = Cursors.Hand,
+            UseVisualStyleBackColor = false
         };
-        boton.FlatAppearance.BorderColor = primario ? Primario : Color.FromArgb(206, 212, 218);
+        boton.FlatAppearance.BorderColor = primario ? Tinta : Borde;
+        boton.FlatAppearance.MouseOverBackColor = primario ? Color.FromArgb(55, 52, 45) : Seleccion;
+        boton.FlatAppearance.MouseDownBackColor = primario ? Color.Black : Borde;
+        return boton;
+    }
+
+    public static Button Enlace(string texto)
+    {
+        var boton = Boton(texto);
+        boton.FlatAppearance.BorderSize = 0;
+        boton.BackColor = Color.Transparent;
+        boton.ForeColor = TextoSuave;
         return boton;
     }
 
@@ -122,16 +158,25 @@ public static class Ui
             MultiSelect = false,
             AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill,
             RowHeadersVisible = false,
-            BackgroundColor = Color.White,
-            BorderStyle = BorderStyle.FixedSingle,
+            BackgroundColor = Superficie,
+            BorderStyle = BorderStyle.None,
+            CellBorderStyle = DataGridViewCellBorderStyle.SingleHorizontal,
+            ColumnHeadersBorderStyle = DataGridViewHeaderBorderStyle.None,
+            ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.DisableResizing,
+            GridColor = Borde,
             EnableHeadersVisualStyles = false,
-            ColumnHeadersHeight = 34,
-            RowTemplate = { Height = 30 }
+            ColumnHeadersHeight = 38,
+            RowTemplate = { Height = 36 }
         };
-        grilla.ColumnHeadersDefaultCellStyle.BackColor = Color.FromArgb(233, 236, 239);
-        grilla.ColumnHeadersDefaultCellStyle.Font = new Font(Fuente, FontStyle.Bold);
-        grilla.DefaultCellStyle.SelectionBackColor = Color.FromArgb(207, 226, 255);
-        grilla.DefaultCellStyle.SelectionForeColor = Color.Black;
+        grilla.ColumnHeadersDefaultCellStyle.BackColor = Superficie;
+        grilla.ColumnHeadersDefaultCellStyle.ForeColor = TextoSuave;
+        grilla.ColumnHeadersDefaultCellStyle.Font = Pequena;
+        grilla.ColumnHeadersDefaultCellStyle.SelectionBackColor = Superficie;
+        grilla.ColumnHeadersDefaultCellStyle.Padding = new Padding(8, 0, 8, 0);
+        grilla.DefaultCellStyle.Padding = new Padding(8, 0, 8, 0);
+        grilla.DefaultCellStyle.ForeColor = Tinta;
+        grilla.DefaultCellStyle.SelectionBackColor = Seleccion;
+        grilla.DefaultCellStyle.SelectionForeColor = Tinta;
         return grilla;
     }
 

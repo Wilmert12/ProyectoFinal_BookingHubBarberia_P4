@@ -1,4 +1,4 @@
-using BookingHub.WinForms.Infraestructura;
+﻿using BookingHub.WinForms.Infraestructura;
 using BookingHub.WinForms.Models;
 
 namespace BookingHub.WinForms.Formularios;
@@ -16,7 +16,7 @@ public class FrmNuevaCita : Form
     private readonly DateTimePicker _fecha = new() { Format = DateTimePickerFormat.Short };
     private readonly DateTimePicker _hora = new() { Format = DateTimePickerFormat.Custom, CustomFormat = "HH:mm", ShowUpDown = true };
     private readonly TextBox _notas = new();
-    private readonly Label _resumen = new() { AutoSize = true, ForeColor = Color.DimGray };
+    private readonly Label _resumen = new() { AutoSize = true, ForeColor = Ui.TextoSuave };
     private readonly Button _guardar = Ui.Boton("Guardar cita", primario: true);
     private List<CatalogoItemDto> _servicios = [];
 
@@ -32,7 +32,8 @@ public class FrmNuevaCita : Form
         MaximizeBox = false;
         MinimizeBox = false;
         ClientSize = new Size(520, 520);
-        BackColor = Color.White;
+        BackColor = Ui.Superficie;
+        Icon = Ui.Icono();
         AcceptButton = _guardar;
 
         _fecha.Value = fecha;

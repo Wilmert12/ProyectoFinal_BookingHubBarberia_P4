@@ -59,7 +59,7 @@
     }
 
         .loading-progress circle:last-child {
-            stroke: #1b6ec2;
+            stroke: #C9A15B;
             stroke-dasharray: calc(3.141 * var(--blazor-load-percentage, 0%) * 0.8), 500%;
             transition: stroke-dasharray 0.05s ease-in-out;
         }
@@ -86,4 +86,74 @@ code {
 
 .form-floating > .form-control-plaintext:focus::placeholder, .form-floating > .form-control:focus::placeholder {
     text-align: start;
+}
+
+:root {
+    --tinta: #17150F;
+    --acento: #C9A15B;
+    --papel: #FAF8F3;
+    --borde: #E6E3DC;
+    --texto-suave: #78736A;
+    --bs-body-bg: var(--papel);
+    --bs-body-color: var(--tinta);
+    --bs-secondary-color: var(--texto-suave);
+    --bs-border-color: var(--borde);
+    --bs-link-color: var(--tinta);
+    --bs-link-hover-color: #000;
+    --bs-border-radius: .625rem;
+}
+
+body {
+    background: var(--papel);
+    -webkit-font-smoothing: antialiased;
+}
+
+.marca-encabezado {
+    background: #fff;
+    border-bottom: 1px solid var(--borde);
+}
+
+.marca-nombre {
+    color: var(--tinta);
+    font-weight: 600;
+    font-size: 1.15rem;
+    letter-spacing: -.01em;
+}
+
+.marca-menu .nav-link {
+    color: var(--texto-suave);
+    padding: .35rem .75rem;
+    border-bottom: 2px solid transparent;
+    border-radius: 0;
+}
+
+    .marca-menu .nav-link:hover {
+        color: var(--tinta);
+    }
+
+    .marca-menu .nav-link.active {
+        color: var(--tinta);
+        border-bottom-color: var(--acento);
+    }
+
+.btn-primary {
+    --bs-btn-bg: var(--tinta);
+    --bs-btn-border-color: var(--tinta);
+    --bs-btn-hover-bg: #37342D;
+    --bs-btn-hover-border-color: #37342D;
+    --bs-btn-active-bg: #000;
+    --bs-btn-active-border-color: #000;
+    --bs-btn-disabled-bg: var(--tinta);
+    --bs-btn-disabled-border-color: var(--tinta);
+}
+
+.card {
+    border: 1px solid var(--borde);
+    box-shadow: none !important;
+}
+
+.form-control:focus,
+.form-select:focus {
+    border-color: var(--acento);
+    box-shadow: 0 0 0 .2rem rgba(201, 161, 91, .2);
 }

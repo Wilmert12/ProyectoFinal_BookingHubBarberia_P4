@@ -7,7 +7,7 @@ namespace BookingHub.API.Seguridad;
 
 public class GeneradorToken(SymmetricSecurityKey clave)
 {
-    public const string Emisor = "BookingHub";
+    public const string Emisor = "CerquilloApp";
     public static readonly TimeSpan Duracion = TimeSpan.FromHours(8);
 
     public SesionDto Crear(UsuarioSesionDto usuario)
