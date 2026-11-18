@@ -17,7 +17,8 @@ public class FrmLogin : Form
         _apis = apis;
         _sesion = sesion;
 
-        Text = "BookingHub - Iniciar sesión";
+        Text = $"{Ui.Marca} · Iniciar sesión";
+        Icon = Ui.Icono();
         Font = Ui.Fuente;
         FormBorderStyle = FormBorderStyle.FixedDialog;
         MaximizeBox = false;
@@ -25,7 +26,7 @@ public class FrmLogin : Form
         StartPosition = FormStartPosition.CenterScreen;
         AutoSize = true;
         AutoSizeMode = AutoSizeMode.GrowAndShrink;
-        BackColor = Color.White;
+        BackColor = Ui.Superficie;
         AcceptButton = _entrar;
 
         var contenido = new FlowLayoutPanel
@@ -33,16 +34,21 @@ public class FrmLogin : Form
             FlowDirection = FlowDirection.TopDown,
             AutoSize = true,
             WrapContents = false,
-            Padding = new Padding(28, 24, 28, 24)
+            Padding = new Padding(44, 40, 44, 40)
         };
-        contenido.Controls.Add(new Label { Text = "BookingHub", Font = Ui.Titulo, AutoSize = true });
-        contenido.Controls.Add(new Label { Text = "Recepción y caja de la barbería", ForeColor = Color.DimGray, AutoSize = true, Margin = new Padding(3, 0, 3, 16) });
+        var logo = Ui.Logo(56);
+        logo.Margin = new Padding(3, 0, 3, 18);
+        contenido.Controls.Add(logo);
+        contenido.Controls.Add(new Label { Text = Ui.Marca, Font = Ui.Titulo, ForeColor = Ui.Tinta, AutoSize = true });
+        contenido.Controls.Add(new Label { Text = "Recepción y caja", ForeColor = Ui.TextoSuave, AutoSize = true, Margin = new Padding(3, 2, 3, 24) });
         contenido.Controls.Add(Ui.Etiqueta("Correo"));
         contenido.Controls.Add(_email);
         contenido.Controls.Add(Ui.Etiqueta("Contraseña"));
         contenido.Controls.Add(_password);
         contenido.Controls.Add(_error);
-        _entrar.Margin = new Padding(3, 14, 3, 3);
+        _entrar.Margin = new Padding(3, 20, 3, 3);
+        _entrar.AutoSize = false;
+        _entrar.Size = new Size(_email.Width, 38);
         contenido.Controls.Add(_entrar);
         Controls.Add(contenido);
 

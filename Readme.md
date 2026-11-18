@@ -1,6 +1,6 @@
 Proyecto Final Programación 4 UASD
 
-Proyecto: BookingHub
+Proyecto: CerquilloApp
 
 Integrantes: 
 

@@ -1,4 +1,4 @@
-using BookingHub.WinForms.Formularios;
+﻿using BookingHub.WinForms.Formularios;
 using BookingHub.WinForms.Infraestructura;
 using BookingHub.WinForms.Models;
 
@@ -11,7 +11,7 @@ public class AgendaControl : UserControl
     private readonly ComboBox _barbero = Ui.Lista();
     private readonly ComboBox _estado = Ui.Lista();
     private readonly DataGridView _grilla = Ui.Grilla();
-    private readonly Label _resumen = new() { AutoSize = true, ForeColor = Color.DimGray, Dock = DockStyle.Bottom, Padding = new Padding(0, 8, 0, 0) };
+    private readonly Label _resumen = new() { AutoSize = true, ForeColor = Ui.TextoSuave, Dock = DockStyle.Bottom, Padding = new Padding(0, 8, 0, 0) };
     private List<CitaDto> _citas = [];
     private bool _cargado;
 
@@ -205,14 +205,17 @@ public class AgendaControl : UserControl
         if (e.RowIndex < 0 || _grilla.Columns[e.ColumnIndex].Name != nameof(FilaCita.Estado) || e.CellStyle is null)
             return;
 
-        e.CellStyle.BackColor = (e.Value as string) switch
+        var color = (e.Value as string) switch
         {
-            "Pendiente" => Color.FromArgb(255, 243, 205),
-            "Confirmada" => Color.FromArgb(207, 244, 252),
-            "EnProceso" => Color.FromArgb(207, 226, 255),
-            "Completada" => Color.FromArgb(209, 231, 221),
-            "Cancelada" or "NoShow" => Color.FromArgb(248, 215, 218),
-            _ => e.CellStyle.BackColor
+            "Pendiente" => Color.FromArgb(176, 122, 20),
+            "Confirmada" => Color.FromArgb(37, 99, 160),
+            "EnProceso" => Color.FromArgb(109, 76, 160),
+            "Completada" => Color.FromArgb(46, 125, 80),
+            "Cancelada" or "NoShow" => Color.FromArgb(180, 60, 60),
+            _ => e.CellStyle.ForeColor
         };
+        e.CellStyle.ForeColor = color;
+        e.CellStyle.SelectionForeColor = color;
+        e.CellStyle.Font = Ui.Destacado;
     }
 }

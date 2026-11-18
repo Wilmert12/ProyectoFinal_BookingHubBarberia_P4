@@ -1,4 +1,4 @@
-using BookingHub.WinForms.Models;
+﻿using BookingHub.WinForms.Models;
 using Refit;
 using System.Globalization;
 using System.Net;
@@ -19,17 +19,17 @@ public static class Mensajes
 
     public static void Error(IWin32Window? ventana, Exception ex)
     {
-        MessageBox.Show(ventana, Describir(ex), "BookingHub", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+        MessageBox.Show(ventana, Describir(ex), Ui.Marca, MessageBoxButtons.OK, MessageBoxIcon.Warning);
     }
 
     public static void Informacion(IWin32Window? ventana, string mensaje)
     {
-        MessageBox.Show(ventana, mensaje, "BookingHub", MessageBoxButtons.OK, MessageBoxIcon.Information);
+        MessageBox.Show(ventana, mensaje, Ui.Marca, MessageBoxButtons.OK, MessageBoxIcon.Information);
     }
 
     public static bool Confirmar(IWin32Window? ventana, string mensaje)
     {
-        return MessageBox.Show(ventana, mensaje, "BookingHub", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes;
+        return MessageBox.Show(ventana, mensaje, Ui.Marca, MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes;
     }
 
     public static string Describir(Exception ex) => ex switch

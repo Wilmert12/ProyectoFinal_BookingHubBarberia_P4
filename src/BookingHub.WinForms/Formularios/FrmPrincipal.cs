@@ -5,66 +5,136 @@ namespace BookingHub.WinForms.Formularios;
 
 public class FrmPrincipal : Form
 {
+    private readonly Panel _contenido = new() { Dock = DockStyle.Fill, Padding = new Padding(32, 24, 32, 24) };
+    private readonly FlowLayoutPanel _menu = new()
+    {
+        AutoSize = true,
+        AutoSizeMode = AutoSizeMode.GrowAndShrink,
+        WrapContents = false,
+        Margin = Padding.Empty,
+        Padding = Padding.Empty
+    };
+    private readonly List<(Button Boton, UserControl Modulo)> _secciones = [];
+
     public bool CerroSesion { get; private set; }
 
     public FrmPrincipal(Apis apis, Sesion sesion)
     {
-        Text = "BookingHub - Recepción y caja";
+        Text = $"{Ui.Marca} · Recepción y caja";
+        Icon = Ui.Icono();
         Font = Ui.Fuente;
         StartPosition = FormStartPosition.CenterScreen;
-        Size = new Size(1180, 760);
-        MinimumSize = new Size(900, 600);
+        Size = new Size(1200, 780);
+        MinimumSize = new Size(960, 620);
         BackColor = Ui.Fondo;
 
-        var encabezado = new Panel { Dock = DockStyle.Top, Height = 52, BackColor = Ui.Marino, Padding = new Padding(16, 0, 16, 0) };
+        var encabezado = new Panel { Dock = DockStyle.Top, Height = 64, BackColor = Ui.Superficie };
+        var linea = new Panel { Dock = DockStyle.Top, Height = 1, BackColor = Ui.Borde };
+
+        var logo = Ui.Logo(30);
+        logo.Location = new Point(28, 17);
         var marca = new Label
         {
-            Text = "BookingHub  Barbería",
+            Text = Ui.Marca,
             Font = Ui.Destacado,
-            ForeColor = Color.White,
+            ForeColor = Ui.Tinta,
             AutoSize = true,
-            Location = new Point(16, 15)
+            Location = new Point(66, 20)
         };
+
         var usuario = new Label
         {
             Text = $"{sesion.Actual!.Nombre} · {sesion.Actual.Rol}",
-            ForeColor = Color.Gainsboro,
-            AutoSize = true,
-            Anchor = AnchorStyles.Top | AnchorStyles.Right
+            ForeColor = Ui.TextoSuave,
+            AutoSize = true
         };
-        var cerrarSesion = Ui.Boton("Cerrar sesión");
-        cerrarSesion.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+        var cerrarSesion = Ui.Enlace("Cerrar sesión");
         cerrarSesion.Click += (_, _) =>
         {
             CerroSesion = true;
             Close();
         };
-        encabezado.Controls.AddRange([marca, usuario, cerrarSesion]);
-        encabezado.Resize += (_, _) =>
-        {
-            cerrarSesion.Location = new Point(encabezado.Width - cerrarSesion.Width - 16, 10);
-            usuario.Location = new Point(cerrarSesion.Left - usuario.Width - 14, 17);
-        };
 
-        var pestanas = new TabControl { Dock = DockStyle.Fill, Padding = new Point(16, 6) };
-        AgregarPestana(pestanas, "Agenda del día", new AgendaControl(apis));
-        AgregarPestana(pestanas, "Caja", new CajaControl(apis));
+        AgregarSeccion("Agenda", new AgendaControl(apis));
+        AgregarSeccion("Caja", new CajaControl(apis));
         if (sesion.EsAdmin)
         {
-            AgregarPestana(pestanas, "Catálogo", new CatalogoControl(apis));
-            AgregarPestana(pestanas, "Personal", new PersonalControl(apis));
-            AgregarPestana(pestanas, "Reportes", new ReportesControl(apis));
+            AgregarSeccion("Catálogo", new CatalogoControl(apis));
+            AgregarSeccion("Personal", new PersonalControl(apis));
+            AgregarSeccion("Reportes", new ReportesControl(apis));
         }
 
-        Controls.Add(pestanas);
+        encabezado.Controls.AddRange([logo, marca, _menu, usuario, cerrarSesion]);
+        encabezado.Resize += (_, _) =>
+        {
+            _menu.Location = new Point(Math.Max(marca.Right + 40, 200), 0);
+            cerrarSesion.Location = new Point(encabezado.Width - cerrarSesion.Width - 24, (encabezado.Height - cerrarSesion.Height) / 2);
+            usuario.Location = new Point(cerrarSesion.Left - usuario.Width - 8, (encabezado.Height - usuario.Height) / 2);
+        };
+
+        Controls.Add(_contenido);
+        Controls.Add(linea);
         Controls.Add(encabezado);
+
+        Mostrar(0);
     }
 
-    private static void AgregarPestana(TabControl pestanas, string titulo, UserControl modulo)
+    private void AgregarSeccion(string titulo, UserControl modulo)
     {
-        var pestana = new TabPage(titulo) { BackColor = Ui.Fondo, Padding = new Padding(16) };
+        var indice = _secciones.Count;
+        var boton = new BotonMenu
+        {
+            Text = titulo,
+            AutoSize = true,
+            AutoSizeMode = AutoSizeMode.GrowAndShrink,
+            Height = 64,
+            MinimumSize = new Size(0, 64),
+            Padding = new Padding(14, 0, 14, 0),
+            Margin = Padding.Empty,
+            FlatStyle = FlatStyle.Flat,
+            BackColor = Ui.Superficie,
+            ForeColor = Ui.TextoSuave,
+            Cursor = Cursors.Hand,
+            TabStop = false
+        };
+        boton.FlatAppearance.BorderSize = 0;
+        boton.FlatAppearance.MouseOverBackColor = Ui.Superficie;
+        boton.FlatAppearance.MouseDownBackColor = Ui.Superficie;
+        boton.Paint += (_, e) =>
+        {
+            if (_secciones.Count > indice && _secciones[indice].Modulo.Visible)
+            {
+                using var pincel = new SolidBrush(Ui.Acento);
+                e.Graphics.FillRectangle(pincel, 14, boton.Height - 3, boton.Width - 28, 3);
+            }
+        };
+        boton.Click += (_, _) => Mostrar(indice);
+
         modulo.Dock = DockStyle.Fill;
-        pestana.Controls.Add(modulo);
-        pestanas.TabPages.Add(pestana);
+        modulo.Visible = false;
+        _contenido.Controls.Add(modulo);
+        _menu.Controls.Add(boton);
+        _secciones.Add((boton, modulo));
+    }
+
+    private void Mostrar(int indice)
+    {
+        for (var i = 0; i < _secciones.Count; i++)
+        {
+            var (boton, modulo) = _secciones[i];
+            var activo = i == indice;
+            modulo.Visible = activo;
+            boton.ForeColor = activo ? Ui.Tinta : Ui.TextoSuave;
+            boton.Invalidate();
+        }
+    }
+
+    private sealed class BotonMenu : Button
+    {
+        public BotonMenu() => SetStyle(ControlStyles.Selectable, false);
+
+        protected override bool ShowFocusCues => false;
+
+        public override void NotifyDefault(bool value) => base.NotifyDefault(false);
     }
 }

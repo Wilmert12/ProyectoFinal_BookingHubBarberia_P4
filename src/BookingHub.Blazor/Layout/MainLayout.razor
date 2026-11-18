@@ -1,18 +1,18 @@
 ﻿@inherits LayoutComponentBase
 
-<header class="d-flex flex-column flex-md-row justify-content-md-between align-items-md-center gap-2 px-4 py-3 bg-dark">
-    <a class="d-flex align-items-baseline gap-2 text-white text-decoration-none" href="">
-        <span class="fs-5 fw-bold">BookingHub</span>
-        <span class="opacity-75">Barbería</span>
+<header class="marca-encabezado d-flex flex-column flex-md-row justify-content-md-between align-items-md-center gap-2 px-4 py-3">
+    <a class="d-flex align-items-center gap-2 text-decoration-none" href="">
+        <img src="logo.svg" alt="" width="32" height="32" />
+        <span class="marca-nombre">CerquilloApp</span>
     </a>
-    <nav class="nav nav-pills d-flex flex-wrap gap-1">
-        <NavLink class="nav-link link-light py-1" href="catalogo">Catálogo</NavLink>
-        <NavLink class="nav-link link-light py-1" href="reservar">Reservar</NavLink>
-        <NavLink class="nav-link link-light py-1" href="mis-citas">Mis citas</NavLink>
-        <NavLink class="nav-link link-light py-1" href="registro">Registro</NavLink>
+    <nav class="marca-menu nav d-flex flex-wrap gap-1">
+        <NavLink class="nav-link" href="catalogo">Catálogo</NavLink>
+        <NavLink class="nav-link" href="reservar">Reservar</NavLink>
+        <NavLink class="nav-link" href="mis-citas">Mis citas</NavLink>
+        <NavLink class="nav-link" href="registro">Registro</NavLink>
     </nav>
 </header>
 
-<main class="container py-4">
+<main class="container py-5">
     @Body
 </main>

@@ -1,4 +1,4 @@
-using BookingHub.WinForms.Infraestructura;
+﻿using BookingHub.WinForms.Infraestructura;
 using BookingHub.WinForms.Models;
 
 namespace BookingHub.WinForms.Modulos;
@@ -75,10 +75,10 @@ public class ReportesControl : UserControl
     {
         AutoSize = false,
         Size = new Size(220, 72),
-        BackColor = Color.White,
-        BorderStyle = BorderStyle.FixedSingle,
-        Padding = new Padding(10),
-        Margin = new Padding(0, 0, 10, 0),
+        BackColor = Ui.Superficie,
+        ForeColor = Ui.Tinta,
+        Padding = new Padding(16, 12, 16, 12),
+        Margin = new Padding(0, 0, 12, 0),
         Font = Ui.Destacado
     };
 

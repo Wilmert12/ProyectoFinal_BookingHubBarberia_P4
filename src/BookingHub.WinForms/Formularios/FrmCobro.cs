@@ -1,4 +1,4 @@
-using BookingHub.WinForms.Infraestructura;
+﻿using BookingHub.WinForms.Infraestructura;
 using BookingHub.WinForms.Models;
 
 namespace BookingHub.WinForms.Formularios;
@@ -33,7 +33,8 @@ public class FrmCobro : Form
         StartPosition = FormStartPosition.CenterParent;
         Size = new Size(820, 640);
         MinimumSize = new Size(700, 560);
-        BackColor = Color.White;
+        BackColor = Ui.Superficie;
+        Icon = Ui.Icono();
 
         var encabezado = new Label
         {

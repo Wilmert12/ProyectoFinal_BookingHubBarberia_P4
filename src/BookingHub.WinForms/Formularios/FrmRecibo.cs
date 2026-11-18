@@ -1,4 +1,4 @@
-using BookingHub.WinForms.Infraestructura;
+﻿using BookingHub.WinForms.Infraestructura;
 using BookingHub.WinForms.Models;
 using System.Drawing.Printing;
 using System.Text;
@@ -18,7 +18,8 @@ public class FrmRecibo : Form
         Font = Ui.Fuente;
         StartPosition = FormStartPosition.CenterParent;
         Size = new Size(480, 620);
-        BackColor = Color.White;
+        BackColor = Ui.Superficie;
+        Icon = Ui.Icono();
 
         var texto = new TextBox
         {
@@ -28,7 +29,8 @@ public class FrmRecibo : Form
             Dock = DockStyle.Fill,
             Font = _fuenteImpresion,
             Text = contenido.Replace("\n", Environment.NewLine),
-            BackColor = Color.White
+            BackColor = Ui.Superficie,
+            BorderStyle = BorderStyle.None
         };
 
         var imprimir = Ui.Boton("Imprimir", primario: true);
@@ -92,7 +94,7 @@ public static class Recibos
     public static string DeCobro(CitaDto cita, List<CitaDetalleDto> detalles, PagoDto pago)
     {
         var texto = new StringBuilder();
-        Centrado(texto, "BOOKINGHUB BARBERÍA");
+        Centrado(texto, "CERQUILLOAPP · BARBERÍA");
         Centrado(texto, "Recibo de pago");
         texto.AppendLine(new string('=', Ancho));
         texto.AppendLine($"Recibo No.: {pago.PagoId}");
@@ -122,7 +124,7 @@ public static class Recibos
     public static string DeCierre(DateTime fecha, List<PagoDto> pagos)
     {
         var texto = new StringBuilder();
-        Centrado(texto, "BOOKINGHUB BARBERÍA");
+        Centrado(texto, "CERQUILLOAPP · BARBERÍA");
         Centrado(texto, "Cierre de caja");
         Centrado(texto, fecha.ToString("dddd dd/MM/yyyy"));
         texto.AppendLine(new string('=', Ancho));
