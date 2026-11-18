@@ -4,6 +4,7 @@
     <Project Path="src/BookingHub.Application/BookingHub.Application.csproj" />
     <Project Path="src/BookingHub.Blazor/BookingHub.Blazor.csproj" />
     <Project Path="src/BookingHub.Infrastructure/BookingHub.Infrastructure.csproj" />
+    <Project Path="src/BookingHub.WinForms/BookingHub.WinForms.csproj" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/BookingHub.Application.UnitTests/BookingHub.Application.UnitTests.csproj" />
