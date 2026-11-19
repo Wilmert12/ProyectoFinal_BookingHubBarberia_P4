@@ -119,7 +119,7 @@ fun MisCitasScreen(
                             verticalArrangement = Arrangement.spacedBy(12.dp)
                         ) {
                             items(uiState.citas, key = { it.citaId }) { cita ->
-                                CitaCard(cita = cita)
+                                CitaDetalleCard(cita = cita)
                             }
                         }
                     }
@@ -129,8 +129,10 @@ fun MisCitasScreen(
     }
 }
 
+/** Tarjeta reutilizable para que cliente y barbero consulten los mismos detalles de una cita. */
 @Composable
-private fun CitaCard(cita: CitaDto) {
+fun CitaDetalleCard(cita: CitaDto, mostrarCliente: Boolean = false) {
+    var detallesExpandidos by remember(cita.citaId) { mutableStateOf(false) }
     val fechaMostrar = remember(cita.fechaInicio) {
         try {
             cita.fechaInicio.replace("T", " ").take(16)
@@ -195,25 +197,84 @@ private fun CitaCard(cita: CitaDto) {
                 color = MaterialTheme.colorScheme.onSurface
             )
 
-            val nombresServicios = cita.detalles.orEmpty().mapNotNull { detalle ->
-                detalle.nombre?.takeIf { nombre -> nombre.isNotBlank() }
-            }
-            if (nombresServicios.isNotEmpty()) {
+            if (mostrarCliente && !cita.clienteNombre.isNullOrBlank()) {
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text = "Servicios: ${nombresServicios.joinToString()}",
+                    text = "Cliente: ${cita.clienteNombre}",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurface
                 )
             }
 
-            if (!cita.notas.isNullOrBlank()) {
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    text = "Notas: ${cita.notas}",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+            TextButton(onClick = { detallesExpandidos = !detallesExpandidos }) {
+                Icon(
+                    imageVector = if (detallesExpandidos) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
+                    contentDescription = null
                 )
+                Text(if (detallesExpandidos) "Ocultar detalles" else "Ver detalles")
+            }
+
+            if (detallesExpandidos) {
+                HorizontalDivider()
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = "Horario: ${fechaMostrar.substringAfter(' ')} - ${formatearHora(cita.fechaFin)}",
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.SemiBold
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = "Servicios y productos",
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Bold
+                )
+                val detalles = cita.detalles.orEmpty()
+                if (detalles.isEmpty()) {
+                    Text(
+                        text = "La API no devolvió el detalle de esta cita.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                } else {
+                    detalles.forEach { detalle ->
+                        val subtotal = detalle.precioUnitario
+                            .multiply(java.math.BigDecimal(detalle.cantidad))
+                            .subtract(detalle.descuento)
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 4.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.Top
+                        ) {
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = detalle.nombre?.takeIf { it.isNotBlank() }
+                                        ?: "Servicio #${detalle.catalogoItemId}",
+                                    style = MaterialTheme.typography.bodyMedium
+                                )
+                                Text(
+                                    text = "${detalle.cantidad} × ${formatearMoneda(detalle.precioUnitario)}" +
+                                        if (detalle.descuento > java.math.BigDecimal.ZERO) {
+                                            " · descuento ${formatearMoneda(detalle.descuento)}"
+                                        } else "",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                            Text(
+                                text = formatearMoneda(subtotal),
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                        }
+                    }
+                }
+
+                if (!cita.notas.isNullOrBlank()) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text("Notas: ${cita.notas}", style = MaterialTheme.typography.bodySmall)
+                }
             }
 
             Spacer(modifier = Modifier.height(8.dp))
@@ -227,3 +288,9 @@ private fun CitaCard(cita: CitaDto) {
         }
     }
 }
+
+private fun formatearHora(fecha: String): String =
+    fecha.substringAfter('T', fecha).take(5).ifBlank { "--:--" }
+
+private fun formatearMoneda(valor: java.math.BigDecimal): String =
+    "RD$ ${String.format(java.util.Locale("es", "DO"), "%.2f", valor)}"
