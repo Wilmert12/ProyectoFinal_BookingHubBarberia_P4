@@ -174,6 +174,12 @@ fun HomeScreen(
             )
 
             Spacer(modifier = Modifier.height(24.dp))
+            TextButton(
+                onClick = { onNavigate(Ruta.AccesoBarbero.ruta) },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("Acceso para barberos")
+            }
         }
     }
 }
