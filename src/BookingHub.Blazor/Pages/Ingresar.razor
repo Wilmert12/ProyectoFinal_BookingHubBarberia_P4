@@ -1,0 +1,82 @@
+@page "/ingresar"
+@inject IAuthApi AuthApi
+@inject SesionUsuario Sesion
+@inject NavigationManager Navegacion
+
+<PageTitle>Ingresar</PageTitle>
+
+<div class="row justify-content-center">
+    <div class="col-sm-9 col-md-6 col-lg-4">
+        <h1 class="mb-1">Ingresar</h1>
+        <p class="text-body-secondary mb-4">Acceso para barberos.</p>
+
+        <form class="d-flex flex-column gap-3" @onsubmit="Entrar">
+            <div class="d-flex flex-column gap-1">
+                <label class="form-label fw-semibold mb-0" for="correo">Correo</label>
+                <input id="correo" class="form-control" type="email" autocomplete="username" @bind="correo" />
+            </div>
+            <div class="d-flex flex-column gap-1">
+                <label class="form-label fw-semibold mb-0" for="clave">Contraseña</label>
+                <input id="clave" class="form-control" type="password" autocomplete="current-password" @bind="clave" />
+            </div>
+
+            @if (error is not null)
+            {
+                <div class="alert alert-danger mb-0">@error</div>
+            }
+
+            <button class="btn btn-primary" type="submit" disabled="@enviando">@(enviando ? "Entrando..." : "Entrar")</button>
+        </form>
+    </div>
+</div>
+
+@code {
+    private string? correo;
+    private string? clave;
+    private string? error;
+    private bool enviando;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await Sesion.Cargar();
+        if (Sesion.EsBarbero)
+            Navegacion.NavigateTo("mi-agenda");
+    }
+
+    private async Task Entrar()
+    {
+        error = null;
+        if (string.IsNullOrWhiteSpace(correo) || string.IsNullOrEmpty(clave))
+        {
+            error = "Escribe tu correo y tu contraseña.";
+            return;
+        }
+
+        enviando = true;
+        try
+        {
+            var sesion = await AuthApi.Login(new LoginDto(correo.Trim(), clave));
+            if (sesion.Rol != "Barbero")
+            {
+                error = "Esta página es para barberos. Recepción y administración usan el programa de escritorio.";
+                return;
+            }
+
+            await Sesion.Iniciar(sesion);
+            Navegacion.NavigateTo("mi-agenda");
+        }
+        catch (Refit.ApiException ex) when (ex.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+        {
+            error = "Correo o contraseña incorrectos.";
+        }
+        catch (Exception ex) when (Formato.EsErrorDeApi(ex))
+        {
+            error = "No se pudo conectar con la API. Intenta de nuevo.";
+        }
+        finally
+        {
+            clave = null;
+            enviando = false;
+        }
+    }
+}

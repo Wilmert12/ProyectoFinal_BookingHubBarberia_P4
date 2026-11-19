@@ -1,4 +1,7 @@
 ﻿@inherits LayoutComponentBase
+@implements IDisposable
+@inject SesionUsuario Sesion
+@inject NavigationManager Navegacion
 
 <header class="marca-encabezado d-flex flex-column flex-md-row justify-content-md-between align-items-md-center gap-2 px-4 py-3">
     <a class="d-flex align-items-center gap-2 text-decoration-none" href="">
@@ -6,13 +9,41 @@
         <span class="marca-nombre">CerquilloApp</span>
     </a>
     <nav class="marca-menu nav d-flex flex-wrap gap-1">
-        <NavLink class="nav-link" href="catalogo">Catálogo</NavLink>
-        <NavLink class="nav-link" href="reservar">Reservar</NavLink>
-        <NavLink class="nav-link" href="mis-citas">Mis citas</NavLink>
-        <NavLink class="nav-link" href="registro">Registro</NavLink>
+        @if (Sesion.EsBarbero)
+        {
+            <NavLink class="nav-link" href="mi-agenda">Mi agenda</NavLink>
+            <NavLink class="nav-link" href="catalogo">Catálogo</NavLink>
+            <button type="button" class="nav-link btn btn-link" @onclick="Salir">Salir</button>
+        }
+        else
+        {
+            <NavLink class="nav-link" href="catalogo">Catálogo</NavLink>
+            <NavLink class="nav-link" href="reservar">Reservar</NavLink>
+            <NavLink class="nav-link" href="mis-citas">Mis citas</NavLink>
+            <NavLink class="nav-link" href="registro">Registro</NavLink>
+            <NavLink class="nav-link" href="ingresar">Barberos</NavLink>
+        }
     </nav>
 </header>
 
 <main class="container py-5">
     @Body
 </main>
+
+@code {
+    protected override async Task OnInitializedAsync()
+    {
+        Sesion.Cambio += AlCambiarSesion;
+        await Sesion.Cargar();
+    }
+
+    private void AlCambiarSesion() => InvokeAsync(StateHasChanged);
+
+    private async Task Salir()
+    {
+        await Sesion.Cerrar();
+        Navegacion.NavigateTo("ingresar");
+    }
+
+    public void Dispose() => Sesion.Cambio -= AlCambiarSesion;
+}

@@ -41,7 +41,7 @@ else
     [Parameter]
     public string Vacio { get; set; } = "Sin citas.";
 
-    private static string ClaseEstado(string? estado) => estado switch
+    public static string ClaseEstado(string? estado) => estado switch
     {
         "Pendiente" => "text-bg-warning",
         "Confirmada" => "text-bg-info",
