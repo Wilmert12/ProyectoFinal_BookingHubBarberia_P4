@@ -7,9 +7,12 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.compose.*
 import com.bookinghub.app.ui.screens.*
 import com.bookinghub.app.ui.theme.Acento
+import com.bookinghub.app.util.CitasCache
+import com.bookinghub.app.util.SesionBarbero
 import com.bookinghub.app.util.SesionCliente
 
 sealed class Ruta(val ruta: String, val titulo: String, val icono: ImageVector) {
@@ -19,14 +22,24 @@ sealed class Ruta(val ruta: String, val titulo: String, val icono: ImageVector) 
     object Reservar : Ruta("reservar", "Reservar", Icons.Default.Add)
     object MisCitas : Ruta("mis_citas", "Mis Citas", Icons.Default.DateRange)
     object Registro : Ruta("registro", "Registro", Icons.Default.PersonAdd)
+    object AccesoBarbero : Ruta("acceso_barbero", "Acceso barbero", Icons.Default.Badge)
+    object AgendaBarbero : Ruta("agenda_barbero", "Mi agenda", Icons.Default.EventNote)
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AppNavigation() {
     val navController = rememberNavController()
+    val context = LocalContext.current
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val rutaActual = navBackStackEntry?.destination?.route
+    val destinoInicial = remember {
+        when {
+            SesionBarbero.haySesion -> Ruta.AgendaBarbero.ruta
+            SesionCliente.hayPerfilGuardado -> Ruta.Home.ruta
+            else -> Ruta.Registro.ruta
+        }
+    }
 
     val pantallasConNavBar = listOf(
         Ruta.Home, Ruta.Catalogo, Ruta.Barberos, Ruta.Reservar, Ruta.MisCitas
@@ -67,15 +80,18 @@ fun AppNavigation() {
     ) { paddingValues ->
         NavHost(
             navController = navController,
-            startDestination = if (SesionCliente.hayPerfilGuardado) Ruta.Home.ruta else Ruta.Registro.ruta,
+            startDestination = destinoInicial,
             modifier = Modifier.padding(paddingValues)
         ) {
             composable(Ruta.Registro.ruta) {
-                RegistroScreen(onRegistroExitoso = {
-                    navController.navigate(Ruta.Home.ruta) {
-                        popUpTo(Ruta.Registro.ruta) { inclusive = true }
-                    }
-                })
+                RegistroScreen(
+                    onRegistroExitoso = {
+                        navController.navigate(Ruta.Home.ruta) {
+                            popUpTo(Ruta.Registro.ruta) { inclusive = true }
+                        }
+                    },
+                    onAccesoBarbero = { navController.navigate(Ruta.AccesoBarbero.ruta) }
+                )
             }
             composable(Ruta.Home.ruta) {
                 HomeScreen(onNavigate = { ruta -> navController.navigate(ruta) })
@@ -90,6 +106,35 @@ fun AppNavigation() {
                 })
             }
             composable(Ruta.MisCitas.ruta) { MisCitasScreen() }
+            composable(Ruta.AccesoBarbero.ruta) {
+                AccesoBarberoScreen(
+                    onAccesoExitoso = {
+                        navController.navigate(Ruta.AgendaBarbero.ruta) {
+                            popUpTo(navController.graph.startDestinationId) { inclusive = true }
+                            launchSingleTop = true
+                        }
+                    },
+                    onVolver = { navController.popBackStack() }
+                )
+            }
+            composable(Ruta.AgendaBarbero.ruta) {
+                AgendaBarberoScreen(
+                    onCerrarSesion = {
+                        val usuarioId = SesionBarbero.sesionActual?.usuarioId
+                        SesionBarbero.borrar(context)
+                        if (usuarioId != null) CitasCache.borrarAgendaBarbero(context, usuarioId)
+                        val siguienteRuta = if (SesionCliente.hayPerfilGuardado) {
+                            Ruta.Home.ruta
+                        } else {
+                            Ruta.Registro.ruta
+                        }
+                        navController.navigate(siguienteRuta) {
+                            popUpTo(navController.graph.startDestinationId) { inclusive = true }
+                            launchSingleTop = true
+                        }
+                    }
+                )
+            }
         }
     }
 }

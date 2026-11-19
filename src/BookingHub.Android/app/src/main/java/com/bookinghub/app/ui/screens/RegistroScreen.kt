@@ -23,6 +23,7 @@ import com.bookinghub.app.ui.viewmodel.ClienteViewModel
 @Composable
 fun RegistroScreen(
     onRegistroExitoso: () -> Unit,
+    onAccesoBarbero: () -> Unit,
     viewModel: ClienteViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -142,6 +143,13 @@ fun RegistroScreen(
                     fontWeight = FontWeight.Bold
                 )
             }
+        }
+
+        TextButton(
+            onClick = onAccesoBarbero,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text("¿Eres barbero? Inicia sesión aquí")
         }
     }
 }
