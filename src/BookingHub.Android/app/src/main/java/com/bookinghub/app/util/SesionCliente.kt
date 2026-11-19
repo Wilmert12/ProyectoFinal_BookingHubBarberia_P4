@@ -1,16 +1,8 @@
 package com.bookinghub.app.util
 
 import android.content.Context
-import android.security.keystore.KeyGenParameterSpec
-import android.security.keystore.KeyProperties
-import android.util.Base64
 import com.bookinghub.app.data.model.ClienteDto
 import com.google.gson.Gson
-import java.security.KeyStore
-import javax.crypto.Cipher
-import javax.crypto.KeyGenerator
-import javax.crypto.SecretKey
-import javax.crypto.spec.GCMParameterSpec
 
 data class ClienteSesion(
     val clienteId: Int,
@@ -21,8 +13,6 @@ object SesionCliente {
     private const val PREFERENCIAS = "sesion_cliente"
     private const val CLAVE_CLIENTE = "cliente_cifrado"
     private const val ALIAS_CLAVE = "bookinghub_cliente_aes"
-    private const val ALMACEN_ANDROID = "AndroidKeyStore"
-    private const val TAMANO_IV = 12
     private val gson = Gson()
 
     @Volatile
@@ -59,38 +49,11 @@ object SesionCliente {
         context.getSharedPreferences(PREFERENCIAS, Context.MODE_PRIVATE)
 
     private fun cifrar(valor: String): String {
-        val cipher = Cipher.getInstance("AES/GCM/NoPadding")
-        cipher.init(Cipher.ENCRYPT_MODE, obtenerClave())
-        val iv = cipher.iv
-        val contenido = cipher.doFinal(valor.toByteArray(Charsets.UTF_8))
-        return Base64.encodeToString(iv + contenido, Base64.NO_WRAP)
+        return CifradoLocal.cifrar(valor, ALIAS_CLAVE)
     }
 
     private fun descifrar(valor: String): ClienteSesion? {
-        val bytes = Base64.decode(valor, Base64.NO_WRAP)
-        require(bytes.size > TAMANO_IV) { "La sesión guardada no es válida." }
-        val iv = bytes.copyOfRange(0, TAMANO_IV)
-        val contenido = bytes.copyOfRange(TAMANO_IV, bytes.size)
-        val cipher = Cipher.getInstance("AES/GCM/NoPadding")
-        cipher.init(Cipher.DECRYPT_MODE, obtenerClave(), GCMParameterSpec(128, iv))
-        return gson.fromJson(String(cipher.doFinal(contenido), Charsets.UTF_8), ClienteSesion::class.java)
-    }
-
-    private fun obtenerClave(): SecretKey {
-        val keyStore = KeyStore.getInstance(ALMACEN_ANDROID).apply { load(null) }
-        (keyStore.getKey(ALIAS_CLAVE, null) as? SecretKey)?.let { return it }
-
-        val keyGenerator = KeyGenerator.getInstance(KeyProperties.KEY_ALGORITHM_AES, ALMACEN_ANDROID)
-        keyGenerator.init(
-            KeyGenParameterSpec.Builder(
-                ALIAS_CLAVE,
-                KeyProperties.PURPOSE_ENCRYPT or KeyProperties.PURPOSE_DECRYPT
-            )
-                .setBlockModes(KeyProperties.BLOCK_MODE_GCM)
-                .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_NONE)
-                .setRandomizedEncryptionRequired(true)
-                .build()
-        )
-        return keyGenerator.generateKey()
+        val contenido = CifradoLocal.descifrar(valor, ALIAS_CLAVE)
+        return gson.fromJson(contenido, ClienteSesion::class.java)
     }
 }
