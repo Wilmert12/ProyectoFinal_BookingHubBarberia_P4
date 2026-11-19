@@ -46,6 +46,34 @@ fun AppNavigation() {
     )
     val mostrarNavBar = rutaActual in pantallasConNavBar.map { it.ruta }
 
+    // El controlador puede restaurar una ruta antigua después de cerrar sesión o reiniciar la app.
+    LaunchedEffect(rutaActual) {
+        val tieneSesionBarbero = SesionBarbero.haySesion
+        val tienePerfilCliente = SesionCliente.hayPerfilGuardado
+        val rutasCliente = setOf(
+            Ruta.Home.ruta,
+            Ruta.Catalogo.ruta,
+            Ruta.Barberos.ruta,
+            Ruta.Reservar.ruta,
+            Ruta.MisCitas.ruta
+        )
+        val destinoSeguro = when {
+            tieneSesionBarbero && rutaActual != Ruta.AgendaBarbero.ruta -> Ruta.AgendaBarbero.ruta
+            !tieneSesionBarbero && rutaActual == Ruta.AgendaBarbero.ruta -> {
+                if (tienePerfilCliente) Ruta.Home.ruta else Ruta.Registro.ruta
+            }
+            !tieneSesionBarbero && !tienePerfilCliente && rutaActual in rutasCliente -> Ruta.Registro.ruta
+            else -> null
+        }
+
+        if (destinoSeguro != null && destinoSeguro != rutaActual) {
+            navController.navigate(destinoSeguro) {
+                popUpTo(navController.graph.startDestinationId) { inclusive = true }
+                launchSingleTop = true
+            }
+        }
+    }
+
     Scaffold(
         bottomBar = {
             if (mostrarNavBar) {
