@@ -40,7 +40,7 @@
 
                 <div class="d-flex flex-column gap-1">
                     <label class="form-label fw-semibold mb-0" for="servicio">Servicio</label>
-                    <select id="servicio" class="form-select" @bind="ServicioId">
+                    <select id="servicio" class="form-select" @bind="ServicioId" @bind:after="CargarHoras">
                         <option value="">Elige un servicio</option>
                         @foreach (var servicio in servicios)
                         {
@@ -51,7 +51,7 @@
 
                 <div class="d-flex flex-column gap-1">
                     <label class="form-label fw-semibold mb-0" for="barbero">Barbero</label>
-                    <select id="barbero" class="form-select" @bind="BarberoId">
+                    <select id="barbero" class="form-select" @bind="BarberoId" @bind:after="CargarHoras">
                         <option value="">Elige un barbero</option>
                         @foreach (var barbero in barberos)
                         {
@@ -63,17 +63,21 @@
                 <div class="d-flex flex-column flex-sm-row gap-3">
                     <div class="d-flex flex-column gap-1 flex-grow-1">
                         <label class="form-label fw-semibold mb-0" for="fecha">Fecha</label>
-                        <input id="fecha" class="form-control" type="date" min="@Hoy.ToString("yyyy-MM-dd")" @bind="fecha" />
+                        <input id="fecha" class="form-control" type="date" min="@Hoy.ToString("yyyy-MM-dd")" @bind="fecha" @bind:after="CargarHoras" />
                     </div>
                     <div class="d-flex flex-column gap-1 flex-grow-1">
                         <label class="form-label fw-semibold mb-0" for="hora">Hora</label>
-                        <select id="hora" class="form-select" @bind="hora">
-                            <option value="">Elige una hora</option>
-                            @foreach (var opcion in Horas)
+                        <select id="hora" class="form-select" @bind="hora" disabled="@(horas.Count == 0)">
+                            <option value="">@(horas.Count == 0 ? "—" : "Elige una hora")</option>
+                            @foreach (var opcion in horas)
                             {
                                 <option value="@opcion">@opcion</option>
                             }
                         </select>
+                        @if (mensajeHoras is not null)
+                        {
+                            <small class="text-body-secondary">@mensajeHoras</small>
+                        }
                     </div>
                 </div>
 
@@ -103,9 +107,6 @@
 
 @code {
     private const int EstadoPendienteId = 1;
-    private static readonly string[] Horas = Enumerable.Range(0, 18)
-        .Select(i => new TimeOnly(9, 0).AddMinutes(i * 30).ToString("HH:mm"))
-        .ToArray();
 
     [SupplyParameterFromQuery]
     public int? ServicioId { get; set; }
@@ -118,6 +119,8 @@
     private int? clienteId;
     private DateOnly fecha = DateOnly.FromDateTime(DateTime.Today.AddDays(1));
     private string? hora;
+    private List<string> horas = [];
+    private string? mensajeHoras = "Elige servicio, barbero y fecha para ver las horas libres.";
     private string? notas;
     private CitaDto? reservada;
     private bool cargando = true;
@@ -151,6 +154,35 @@
         {
             cargando = false;
         }
+
+        await CargarHoras();
+    }
+
+    private async Task CargarHoras()
+    {
+        if (ServicioSeleccionado is not { } servicio || BarberoId is not { } barberoId)
+        {
+            horas = [];
+            hora = null;
+            mensajeHoras = "Elige servicio, barbero y fecha para ver las horas libres.";
+            return;
+        }
+
+        mensajeHoras = "Buscando horas libres...";
+        try
+        {
+            var disponibilidad = await BarberoApi.GetDisponibilidad(barberoId, fecha, servicio.DuracionMin ?? 30);
+            horas = disponibilidad.Horarios.Select(h => h.Inicio.ToString("HH:mm")).ToList();
+            mensajeHoras = horas.Count == 0 ? "Este barbero no tiene horas libres ese día. Prueba otra fecha." : null;
+        }
+        catch (Exception ex) when (Formato.EsErrorDeApi(ex))
+        {
+            horas = [];
+            mensajeHoras = "No se pudieron cargar las horas libres.";
+        }
+
+        if (hora is not null && !horas.Contains(hora))
+            hora = null;
     }
 
     private async Task ConfirmarReserva()
@@ -181,6 +213,11 @@
             reservada = await CitaApi.CrearCita(cita);
             Sesion.ClienteId = clienteId;
         }
+        catch (Refit.ApiException ex) when (ex.Content?.Contains("CITA_CHOQUE") == true)
+        {
+            error = "Esa hora se acaba de ocupar. Elige otra.";
+            await CargarHoras();
+        }
         catch (Exception ex) when (Formato.EsErrorDeApi(ex))
         {
             error = "No se pudo reservar la cita. Verifica tu número de cliente e intenta de nuevo.";
@@ -206,10 +243,11 @@
         return null;
     }
 
-    private void NuevaReserva()
+    private async Task NuevaReserva()
     {
         reservada = null;
         hora = null;
         notas = null;
+        await CargarHoras();
     }
 }

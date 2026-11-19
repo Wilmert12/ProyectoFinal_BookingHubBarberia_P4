@@ -1,0 +1,203 @@
+@page "/mi-agenda"
+@inject ICitaApi CitaApi
+@inject IBarberoApi BarberoApi
+@inject SesionUsuario Sesion
+@inject NavigationManager Navegacion
+
+<PageTitle>Mi agenda</PageTitle>
+
+@if (Sesion.Actual is { } usuario)
+{
+    <div class="d-flex flex-column flex-md-row justify-content-md-between align-items-md-end gap-3 mb-4">
+        <div>
+            <p class="text-body-secondary mb-1">Hola, @usuario.Nombre</p>
+            <h1 class="mb-0">Mi agenda</h1>
+        </div>
+        <div class="d-flex flex-wrap align-items-center gap-2">
+            <button type="button" class="btn btn-outline-secondary" @onclick="() => CambiarDia(-1)" aria-label="Día anterior">‹</button>
+            <input class="form-control w-auto" type="date" @bind="fecha" @bind:after="Cargar" aria-label="Fecha" />
+            <button type="button" class="btn btn-outline-secondary" @onclick="() => CambiarDia(1)" aria-label="Día siguiente">›</button>
+            @if (fecha != Hoy)
+            {
+                <button type="button" class="btn btn-link" @onclick="IrAHoy">Hoy</button>
+            }
+        </div>
+    </div>
+
+    <p class="fw-semibold mb-3">@Formato.FechaLarga(fecha)</p>
+
+    @if (cargando)
+    {
+        <p class="text-body-secondary">Cargando agenda...</p>
+    }
+    else if (error is not null)
+    {
+        <div class="alert alert-danger">@error</div>
+    }
+    else
+    {
+        <div class="row g-3 mb-4">
+            <div class="col-6 col-md-3">
+                <div class="card h-100"><div class="card-body">
+                    <div class="text-body-secondary small">Citas</div>
+                    <div class="fs-4 fw-semibold">@Activas.Count</div>
+                </div></div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="card h-100"><div class="card-body">
+                    <div class="text-body-secondary small">Completadas</div>
+                    <div class="fs-4 fw-semibold">@citas.Count(c => c.Estado == "Completada")</div>
+                </div></div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="card h-100"><div class="card-body">
+                    <div class="text-body-secondary small">Próxima</div>
+                    <div class="fs-4 fw-semibold">@(Proxima?.FechaInicio.ToString("HH:mm") ?? "—")</div>
+                </div></div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="card h-100"><div class="card-body">
+                    <div class="text-body-secondary small">Total del día</div>
+                    <div class="fs-4 fw-semibold">@Formato.Precio(Activas.Sum(c => c.Total))</div>
+                </div></div>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-lg-8">
+                <h2 class="h5 mb-3">Citas</h2>
+                @if (citas.Count == 0)
+                {
+                    <p class="text-body-secondary">No tienes citas este día.</p>
+                }
+                else
+                {
+                    <ul class="list-group">
+                        @foreach (var cita in citas)
+                        {
+                            <li class="list-group-item d-flex gap-3 py-3 @(EsLibre(cita) ? "opacity-50" : "")">
+                                <div class="agenda-hora">
+                                    <div class="fw-semibold">@cita.FechaInicio.ToString("HH:mm")</div>
+                                    <div class="small text-body-secondary">@cita.FechaFin.ToString("HH:mm")</div>
+                                </div>
+                                <div class="flex-grow-1">
+                                    <div class="d-flex flex-wrap justify-content-between gap-2">
+                                        <span class="fw-semibold">@cita.ClienteNombre</span>
+                                        <span class="badge rounded-pill align-self-start @TablaCitas.ClaseEstado(cita.Estado)">@cita.Estado</span>
+                                    </div>
+                                    <div class="text-body-secondary">@Servicios(cita)</div>
+                                    <div class="small">@Formato.Precio(cita.Total)</div>
+                                </div>
+                            </li>
+                        }
+                    </ul>
+                }
+            </div>
+            <div class="col-lg-4">
+                <h2 class="h5 mb-3">Horas libres</h2>
+                @if (libres is null)
+                {
+                    <p class="text-body-secondary">No se pudieron calcular.</p>
+                }
+                else if (libres.Count == 0)
+                {
+                    <p class="text-body-secondary">Sin horas libres este día.</p>
+                }
+                else
+                {
+                    <div class="d-flex flex-wrap gap-2">
+                        @foreach (var libre in libres)
+                        {
+                            <span class="badge rounded-pill text-bg-light border fw-normal px-3 py-2">@libre.Inicio.ToString("HH:mm")</span>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+    }
+}
+
+@code {
+    private DateOnly fecha = DateOnly.FromDateTime(DateTime.Today);
+    private List<CitaDto> citas = [];
+    private List<HorarioLibreDto>? libres;
+    private int? barberoId;
+    private bool cargando = true;
+    private string? error;
+
+    private static DateOnly Hoy => DateOnly.FromDateTime(DateTime.Today);
+
+    private List<CitaDto> Activas => citas.Where(c => !EsLibre(c)).ToList();
+
+    private CitaDto? Proxima => fecha == Hoy
+        ? Activas.FirstOrDefault(c => c.FechaInicio >= DateTime.Now)
+        : Activas.FirstOrDefault();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await Sesion.Cargar();
+        if (!Sesion.EsBarbero)
+        {
+            Navegacion.NavigateTo("ingresar");
+            return;
+        }
+
+        await Cargar();
+    }
+
+    private async Task CambiarDia(int dias)
+    {
+        fecha = fecha.AddDays(dias);
+        await Cargar();
+    }
+
+    private async Task IrAHoy()
+    {
+        fecha = Hoy;
+        await Cargar();
+    }
+
+    private async Task Cargar()
+    {
+        cargando = true;
+        error = null;
+
+        try
+        {
+            barberoId ??= (await BarberoApi.GetBarberos())
+                .FirstOrDefault(b => b.UsuarioId == Sesion.Actual!.UsuarioId)?.BarberoId;
+
+            var citasTarea = CitaApi.GetMisCitas(fecha);
+            var disponibilidad = barberoId is { } id
+                ? await BarberoApi.GetDisponibilidad(id, fecha, 30)
+                : null;
+
+            citas = await citasTarea;
+            libres = disponibilidad?.Horarios;
+        }
+        catch (Refit.ApiException ex) when (ex.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+        {
+            await Sesion.Cerrar();
+            Navegacion.NavigateTo("ingresar");
+        }
+        catch (Refit.ApiException ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
+        {
+            error = "Tu usuario no tiene un perfil de barbero. Pide al administrador que lo cree.";
+        }
+        catch (Exception ex) when (Formato.EsErrorDeApi(ex))
+        {
+            error = "No se pudo cargar la agenda. Verifica tu conexión e intenta de nuevo.";
+        }
+        finally
+        {
+            cargando = false;
+        }
+    }
+
+    private static bool EsLibre(CitaDto cita) => cita.Estado is "Cancelada" or "NoShow";
+
+    private static string Servicios(CitaDto cita) =>
+        cita.Detalles is { Count: > 0 } detalles
+            ? string.Join(", ", detalles.Select(d => d.Nombre))
+            : cita.Notas ?? string.Empty;
+}

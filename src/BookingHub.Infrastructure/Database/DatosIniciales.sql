@@ -58,11 +58,11 @@ WHERE NOT EXISTS (SELECT 1 FROM MetodosPago m WHERE m.descripcion = v.d);
 
 INSERT INTO CatalogoItems (nombre, descripcion, esServicio, precio, duracionMin)
 SELECT v.n, v.d, v.s, v.p, v.m FROM (VALUES
-    ('Corte clásico', 'Corte a tijera o máquina con terminación', 1, 8.00, 30),
-    ('Corte + Barba', 'Corte completo con perfilado de barba', 1, 12.00, 40),
-    ('Perfilado de barba', 'Arreglo y delineado de barba', 1, 5.00, 20),
-    ('Cera Mate', 'Fijación media, acabado natural', 0, 10.00, NULL),
-    ('Aceite para barba', 'Hidrata y suaviza la barba', 0, 7.50, NULL)) v(n, d, s, p, m)
+    ('Corte clásico', 'Corte a tijera o máquina con terminación', 1, 400.00, 30),
+    ('Corte + Barba', 'Corte completo con perfilado de barba', 1, 600.00, 40),
+    ('Perfilado de barba', 'Arreglo y delineado de barba', 1, 250.00, 20),
+    ('Cera Mate', 'Fijación media, acabado natural', 0, 500.00, NULL),
+    ('Aceite para barba', 'Hidrata y suaviza la barba', 0, 450.00, NULL)) v(n, d, s, p, m)
 WHERE NOT EXISTS (SELECT 1 FROM CatalogoItems c WHERE c.nombre = v.n);
 
 SELECT 'Cliente' AS tipo, clienteId AS id, nombre AS nombre FROM Clientes

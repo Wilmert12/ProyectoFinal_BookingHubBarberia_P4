@@ -8,7 +8,7 @@ namespace BookingHub.API.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-public class BarberosController(BarberoService barberoService) : ControllerBase
+public class BarberosController(BarberoService barberoService, DisponibilidadService disponibilidadService) : ControllerBase
 {
     [HttpGet]
     public async Task<ActionResult<List<BarberoDto>>> GetBarberos(bool incluirInactivos = false)
@@ -25,6 +25,21 @@ public class BarberosController(BarberoService barberoService) : ControllerBase
     public async Task<ActionResult<BarberoDto>> GetBarbero(int id)
     {
         var result = await barberoService.Buscar(id);
+
+        if (result.IsFailure)
+            return BadRequest(result.Error);
+
+        if (result.Value == null)
+            return NotFound();
+
+        return Ok(result.Value);
+    }
+
+    /// <summary>Horas en las que el barbero puede empezar una cita de la duración indicada.</summary>
+    [HttpGet("{id}/disponibilidad")]
+    public async Task<ActionResult<DisponibilidadDto>> GetDisponibilidad(int id, DateOnly fecha, int duracionMin = DisponibilidadService.IntervaloMin)
+    {
+        var result = await disponibilidadService.Calcular(id, fecha, duracionMin);
 
         if (result.IsFailure)
             return BadRequest(result.Error);

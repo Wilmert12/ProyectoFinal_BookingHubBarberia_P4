@@ -18,6 +18,9 @@ public class CitaService(
         if (Validar(cita) is { } error)
             return Result.Failure(error);
 
+        if (await ChocaConOtraCita(cita))
+            return Result.Failure(new Error("CITA_CHOQUE", "El barbero ya tiene otra cita en ese horario."));
+
         if (cita.Detalles is { Count: > 0 })
             cita.Total = cita.Detalles.Sum(d => d.Cantidad * d.PrecioUnitario - d.Descuento);
 
@@ -49,6 +52,37 @@ public class CitaService(
         }
 
         return null;
+    }
+
+    private async Task<bool> ChocaConOtraCita(CitaDto cita)
+    {
+        await using var contexto = await contextFactory.CreateDbContextAsync();
+
+        var liberaHorario = await contexto.EstadosCita
+            .Where(e => e.EstadoCitaId == cita.EstadoCitaId)
+            .Select(e => e.LiberaHorario)
+            .FirstOrDefaultAsync();
+        if (liberaHorario)
+            return false;
+
+        // Al editar sin mover la cita (por ejemplo, solo cambiar el estado) no se vuelve a validar.
+        var actual = await contexto.Citas
+            .AsNoTracking()
+            .Where(c => c.CitaId == cita.CitaId)
+            .Select(c => new { c.BarberoId, c.FechaInicio, c.FechaFin, c.EstadoCita.LiberaHorario })
+            .FirstOrDefaultAsync();
+        if (actual is not null && !actual.LiberaHorario
+            && actual.BarberoId == cita.BarberoId
+            && actual.FechaInicio == cita.FechaInicio
+            && actual.FechaFin == cita.FechaFin)
+            return false;
+
+        return await contexto.Citas.AnyAsync(c =>
+            c.CitaId != cita.CitaId
+            && c.BarberoId == cita.BarberoId
+            && !c.EstadoCita.LiberaHorario
+            && c.FechaInicio < cita.FechaFin
+            && c.FechaFin > cita.FechaInicio);
     }
 
     private async Task<bool> Existe(int citaId)

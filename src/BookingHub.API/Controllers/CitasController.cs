@@ -8,7 +8,7 @@ namespace BookingHub.API.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-public class CitasController(CitaService citaService) : ControllerBase
+public class CitasController(CitaService citaService, BarberoService barberoService) : ControllerBase
 {
     [HttpGet]
     public async Task<ActionResult<List<CitaDto>>> GetCitas(int? clienteId, int? barberoId, DateOnly? fecha)
@@ -23,6 +23,34 @@ public class CitasController(CitaService citaService) : ControllerBase
             (clienteId == null || c.ClienteId == clienteId) &&
             (barberoId == null || c.BarberoId == barberoId) &&
             (desde == null || (c.FechaInicio >= desde && c.FechaInicio < hasta)));
+
+        if (result.IsFailure)
+            return BadRequest(result.Error);
+
+        return Ok(result.Value);
+    }
+
+    /// <summary>Agenda del barbero que inició sesión para un día (hoy si no se indica).</summary>
+    [Authorize(Roles = RolesSistema.Barbero)]
+    [HttpGet("mias")]
+    public async Task<ActionResult<List<CitaDto>>> GetMisCitas(DateOnly? fecha)
+    {
+        if (!int.TryParse(User.FindFirst("sub")?.Value, out var usuarioId))
+            return Unauthorized();
+
+        var barbero = await barberoService.GetList(b => b.UsuarioId == usuarioId);
+        if (barbero.IsFailure)
+            return BadRequest(barbero.Error);
+
+        var barberoId = barbero.Value!.FirstOrDefault()?.BarberoId;
+        if (barberoId is null)
+            return NotFound("Tu usuario no tiene un perfil de barbero.");
+
+        var desde = (fecha ?? DateOnly.FromDateTime(HoraLocal.Ahora)).ToDateTime(TimeOnly.MinValue);
+        var hasta = desde.AddDays(1);
+
+        var result = await citaService.GetList(c =>
+            c.BarberoId == barberoId && c.FechaInicio >= desde && c.FechaInicio < hasta);
 
         if (result.IsFailure)
             return BadRequest(result.Error);

@@ -157,3 +157,7 @@ body {
     border-color: var(--acento);
     box-shadow: 0 0 0 .2rem rgba(201, 161, 91, .2);
 }
+
+.agenda-hora {
+    min-width: 3.5rem;
+}

@@ -18,7 +18,17 @@ public static class Ui
     public static readonly Font Destacado = new("Segoe UI Semibold", 11f);
     public static readonly Font Pequena = new("Segoe UI", 9f);
 
-    private static readonly CultureInfo Moneda = CultureInfo.GetCultureInfo("en-US");
+    public static readonly CultureInfo Moneda = CrearMoneda();
+
+    // Pesos dominicanos: RD$1,250.00
+    private static CultureInfo CrearMoneda()
+    {
+        var cultura = (CultureInfo)CultureInfo.GetCultureInfo("en-US").Clone();
+        cultura.NumberFormat.CurrencySymbol = "RD$";
+        cultura.NumberFormat.CurrencyPositivePattern = 0;
+        cultura.NumberFormat.CurrencyNegativePattern = 1;
+        return cultura;
+    }
 
     public static Label TituloModulo(string texto) => new()
     {
