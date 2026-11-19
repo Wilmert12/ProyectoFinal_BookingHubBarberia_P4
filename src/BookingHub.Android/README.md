@@ -29,7 +29,7 @@ El logo oficial del poste de barbero con terminales doradas (`logo.svg` / `icon-
 - **Navegación:** Jetpack Navigation Compose con barra inferior persistente
 - **Conectividad:** Retrofit 2 + Gson + OkHttp Logging Interceptor
 - **Asincronía:** Kotlin Coroutines
-- **Sesión local:** perfil cifrado con AES-GCM y una clave protegida por Android Keystore
+- **Sesión y caché local:** AES-GCM con claves protegidas por Android Keystore
 
 ---
 
@@ -40,7 +40,9 @@ El logo oficial del poste de barbero con terminales doradas (`logo.svg` / `icon-
 3. **Catálogo:** Lista de servicios y productos con filtros, duración estimada y precios en RD$.
 4. **Equipo de Barberos:** Especialistas con sus identificadores de color y estado activo.
 5. **Reservar Cita:** Selección de servicios, fechas y horas consultadas a la disponibilidad real de cada barbero.
-6. **Mis Citas:** Historial con estado, barbero, servicios asociados y total.
+6. **Mis Citas:** Historial con estado y una vista expandible con horario, cantidades, precios, descuentos y notas.
+7. **Acceso de barbero:** Inicio con las credenciales del personal, sesión guardada de forma cifrada y agenda propia por fecha.
+8. **Persistencia local:** La última respuesta de citas y agendas queda cifrada para poder consultarla si no hay conexión.
 
 ---
 
@@ -64,6 +66,15 @@ La compilación limita el paralelismo de Gradle para reducir el consumo de memor
 - En Blazor abre **Mis Citas**, pega ese número en **Número de cliente** y pulsa **Buscar**. La página consulta `GET /api/Citas?clienteId=<id>`.
 - Android y Blazor publicado usan por defecto la misma API de Azure. WinForms y Blazor en desarrollo apuntan a `https://localhost:7109/`; para probar Android contra esa API local, configura `bookinghubApiBaseUrl=http://<IP_DE_TU_PC>:5058/` en el `local.properties` de Android. Los tres clientes solo comparten citas si consultan el mismo servidor y la misma base de datos.
 - En **Mis Citas** de Android también aparece el ID de cada cita, para poder contrastarlo con la agenda del personal en WinForms.
+
+## Acceso de barberos y persistencia
+
+- Desde Registro o Inicio, elige **Acceso para barberos** e inicia sesión con una cuenta existente cuyo rol sea `Barbero`. Android usa `POST /api/Auth/login`; las cuentas y contraseñas las administra el personal en el sistema existente.
+- La API entrega un token JWT válido por ocho horas. Android cifra el token y el perfil con AES-GCM y Android Keystore. Al abrir la app, revisa la expiración; si ya venció, vuelve al flujo de acceso.
+- El área **Mi agenda** consulta `GET /api/Citas/mias?fecha=AAAA-MM-DD`. La API identifica al usuario por el token y filtra las citas del barbero asociado; la app permite elegir el día y mostrar cliente, servicios, horario, estado, total y notas.
+- En **Mis Citas** del cliente y en **Mi agenda** del barbero, cada tarjeta se puede expandir para revisar precios por servicio, cantidad, descuento y notas.
+- Las respuestas se guardan cifradas en el dispositivo y separadas por `ClienteId` o por usuario de barbero y fecha. Si no hay conexión, Android presenta la última copia disponible e indica que no pudo actualizarla. El servidor sigue siendo la fuente oficial de las citas.
+- Al cerrar sesión de barbero, Android elimina el token y la caché local de su agenda.
 
 ## Límites del contrato actual de la API
 
