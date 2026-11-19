@@ -44,7 +44,7 @@ fun MisCitasScreen(
                 .padding(paddingValues)
         ) {
             when {
-                uiState.cargando -> {
+                uiState.cargando && uiState.citas.isEmpty() -> {
                     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                         CircularProgressIndicator(color = Acento)
                     }
@@ -107,6 +107,17 @@ fun MisCitasScreen(
                 }
                 else -> {
                     Column(modifier = Modifier.fillMaxSize()) {
+                        if (uiState.cargando) {
+                            LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+                        }
+                        uiState.aviso?.let { aviso ->
+                            Text(
+                                text = aviso,
+                                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.error
+                            )
+                        }
                         Text(
                             text = "Para cancelar una cita, comunícate directamente con la barbería.",
                             modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),

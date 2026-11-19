@@ -132,6 +132,14 @@ fun AgendaBarberoScreen(
                     )
                 }
             } else {
+                uiState.aviso?.let { aviso ->
+                    Text(
+                        text = aviso,
+                        modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.error
+                    )
+                }
                 if (uiState.cargando) {
                     CircularProgressIndicator(
                         modifier = Modifier

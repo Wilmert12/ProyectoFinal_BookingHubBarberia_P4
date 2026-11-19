@@ -1,12 +1,15 @@
 package com.bookinghub.app.ui.viewmodel
 
-import androidx.lifecycle.ViewModel
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.bookinghub.app.data.api.ApiClient
 import com.bookinghub.app.data.api.mensajeError
 import com.bookinghub.app.data.model.CitaDto
+import com.bookinghub.app.util.CitasCache
 import com.bookinghub.app.util.SesionCliente
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -14,12 +17,14 @@ import kotlinx.coroutines.launch
 data class CitasUiState(
     val citas: List<CitaDto> = emptyList(),
     val cargando: Boolean = false,
-    val error: String? = null
+    val error: String? = null,
+    val aviso: String? = null
 )
 
-class CitasViewModel : ViewModel() {
+class CitasViewModel(application: Application) : AndroidViewModel(application) {
     private val _uiState = MutableStateFlow(CitasUiState())
     val uiState: StateFlow<CitasUiState> = _uiState
+    private var cargaActual: Job? = null
 
     init { cargarCitas() }
 
@@ -29,19 +34,39 @@ class CitasViewModel : ViewModel() {
             _uiState.value = CitasUiState(error = "No hay un perfil de cliente guardado en este dispositivo.")
             return
         }
-        viewModelScope.launch {
-            _uiState.value = CitasUiState(cargando = true)
+
+        val citasGuardadas = CitasCache.leerCliente(getApplication(), clienteId)
+        cargaActual?.cancel()
+        _uiState.value = CitasUiState(citas = citasGuardadas.orEmpty(), cargando = true)
+        cargaActual = viewModelScope.launch {
             try {
                 val response = ApiClient.citaApi.getCitas(clienteId = clienteId)
                 if (response.isSuccessful) {
-                    _uiState.value = CitasUiState(citas = response.body() ?: emptyList())
+                    val citas = response.body().orEmpty()
+                    CitasCache.guardarCliente(getApplication(), clienteId, citas)
+                    _uiState.value = CitasUiState(citas = citas)
                 } else {
-                    _uiState.value = CitasUiState(error = response.mensajeError("No se pudieron cargar tus citas"))
+                    val mensaje = response.mensajeError("No se pudieron cargar tus citas")
+                    _uiState.value = if (citasGuardadas != null) {
+                        CitasUiState(
+                            citas = citasGuardadas,
+                            aviso = "No se pudo actualizar. Se muestran las últimas citas guardadas."
+                        )
+                    } else {
+                        CitasUiState(error = mensaje)
+                    }
                 }
             } catch (cancelacion: CancellationException) {
                 throw cancelacion
             } catch (e: Exception) {
-                _uiState.value = CitasUiState(error = e.localizedMessage ?: "Revisa tu conexión e inténtalo de nuevo.")
+                _uiState.value = if (citasGuardadas != null) {
+                    CitasUiState(
+                        citas = citasGuardadas,
+                        aviso = "Sin conexión. Se muestran las últimas citas guardadas."
+                    )
+                } else {
+                    CitasUiState(error = e.localizedMessage ?: "Revisa tu conexión e inténtalo de nuevo.")
+                }
             }
         }
     }
