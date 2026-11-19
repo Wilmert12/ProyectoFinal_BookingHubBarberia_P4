@@ -17,6 +17,12 @@ static class Program
         var configuracion = new ConfigurationBuilder()
             .SetBasePath(AppContext.BaseDirectory)
             .AddJsonFile("appsettings.json", optional: true)
+#if DEBUG
+            // Al programar (Debug) se usa la API local; la versión Release usa la de Azure.
+            .AddJsonFile("appsettings.Development.json", optional: true)
+#endif
+            // Archivo personal fuera de Git para apuntar a otra API sin tocar los demás.
+            .AddJsonFile("appsettings.Local.json", optional: true)
             .Build();
         var apiBaseUrl = new Uri(configuracion["ApiBaseUrl"] ?? "https://localhost:7109/");
 
