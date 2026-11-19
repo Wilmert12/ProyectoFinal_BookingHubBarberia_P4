@@ -4,7 +4,17 @@ namespace BookingHub.Blazor;
 
 public static class Formato
 {
-    private static readonly CultureInfo Moneda = CultureInfo.GetCultureInfo("en-US");
+    private static readonly CultureInfo Moneda = CrearMoneda();
+
+    // Pesos dominicanos: RD$1,250.00
+    private static CultureInfo CrearMoneda()
+    {
+        var cultura = (CultureInfo)CultureInfo.GetCultureInfo("en-US").Clone();
+        cultura.NumberFormat.CurrencySymbol = "RD$";
+        cultura.NumberFormat.CurrencyPositivePattern = 0;
+        cultura.NumberFormat.CurrencyNegativePattern = 1;
+        return cultura;
+    }
 
     private static readonly string[] Dias = ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
     private static readonly string[] Meses = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"];

@@ -8,10 +8,9 @@ namespace BookingHub.WinForms.Infraestructura;
 
 public static class Mensajes
 {
-    private static readonly CultureInfo Moneda = CultureInfo.GetCultureInfo("en-US");
     private static readonly JsonSerializerOptions Json = new(JsonSerializerDefaults.Web);
 
-    public static string Precio(decimal valor) => valor.ToString("C2", Moneda);
+    public static string Precio(decimal valor) => valor.ToString("C2", Ui.Moneda);
 
     public static string Fecha(DateTime fecha) => fecha.ToString("yyyy-MM-dd");
 
