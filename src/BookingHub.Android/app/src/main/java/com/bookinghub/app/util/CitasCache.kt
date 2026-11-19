@@ -21,6 +21,10 @@ object CitasCache {
         guardar(context, "$PREFIJO_CLIENTE$clienteId", citas)
     }
 
+    fun borrarCliente(context: Context, clienteId: Int) {
+        preferencias(context).edit().remove("$PREFIJO_CLIENTE$clienteId").apply()
+    }
+
     fun leerBarbero(context: Context, usuarioId: Int, fecha: String): List<CitaDto>? =
         leer(context, "${PREFIJO_BARBERO}${usuarioId}_$fecha")
 

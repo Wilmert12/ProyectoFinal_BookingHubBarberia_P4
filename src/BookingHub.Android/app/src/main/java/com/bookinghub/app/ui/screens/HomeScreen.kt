@@ -54,7 +54,12 @@ fun HomeScreen(
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.surface
-                )
+                ),
+                actions = {
+                    IconButton(onClick = { onNavigate(Ruta.Ajustes.ruta) }) {
+                        Icon(Icons.Default.Settings, contentDescription = "Ajustes")
+                    }
+                }
             )
         }
     ) { paddingValues ->

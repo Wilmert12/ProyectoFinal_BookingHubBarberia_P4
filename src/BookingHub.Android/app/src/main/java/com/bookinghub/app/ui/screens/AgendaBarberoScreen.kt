@@ -15,12 +15,17 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CalendarMonth
-import androidx.compose.material.icons.filled.Logout
+import androidx.compose.material.icons.filled.History
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Today
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -54,14 +59,16 @@ import java.util.Locale
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AgendaBarberoScreen(
-    onCerrarSesion: () -> Unit,
+    onAbrirAjustes: () -> Unit,
+    onSesionExpirada: () -> Unit,
     viewModel: AgendaBarberoViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
     var mostrarSelectorFecha by remember { mutableStateOf(false) }
+    var menuAbierto by remember { mutableStateOf(false) }
 
     LaunchedEffect(uiState.sesionExpirada) {
-        if (uiState.sesionExpirada) onCerrarSesion()
+        if (uiState.sesionExpirada) onSesionExpirada()
     }
 
     Scaffold(
@@ -80,8 +87,45 @@ fun AgendaBarberoScreen(
                     IconButton(onClick = { viewModel.recargar() }) {
                         Icon(Icons.Default.Refresh, contentDescription = "Actualizar agenda")
                     }
-                    IconButton(onClick = onCerrarSesion) {
-                        Icon(Icons.Default.Logout, contentDescription = "Cerrar sesión")
+                    IconButton(onClick = { menuAbierto = true }) {
+                        Icon(Icons.Default.MoreVert, contentDescription = "Más opciones")
+                    }
+                    DropdownMenu(
+                        expanded = menuAbierto,
+                        onDismissRequest = { menuAbierto = false }
+                    ) {
+                        DropdownMenuItem(
+                            text = { Text("Ir a hoy") },
+                            leadingIcon = { Icon(Icons.Default.Today, contentDescription = null) },
+                            onClick = {
+                                menuAbierto = false
+                                viewModel.seleccionarFecha(LocalDate.now())
+                            }
+                        )
+                        DropdownMenuItem(
+                            text = { Text("Día anterior") },
+                            leadingIcon = { Icon(Icons.Default.History, contentDescription = null) },
+                            onClick = {
+                                menuAbierto = false
+                                viewModel.seleccionarFecha(uiState.fecha.minusDays(1))
+                            }
+                        )
+                        DropdownMenuItem(
+                            text = { Text("Día siguiente") },
+                            leadingIcon = { Icon(Icons.Default.CalendarMonth, contentDescription = null) },
+                            onClick = {
+                                menuAbierto = false
+                                viewModel.seleccionarFecha(uiState.fecha.plusDays(1))
+                            }
+                        )
+                        DropdownMenuItem(
+                            text = { Text("Ajustes") },
+                            leadingIcon = { Icon(Icons.Default.Settings, contentDescription = null) },
+                            onClick = {
+                                menuAbierto = false
+                                onAbrirAjustes()
+                            }
+                        )
                     }
                 }
             )
