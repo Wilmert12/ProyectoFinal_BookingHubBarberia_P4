@@ -14,8 +14,10 @@ public static class MapeoConfig
 
         config.NewConfig<Cita, CitaDto>()
             .Map(dto => dto.ClienteNombre, cita => cita.Cliente.Nombre)
+            .Map(dto => dto.ClienteTelefono, cita => cita.Cliente.Telefono)
             .Map(dto => dto.BarberoNombre, cita => cita.Barbero.Usuario.Nombre)
             .Map(dto => dto.Estado, cita => cita.EstadoCita.Descripcion)
+            .Map(dto => dto.Resenada, cita => cita.Resena != null)
             .Map(dto => dto.Detalles, cita => cita.CitaDetalles);
 
         config.NewConfig<CitaDetalle, CitaDetalleDto>()
@@ -38,6 +40,9 @@ public static class MapeoConfig
 
         config.NewConfig<Barbero, BarberoDto>()
             .Map(dto => dto.Nombre, barbero => barbero.Usuario.Nombre)
+            .Map(dto => dto.CalificacionPromedio,
+                barbero => barbero.Resenas.Any() ? barbero.Resenas.Average(resena => (decimal)resena.Puntaje) : 0m)
+            .Map(dto => dto.TotalResenas, barbero => barbero.Resenas.Count)
             .Ignore(dto => dto.Cedula);
 
         config.NewConfig<BarberoDto, Barbero>()

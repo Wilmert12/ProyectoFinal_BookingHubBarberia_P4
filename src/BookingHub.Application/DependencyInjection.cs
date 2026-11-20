@@ -15,7 +15,11 @@ public static class DependencyInjection
         services.AddScoped<CatalogosService>();
         services.AddScoped<ReporteService>();
         services.AddScoped<UsuarioService>();
+        services.AddScoped<ServicioAutenticacionCliente>();
         services.AddScoped<DisponibilidadService>();
+        services.AddScoped<ReservaCitaService>();
+        services.AddScoped<AgendaBarberoService>();
+        services.AddScoped<ExperienciaClienteService>();
 
         return services;
     }

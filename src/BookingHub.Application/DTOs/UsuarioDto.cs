@@ -23,4 +23,12 @@ public record LoginDto(string Email, string Password);
 
 public record UsuarioSesionDto(int UsuarioId, string Nombre, string Email, string Rol);
 
-public record SesionDto(string Token, DateTime Expira, int UsuarioId, string Nombre, string Email, string Rol);
+public record SesionDto(
+    string Token,
+    DateTime Expira,
+    int UsuarioId,
+    string Nombre,
+    string Email,
+    string Rol,
+    string? RefreshToken = null,
+    int? ClienteId = null);

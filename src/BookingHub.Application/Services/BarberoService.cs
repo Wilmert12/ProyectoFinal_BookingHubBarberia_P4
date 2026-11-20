@@ -53,6 +53,7 @@ public class BarberoService(
             .ExecuteUpdateAsync(s => s
                 .SetProperty(b => b.UsuarioId, barberoDto.UsuarioId)
                 .SetProperty(b => b.Apodo, barberoDto.Apodo)
+                .SetProperty(b => b.Especialidades, b => barberoDto.Especialidades ?? b.Especialidades)
                 .SetProperty(b => b.Cedula, b => barberoDto.Cedula ?? b.Cedula)
                 .SetProperty(b => b.ColorHex, barberoDto.ColorHex)
                 .SetProperty(b => b.Activo, barberoDto.Activo)) > 0;
@@ -67,6 +68,15 @@ public class BarberoService(
             .AsNoTracking()
             .Where(b => b.BarberoId == barberoId)
             .ProjectToType<BarberoDto>(MapeoConfig.Config)
+            .FirstOrDefaultAsync();
+    }
+
+    public async Task<byte[]?> ObtenerFoto(int barberoId)
+    {
+        await using var contexto = await contextFactory.CreateDbContextAsync();
+        return await contexto.Barberos.AsNoTracking()
+            .Where(b => b.BarberoId == barberoId && b.Activo)
+            .Select(b => b.Usuario.FotoPerfil)
             .FirstOrDefaultAsync();
     }
 

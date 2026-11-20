@@ -18,12 +18,16 @@ public class ClienteService(
         if (!await Existe(cliente.ClienteId))
         {
             var inserto = await Insertar(cliente);
-            return Result.Success(inserto);
+            return inserto
+                ? Result.Success(true)
+                : Result.Failure(new Error("CLIENTE_EMAIL", "Ya existe un cliente con ese correo electrónico."));
         }
         else
         {
             var modifico = await Modificar(cliente);
-            return Result.Success(modifico);
+            return modifico
+                ? Result.Success(true)
+                : Result.Failure(new Error("CLIENTE_EMAIL", "Ya existe un cliente con ese correo electrónico."));
         }
     }
 
@@ -37,7 +41,13 @@ public class ClienteService(
     private async Task<bool> Insertar(ClienteDto clienteDto)
     {
         await using var contexto = await contextFactory.CreateDbContextAsync();
+        var emailNormalizado = NormalizarEmail(clienteDto.Email);
+        if (emailNormalizado != null && await contexto.Clientes.AnyAsync(c => c.EmailNormalizado == emailNormalizado))
+            return false;
+
         var cliente = clienteDto.Adapt<Cliente>(MapeoConfig.Config);
+        cliente.Email = clienteDto.Email?.Trim();
+        cliente.EmailNormalizado = emailNormalizado;
         contexto.Clientes.Add(cliente);
         var inserto = await contexto.SaveChangesAsync() > 0;
         clienteDto.ClienteId = cliente.ClienteId;
@@ -47,14 +57,23 @@ public class ClienteService(
     private async Task<bool> Modificar(ClienteDto clienteDto)
     {
         await using var contexto = await contextFactory.CreateDbContextAsync();
+        var emailNormalizado = NormalizarEmail(clienteDto.Email);
+        if (emailNormalizado != null && await contexto.Clientes.AnyAsync(c =>
+                c.ClienteId != clienteDto.ClienteId && c.EmailNormalizado == emailNormalizado))
+            return false;
+
         return await contexto.Clientes
             .Where(c => c.ClienteId == clienteDto.ClienteId)
             .ExecuteUpdateAsync(s => s
                 .SetProperty(c => c.Nombre, clienteDto.Nombre)
                 .SetProperty(c => c.Telefono, clienteDto.Telefono)
-                .SetProperty(c => c.Email, clienteDto.Email)
+                .SetProperty(c => c.Email, clienteDto.Email == null ? null : clienteDto.Email.Trim())
+                .SetProperty(c => c.EmailNormalizado, emailNormalizado)
                 .SetProperty(c => c.Activo, clienteDto.Activo)) > 0;
     }
+
+    private static string? NormalizarEmail(string? email) =>
+        string.IsNullOrWhiteSpace(email) ? null : email.Trim().ToLowerInvariant();
 
     public async Task<Result<ClienteDto?>> Buscar(int clienteId)
     {

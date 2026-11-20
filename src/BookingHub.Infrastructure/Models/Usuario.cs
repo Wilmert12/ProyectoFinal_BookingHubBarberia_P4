@@ -28,4 +28,6 @@ public partial class Usuario
     public virtual Barbero? Barbero { get; set; }
 
     public virtual Role Rol { get; set; } = null!;
+
+    public virtual ICollection<AuthToken> AuthTokens { get; set; } = new List<AuthToken>();
 }

@@ -10,6 +10,9 @@ public record BarberoDto
     public string? Apodo { get; set; }
     public string ColorHex { get; set; } = "#000000";
     public bool Activo { get; set; } = true;
+    public decimal CalificacionPromedio { get; set; }
+    public int TotalResenas { get; set; }
+    public string? Especialidades { get; set; }
 
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public string? Cedula { get; set; }

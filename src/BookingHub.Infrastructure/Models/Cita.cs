@@ -32,4 +32,6 @@ public partial class Cita
     public virtual EstadosCitum EstadoCita { get; set; } = null!;
 
     public virtual ICollection<Pago> Pagos { get; set; } = new List<Pago>();
+
+    public virtual Resena? Resena { get; set; }
 }

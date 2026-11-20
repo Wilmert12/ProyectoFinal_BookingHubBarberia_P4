@@ -9,6 +9,8 @@ public partial class CatalogoItem
 
     public string? Descripcion { get; set; }
 
+    public string? Categoria { get; set; }
+
     public bool EsServicio { get; set; }
 
     public decimal Precio { get; set; }

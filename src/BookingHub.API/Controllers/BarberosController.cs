@@ -8,7 +8,10 @@ namespace BookingHub.API.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-public class BarberosController(BarberoService barberoService, DisponibilidadService disponibilidadService) : ControllerBase
+public class BarberosController(
+    BarberoService barberoService,
+    DisponibilidadService disponibilidadService,
+    ExperienciaClienteService experienciaClienteService) : ControllerBase
 {
     [HttpGet]
     public async Task<ActionResult<List<BarberoDto>>> GetBarberos(bool incluirInactivos = false)
@@ -33,6 +36,21 @@ public class BarberosController(BarberoService barberoService, DisponibilidadSer
             return NotFound();
 
         return Ok(result.Value);
+    }
+
+    [HttpGet("{id:int}/resenas")]
+    public async Task<ActionResult<List<ResenaDto>>> GetResenas(int id)
+    {
+        var result = await experienciaClienteService.ResenasDeBarbero(id);
+        return result.IsFailure ? BadRequest(result.Error) : Ok(result.Value);
+    }
+
+    [HttpGet("{id:int}/foto")]
+    public async Task<IActionResult> GetFoto(int id)
+    {
+        var foto = await barberoService.ObtenerFoto(id);
+        if (foto is null) return NotFound();
+        return File(foto, FotoPerfilAzureService.TipoContenido(foto));
     }
 
     /// <summary>Horas en las que el barbero puede empezar una cita de la duración indicada.</summary>

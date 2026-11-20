@@ -163,6 +163,27 @@ public class CitaService(
             .ToListAsync();
     }
 
+    public async Task<Result<PaginaDto<CitaDto>>> GetPage(
+        Expression<Func<CitaDto, bool>> criterio,
+        int pagina,
+        int tamano)
+    {
+        await using var contexto = await contextFactory.CreateDbContextAsync();
+        var query = contexto.Citas
+            .AsNoTracking()
+            .ProjectToType<CitaDto>(MapeoConfig.Config)
+            .Where(criterio);
+        var total = await query.CountAsync();
+        var items = await query
+            .OrderByDescending(c => c.FechaInicio)
+            .ThenByDescending(c => c.CitaId)
+            .Skip((pagina - 1) * tamano)
+            .Take(tamano)
+            .ToListAsync();
+
+        return new PaginaDto<CitaDto>(items, pagina, tamano, pagina * tamano < total);
+    }
+
     public async Task<Result> Eliminar(int citaId)
     {
         await using var contexto = await contextFactory.CreateDbContextAsync();

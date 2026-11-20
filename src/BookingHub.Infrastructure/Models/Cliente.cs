@@ -11,6 +11,12 @@ public partial class Cliente
 
     public string? Email { get; set; }
 
+    public string? EmailNormalizado { get; set; }
+
+    public string? PasswordHash { get; set; }
+
+    public byte[]? FotoPerfil { get; set; }
+
     public string? Notas { get; set; }
 
     public int TotalNoShows { get; set; }
@@ -22,4 +28,10 @@ public partial class Cliente
     public int ClienteId { get; set; }
 
     public virtual ICollection<Cita> Cita { get; set; } = new List<Cita>();
+
+    public virtual ICollection<AuthToken> AuthTokens { get; set; } = new List<AuthToken>();
+
+    public virtual ICollection<FavoritoBarbero> FavoritosBarberos { get; set; } = new List<FavoritoBarbero>();
+
+    public virtual ICollection<Resena> Resenas { get; set; } = new List<Resena>();
 }

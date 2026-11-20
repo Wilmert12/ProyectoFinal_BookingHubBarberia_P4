@@ -18,6 +18,12 @@ public partial class BookingHubContext : DbContext
 
     public virtual DbSet<Barbero> Barberos { get; set; }
 
+    public virtual DbSet<AuthToken> AuthTokens { get; set; }
+
+    public virtual DbSet<FavoritoBarbero> FavoritosBarberos { get; set; }
+
+    public virtual DbSet<Resena> Resenas { get; set; }
+
     public virtual DbSet<CatalogoItem> CatalogoItems { get; set; }
 
     public virtual DbSet<Cita> Citas { get; set; }
@@ -59,6 +65,7 @@ public partial class BookingHubContext : DbContext
             entity.Property(e => e.Apodo)
                 .HasMaxLength(50)
                 .HasColumnName("apodo");
+            entity.Property(e => e.Especialidades).HasMaxLength(500).HasColumnName("especialidades");
             entity.Property(e => e.Cedula)
                 .HasMaxLength(13)
                 .IsUnicode(false)
@@ -81,6 +88,28 @@ public partial class BookingHubContext : DbContext
                 .HasConstraintName("FK__Barberos__usuari__4CA06362");
         });
 
+        modelBuilder.Entity<AuthToken>(entity =>
+        {
+            entity.HasKey(e => e.AuthTokenId).HasName("PK_AuthTokens");
+            entity.ToTable("AuthTokens");
+            entity.HasIndex(e => e.TokenHash, "UX_AuthTokens_TokenHash").IsUnique();
+            entity.HasIndex(e => new { e.Tipo, e.ClienteId, e.FechaExpiracion }, "IX_AuthTokens_Cliente_Tipo");
+            entity.HasIndex(e => new { e.Tipo, e.UsuarioId, e.FechaExpiracion }, "IX_AuthTokens_Usuario_Tipo");
+            entity.Property(e => e.AuthTokenId).HasColumnName("authTokenId");
+            entity.Property(e => e.ClienteId).HasColumnName("clienteId");
+            entity.Property(e => e.UsuarioId).HasColumnName("usuarioId");
+            entity.Property(e => e.Tipo).HasMaxLength(20).IsUnicode(false).HasColumnName("tipo");
+            entity.Property(e => e.TokenHash).HasMaxLength(64).IsUnicode(false).HasColumnName("tokenHash");
+            entity.Property(e => e.FechaCreacion).HasPrecision(0).HasColumnName("fechaCreacion");
+            entity.Property(e => e.FechaExpiracion).HasPrecision(0).HasColumnName("fechaExpiracion");
+            entity.Property(e => e.FechaRevocacion).HasPrecision(0).HasColumnName("fechaRevocacion");
+            entity.Property(e => e.ReemplazadoPorHash).HasMaxLength(64).IsUnicode(false).HasColumnName("reemplazadoPorHash");
+            entity.HasOne(e => e.Cliente).WithMany(c => c.AuthTokens).HasForeignKey(e => e.ClienteId)
+                .OnDelete(DeleteBehavior.ClientSetNull).HasConstraintName("FK_AuthTokens_Clientes");
+            entity.HasOne(e => e.Usuario).WithMany(u => u.AuthTokens).HasForeignKey(e => e.UsuarioId)
+                .OnDelete(DeleteBehavior.ClientSetNull).HasConstraintName("FK_AuthTokens_Usuarios");
+        });
+
         modelBuilder.Entity<CatalogoItem>(entity =>
         {
             entity.HasKey(e => e.CatalogoItemId).HasName("PK__Catalogo__82EA9348DAA509E1");
@@ -92,6 +121,7 @@ public partial class BookingHubContext : DbContext
             entity.Property(e => e.Descripcion)
                 .HasMaxLength(500)
                 .HasColumnName("descripcion");
+            entity.Property(e => e.Categoria).HasMaxLength(60).HasColumnName("categoria");
             entity.Property(e => e.DuracionMin).HasColumnName("duracionMin");
             entity.Property(e => e.EsServicio)
                 .HasDefaultValue(true)
@@ -194,6 +224,9 @@ public partial class BookingHubContext : DbContext
             entity.HasIndex(e => e.Email, "IX_Clientes_Email")
                 .IsUnique()
                 .HasFilter("([email] IS NOT NULL)");
+            entity.HasIndex(e => e.EmailNormalizado, "UX_Clientes_EmailNormalizado")
+                .IsUnique()
+                .HasFilter("([emailNormalizado] IS NOT NULL)");
 
             entity.Property(e => e.ClienteId).HasColumnName("clienteId");
             entity.Property(e => e.Activo)
@@ -202,6 +235,14 @@ public partial class BookingHubContext : DbContext
             entity.Property(e => e.Email)
                 .HasMaxLength(255)
                 .HasColumnName("email");
+            entity.Property(e => e.EmailNormalizado)
+                .HasMaxLength(255)
+                .HasColumnName("emailNormalizado");
+            entity.Property(e => e.PasswordHash)
+                .HasMaxLength(255)
+                .IsUnicode(false)
+                .HasColumnName("passwordHash");
+            entity.Property(e => e.FotoPerfil).HasColumnName("fotoPerfil");
             entity.Property(e => e.FechaRegistro)
                 .HasPrecision(0)
                 .HasDefaultValueSql("(sysdatetime())")
@@ -217,6 +258,40 @@ public partial class BookingHubContext : DbContext
                 .IsUnicode(false)
                 .HasColumnName("telefono");
             entity.Property(e => e.TotalNoShows).HasColumnName("totalNoShows");
+            entity.HasMany(e => e.FavoritosBarberos).WithOne(e => e.Cliente)
+                .HasForeignKey(e => e.ClienteId).OnDelete(DeleteBehavior.ClientSetNull);
+            entity.HasMany(e => e.Resenas).WithOne(e => e.Cliente)
+                .HasForeignKey(e => e.ClienteId).OnDelete(DeleteBehavior.ClientSetNull);
+        });
+
+        modelBuilder.Entity<FavoritoBarbero>(entity =>
+        {
+            entity.HasKey(e => new { e.ClienteId, e.BarberoId }).HasName("PK_FavoritosBarberos");
+            entity.ToTable("FavoritosBarberos");
+            entity.Property(e => e.ClienteId).HasColumnName("clienteId");
+            entity.Property(e => e.BarberoId).HasColumnName("barberoId");
+            entity.Property(e => e.FechaRegistro).HasPrecision(0).HasDefaultValueSql("(sysdatetime())").HasColumnName("fechaRegistro");
+            entity.HasOne(e => e.Barbero).WithMany(b => b.ClientesFavoritos).HasForeignKey(e => e.BarberoId)
+                .OnDelete(DeleteBehavior.ClientSetNull).HasConstraintName("FK_FavoritosBarberos_Barberos");
+        });
+
+        modelBuilder.Entity<Resena>(entity =>
+        {
+            entity.HasKey(e => e.ResenaId).HasName("PK_Resenas");
+            entity.ToTable("Resenas", table => table.HasCheckConstraint("CK_Resenas_Puntaje", "[puntaje] BETWEEN 1 AND 5"));
+            entity.HasIndex(e => e.CitaId, "UX_Resenas_Cita").IsUnique();
+            entity.HasIndex(e => new { e.BarberoId, e.FechaRegistro }, "IX_Resenas_Barbero_Fecha");
+            entity.Property(e => e.ResenaId).HasColumnName("resenaId");
+            entity.Property(e => e.CitaId).HasColumnName("citaId");
+            entity.Property(e => e.ClienteId).HasColumnName("clienteId");
+            entity.Property(e => e.BarberoId).HasColumnName("barberoId");
+            entity.Property(e => e.Puntaje).HasColumnName("puntaje");
+            entity.Property(e => e.Comentario).HasMaxLength(500).HasColumnName("comentario");
+            entity.Property(e => e.FechaRegistro).HasPrecision(0).HasDefaultValueSql("(sysdatetime())").HasColumnName("fechaRegistro");
+            entity.HasOne(e => e.Cita).WithOne(c => c.Resena).HasForeignKey<Resena>(e => e.CitaId)
+                .OnDelete(DeleteBehavior.ClientSetNull).HasConstraintName("FK_Resenas_Citas");
+            entity.HasOne(e => e.Cliente).WithMany(c => c.Resenas).HasForeignKey(e => e.ClienteId).OnDelete(DeleteBehavior.ClientSetNull);
+            entity.HasOne(e => e.Barbero).WithMany(b => b.Resenas).HasForeignKey(e => e.BarberoId).OnDelete(DeleteBehavior.ClientSetNull);
         });
 
         modelBuilder.Entity<EstadosCitum>(entity =>

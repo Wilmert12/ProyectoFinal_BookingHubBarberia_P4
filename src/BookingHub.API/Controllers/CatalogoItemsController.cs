@@ -11,14 +11,30 @@ namespace BookingHub.API.Controllers;
 public class CatalogoItemsController(CatalogoItemService catalogoItemService) : ControllerBase
 {
     [HttpGet]
-    public async Task<ActionResult<List<CatalogoItemDto>>> GetCatalogoItems(bool incluirInactivos = false)
+    public async Task<ActionResult<List<CatalogoItemDto>>> GetCatalogoItems(
+        bool incluirInactivos = false,
+        string? q = null,
+        bool? esServicio = null,
+        string? ordenar = null)
     {
-        var result = await catalogoItemService.GetList(i => incluirInactivos || i.Activo);
+        var result = await catalogoItemService.GetList(i => (incluirInactivos || i.Activo) &&
+            (esServicio == null || i.EsServicio == esServicio) &&
+            (string.IsNullOrWhiteSpace(q) || i.Nombre.Contains(q) || (i.Descripcion != null && i.Descripcion.Contains(q)) ||
+                (i.Categoria != null && i.Categoria.Contains(q))));
 
         if (result.IsFailure)
             return BadRequest(result.Error);
 
-        return Ok(result.Value);
+        var items = result.Value ?? [];
+        items = ordenar?.Trim().ToLowerInvariant() switch
+        {
+            "precio" => items.OrderBy(i => i.Precio).ToList(),
+            "duracion" => items.OrderBy(i => i.DuracionMin ?? int.MaxValue).ToList(),
+            "nombre" => items.OrderBy(i => i.Nombre).ToList(),
+            "precio-desc" => items.OrderByDescending(i => i.Precio).ToList(),
+            _ => items.OrderBy(i => i.Nombre).ToList()
+        };
+        return Ok(items);
     }
 
     [HttpGet("{id}")]
