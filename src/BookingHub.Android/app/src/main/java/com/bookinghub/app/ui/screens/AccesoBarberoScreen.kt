@@ -11,7 +11,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
@@ -41,32 +41,33 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.bookinghub.app.ui.viewmodel.AccesoBarberoViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AccesoBarberoScreen(
-    onAccesoExitoso: () -> Unit,
+    onAccesoExitoso: (String) -> Unit,
     onVolver: () -> Unit,
-    viewModel: AccesoBarberoViewModel = viewModel()
+    onOlvideContrasena: () -> Unit,
+    viewModel: AccesoBarberoViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var mostrarPassword by remember { mutableStateOf(false) }
 
-    LaunchedEffect(uiState.sesionIniciada) {
-        if (uiState.sesionIniciada) onAccesoExitoso()
+    LaunchedEffect(uiState.sesionIniciada, uiState.rol) {
+        if (uiState.sesionIniciada) onAccesoExitoso(uiState.rol ?: "Cliente")
     }
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Acceso de barbero") },
+                title = { Text(androidx.compose.ui.res.stringResource(com.bookinghub.app.R.string.sign_in)) },
                 navigationIcon = {
                     IconButton(onClick = onVolver) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Volver")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver")
                     }
                 }
             )
@@ -81,13 +82,13 @@ fun AccesoBarberoScreen(
             verticalArrangement = Arrangement.Center
         ) {
             Text(
-                text = "Bienvenido al área de barberos",
+                text = "Bienvenido a CerquilloApp",
                 style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.Bold
             )
             Spacer(modifier = Modifier.height(8.dp))
             Text(
-                text = "Inicia sesión con la cuenta que te asignó la barbería.",
+                text = "Ingresa con tu cuenta de cliente o barbero.",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -96,7 +97,7 @@ fun AccesoBarberoScreen(
             OutlinedTextField(
                 value = email,
                 onValueChange = { email = it },
-                label = { Text("Correo electrónico") },
+                label = { Text(androidx.compose.ui.res.stringResource(com.bookinghub.app.R.string.email)) },
                 leadingIcon = { Icon(Icons.Default.Email, contentDescription = null) },
                 keyboardOptions = KeyboardOptions(
                     keyboardType = KeyboardType.Email,
@@ -111,7 +112,7 @@ fun AccesoBarberoScreen(
             OutlinedTextField(
                 value = password,
                 onValueChange = { password = it },
-                label = { Text("Contraseña") },
+                label = { Text(androidx.compose.ui.res.stringResource(com.bookinghub.app.R.string.password)) },
                 keyboardOptions = KeyboardOptions(
                     keyboardType = KeyboardType.Password,
                     imeAction = ImeAction.Done
@@ -155,11 +156,14 @@ fun AccesoBarberoScreen(
                         strokeWidth = 2.dp
                     )
                 } else {
-                    Text("Iniciar sesión", fontWeight = FontWeight.Bold)
+                    Text(androidx.compose.ui.res.stringResource(com.bookinghub.app.R.string.sign_in), fontWeight = FontWeight.Bold)
                 }
             }
+            TextButton(onClick = onOlvideContrasena) {
+                Text(androidx.compose.ui.res.stringResource(com.bookinghub.app.R.string.forgot_password))
+            }
             TextButton(onClick = onVolver) {
-                Text("Volver")
+                Text(androidx.compose.ui.res.stringResource(com.bookinghub.app.R.string.create_account))
             }
         }
     }
