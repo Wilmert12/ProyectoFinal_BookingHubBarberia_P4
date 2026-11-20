@@ -111,11 +111,14 @@ jobs:
 
       - name: Ejecutar pruebas instrumentadas
         uses: reactivecircus/android-emulator-runner@v2
+        env:
+          ANDROID_I_WANT_MY_TCG: "yes"
         with:
           api-level: 36
           target: google_apis
           arch: x86_64
           profile: pixel_6
+          emulator-boot-timeout: 1200
           disable-animations: true
           script: >-
             bash ./src/BookingHub.Android/gradlew

@@ -4,7 +4,7 @@ Esta fase deja automatizados los controles Android y la generación de una relea
 
 ## Automatización de PR y `main`
 
-`.github/workflows/android-ci.yml` valida únicamente el proyecto Android cuando el PR o commit incluye Android o sus workflows. Ejecuta Lint debug, pruebas JVM, reporte y umbral JaCoCo, compilación de tests Compose, empaquetado debug/release y pruebas Compose en un emulador API 36. Los resultados y APK/AAB de comprobación quedan como artefactos de la ejecución. El workflow tiene permiso de solo lectura.
+`.github/workflows/android-ci.yml` valida únicamente el proyecto Android cuando el PR o commit incluye Android o sus workflows. Ejecuta Lint debug, pruebas JVM, reporte y umbral JaCoCo, compilación de tests Compose, empaquetado debug/release y pruebas Compose en un emulador API 36. Si el runner no ofrece aceleración KVM, habilita TCG y espera hasta 20 minutos para que inicie el emulador. Los resultados y APK/AAB de comprobación quedan como artefactos de la ejecución. El workflow tiene permiso de solo lectura.
 
 El código compila con API 37 porque las versiones actuales de Compose y Lifecycle lo requieren; Android 17 sigue en Preview. Cada job acepta licencias sin interacción e instala `platforms;android-37.0` desde el canal Canary. La app conserva `targetSdk = 36`, probado en emulador API 36 y alineado con Play Console.
 
