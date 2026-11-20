@@ -38,7 +38,7 @@ jobs:
         shell: bash
         run: |
           yes | sdkmanager --licenses >/dev/null || test "${PIPESTATUS[1]}" -eq 0
-          sdkmanager --channel=3 "platforms;android-37"
+          sdkmanager --channel=3 "platforms;android-37.0"
 
       - name: Configurar caché de Gradle
         uses: gradle/actions/setup-gradle@v6
