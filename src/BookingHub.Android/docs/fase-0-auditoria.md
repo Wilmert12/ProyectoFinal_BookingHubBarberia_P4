@@ -35,7 +35,7 @@ Referencias revisadas: [AuthController](../../BookingHub.API/Controllers/AuthCon
 | Requisito | Estado | Evidencia |
 |---|---|---|
 | Auditar Android y el contrato real de la API antes de cambios funcionales | Existe | Se revisaron pantallas, ViewModels, API clients, DTOs, controladores, servicios y workflows. |
-| compileSdk actualizado para SDK de Android vigente | Existe | `compileSdk = 37`. |
+| compileSdk para dependencias Android actuales | Existe | `compileSdk = 37` (Android 17 Preview); CI instala la plataforma desde el canal Canary. `targetSdk = 36` sigue el requisito vigente de Play. |
 | targetSdk actualizado al requisito vigente de Google Play | Existe | `targetSdk = 36`. |
 | Actualizar Compose BOM, Navigation, Lifecycle, Retrofit, OkHttp y Coroutines | Existe | Versiones centralizadas en `gradle/libs.versions.toml`. |
 | Migrar plugins y dependencias al version catalog | Existe | `gradle/libs.versions.toml`, build raíz y build de `app`. |

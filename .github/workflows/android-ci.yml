@@ -39,7 +39,14 @@ jobs:
       - name: Preparar Android SDK
         uses: android-actions/setup-android@v4
         with:
-          packages: "platforms;android-37"
+          accept-android-sdk-licenses: true
+          log-accepted-android-sdk-licenses: false
+
+      - name: Aceptar licencias e instalar SDK Android 17 Preview
+        shell: bash
+        run: |
+          yes | sdkmanager --licenses >/dev/null || test "${PIPESTATUS[1]}" -eq 0
+          sdkmanager --channel=3 "platforms;android-37"
 
       - name: Configurar caché de Gradle
         uses: gradle/actions/setup-gradle@v6
@@ -90,7 +97,14 @@ jobs:
       - name: Preparar Android SDK
         uses: android-actions/setup-android@v4
         with:
-          packages: "platforms;android-37"
+          accept-android-sdk-licenses: true
+          log-accepted-android-sdk-licenses: false
+
+      - name: Aceptar licencias e instalar SDK Android 17 Preview
+        shell: bash
+        run: |
+          yes | sdkmanager --licenses >/dev/null || test "${PIPESTATUS[1]}" -eq 0
+          sdkmanager --channel=3 "platforms;android-37"
 
       - name: Configurar caché de Gradle
         uses: gradle/actions/setup-gradle@v6
