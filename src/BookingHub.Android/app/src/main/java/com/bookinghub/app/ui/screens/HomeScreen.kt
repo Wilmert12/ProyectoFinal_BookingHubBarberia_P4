@@ -14,15 +14,18 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.platform.LocalClipboard
+import androidx.compose.ui.platform.toClipEntry
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.unit.dp
+import android.content.ClipData
 import com.bookinghub.app.R
 import com.bookinghub.app.ui.navigation.Ruta
 import com.bookinghub.app.ui.theme.Acento
 import com.bookinghub.app.ui.theme.Borde
 import com.bookinghub.app.util.SesionCliente
+import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -30,7 +33,8 @@ fun HomeScreen(
     onNavigate: (String) -> Unit
 ) {
     val cliente = SesionCliente.clienteActual
-    val clipboardManager = LocalClipboardManager.current
+    val clipboard = LocalClipboard.current
+    val clipboardScope = rememberCoroutineScope()
     val scrollState = rememberScrollState()
 
     Scaffold(
@@ -44,8 +48,7 @@ fun HomeScreen(
                             modifier = Modifier.size(32.dp)
                         )
                         Spacer(modifier = Modifier.width(10.dp))
-                        Text(
-                            text = "CerquilloApp",
+                        Text(androidx.compose.ui.res.stringResource(com.bookinghub.app.R.string.brand_name),
                             style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onSurface
@@ -114,7 +117,14 @@ fun HomeScreen(
                             }
                             IconButton(
                                 onClick = {
-                                    clipboardManager.setText(AnnotatedString(cliente.clienteId.toString()))
+                                    clipboardScope.launch {
+                                        clipboard.setClipEntry(
+                                            ClipData.newPlainText(
+                                                "Número de cliente",
+                                                cliente.clienteId.toString()
+                                            ).toClipEntry()
+                                        )
+                                    }
                                 }
                             ) {
                                 Icon(
@@ -183,7 +193,7 @@ fun HomeScreen(
                 onClick = { onNavigate(Ruta.AccesoBarbero.ruta) },
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text("Acceso para barberos")
+                Text(androidx.compose.ui.res.stringResource(com.bookinghub.app.R.string.barber_access))
             }
         }
     }
