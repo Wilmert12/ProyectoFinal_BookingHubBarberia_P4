@@ -2,6 +2,7 @@ package com.bookinghub.app.ui.theme
 
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.foundation.isSystemInDarkTheme
 
 private val DarkColorScheme = darkColorScheme(
     primary = Acento,
@@ -43,10 +44,17 @@ private val LightColorScheme = lightColorScheme(
 
 @Composable
 fun BookingHubTheme(
-    darkTheme: Boolean = false,
+    darkTheme: Boolean = isSystemInDarkTheme(),
+    dynamicColor: Boolean = false,
     content: @Composable () -> Unit
 ) {
-    val colorScheme = if (darkTheme) DarkColorScheme else LightColorScheme
+    val colorScheme = when {
+        dynamicColor && android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S ->
+            if (darkTheme) androidx.compose.material3.dynamicDarkColorScheme(androidx.compose.ui.platform.LocalContext.current)
+            else androidx.compose.material3.dynamicLightColorScheme(androidx.compose.ui.platform.LocalContext.current)
+        darkTheme -> DarkColorScheme
+        else -> LightColorScheme
+    }
     MaterialTheme(
         colorScheme = colorScheme,
         typography = Typography,
