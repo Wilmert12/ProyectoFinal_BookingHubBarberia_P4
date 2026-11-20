@@ -16,23 +16,35 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.compose.ui.platform.LocalLocale
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.bookinghub.app.ui.theme.Acento
 import com.bookinghub.app.ui.theme.Borde
 import com.bookinghub.app.ui.viewmodel.ReservarViewModel
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
-import java.util.Locale
+import android.Manifest
+import android.content.pm.PackageManager
+import android.os.Build
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.ContextCompat
+import androidx.compose.ui.platform.LocalContext
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ReservarScreen(
     onCitaCreada: () -> Unit,
-    viewModel: ReservarViewModel = viewModel()
+    viewModel: ReservarViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val scrollState = rememberScrollState()
+    val context = LocalContext.current
+    val locale = LocalLocale.current.platformLocale
+    val solicitarNotificaciones = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { }
+    val necesitaPermisoNotificaciones = Build.VERSION.SDK_INT >= 33 &&
+        ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED
 
     LaunchedEffect(uiState.citaCreada) {
         if (uiState.citaCreada) {
@@ -48,7 +60,7 @@ fun ReservarScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Reservar Cita", fontWeight = FontWeight.Bold) }
+                title = { Text(androidx.compose.ui.res.stringResource(com.bookinghub.app.R.string.book_appointment), fontWeight = FontWeight.Bold) }
             )
         }
     ) { paddingValues ->
@@ -73,7 +85,7 @@ fun ReservarScreen(
                             style = MaterialTheme.typography.bodyMedium
                         )
                         Spacer(modifier = Modifier.height(16.dp))
-                        Button(onClick = { viewModel.cargarDatos() }) { Text("Reintentar") }
+                        Button(onClick = { viewModel.cargarDatos() }) { Text(androidx.compose.ui.res.stringResource(com.bookinghub.app.R.string.retry)) }
                     }
                 }
             }
@@ -100,6 +112,21 @@ fun ReservarScreen(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     modifier = Modifier.fillMaxWidth()
                 ) {
+                    item(key = "cualquiera_disponible") {
+                        FilterChip(
+                            selected = uiState.cualquieraDisponible,
+                            onClick = viewModel::seleccionarCualquieraDisponible,
+                            label = { Text(androidx.compose.ui.res.stringResource(com.bookinghub.app.R.string.any_available_barber)) },
+                            border = BorderStroke(1.dp, if (uiState.cualquieraDisponible) Acento else Borde),
+                            colors = FilterChipDefaults.filterChipColors(
+                                selectedContainerColor = Acento.copy(alpha = 0.2f),
+                                selectedLabelColor = MaterialTheme.colorScheme.onBackground
+                            ),
+                            leadingIcon = if (uiState.cualquieraDisponible) {
+                                { Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(16.dp), tint = Acento) }
+                            } else null
+                        )
+                    }
                     items(uiState.barberos, key = { it.barberoId }) { barbero ->
                         val seleccionado = uiState.barberoSeleccionado?.barberoId == barbero.barberoId
                         FilterChip(
@@ -118,7 +145,7 @@ fun ReservarScreen(
                     }
                 }
                 if (uiState.barberos.isEmpty()) {
-                    Text("No hay barberos disponibles.", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(androidx.compose.ui.res.stringResource(com.bookinghub.app.R.string.no_barbers_available), color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
 
                 Spacer(modifier = Modifier.height(20.dp))
@@ -173,7 +200,7 @@ fun ReservarScreen(
                                 )
                             }
                             Text(
-                                text = "RD$ ${String.format(Locale("es", "DO"), "%.2f", servicio.precio)}",
+                                text = "RD$ ${String.format(locale, "%,.2f", servicio.precio)}",
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold,
                                 color = Acento
@@ -182,7 +209,7 @@ fun ReservarScreen(
                     }
                 }
                 if (uiState.servicios.isEmpty()) {
-                    Text("No hay servicios disponibles.", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(androidx.compose.ui.res.stringResource(com.bookinghub.app.R.string.no_services_available), color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
 
                 Spacer(modifier = Modifier.height(20.dp))
@@ -196,7 +223,7 @@ fun ReservarScreen(
                 )
                 Spacer(modifier = Modifier.height(8.dp))
 
-                val diaFormatter = remember { DateTimeFormatter.ofPattern("EEE d", Locale("es")) }
+                val diaFormatter = remember(locale) { DateTimeFormatter.ofPattern("EEE d", locale) }
                 LazyRow(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     modifier = Modifier.fillMaxWidth()
@@ -235,20 +262,20 @@ fun ReservarScreen(
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             CircularProgressIndicator(modifier = Modifier.size(20.dp), color = Acento, strokeWidth = 2.dp)
                             Spacer(modifier = Modifier.width(10.dp))
-                            Text("Consultando horarios…", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Text(androidx.compose.ui.res.stringResource(com.bookinghub.app.R.string.checking_availability), color = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
                     }
                     uiState.errorDisponibilidad != null -> {
                         Column {
                             Text(uiState.errorDisponibilidad.orEmpty(), color = MaterialTheme.colorScheme.error)
-                            TextButton(onClick = { viewModel.recargarDisponibilidad() }) { Text("Reintentar horarios") }
+                            TextButton(onClick = { viewModel.recargarDisponibilidad() }) { Text(androidx.compose.ui.res.stringResource(com.bookinghub.app.R.string.retry_times)) }
                         }
                     }
-                    uiState.barberoSeleccionado == null || uiState.fechaSeleccionada == null || uiState.serviciosSeleccionados.isEmpty() -> {
-                        Text("Selecciona barbero, servicios y fecha para consultar horarios.", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    (uiState.barberoSeleccionado == null && !uiState.cualquieraDisponible) || uiState.fechaSeleccionada == null || uiState.serviciosSeleccionados.isEmpty() -> {
+                        Text(androidx.compose.ui.res.stringResource(com.bookinghub.app.R.string.select_barber_services_date), color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                     uiState.horariosDisponibles.isEmpty() -> {
-                        Text("No hay horarios disponibles para esta selección.", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text(androidx.compose.ui.res.stringResource(com.bookinghub.app.R.string.no_slots_available), color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                     else -> {
                         val horaFormatter = remember { DateTimeFormatter.ofPattern("HH:mm") }
@@ -262,10 +289,11 @@ fun ReservarScreen(
                                     LocalDateTime.parse(horario.inicio.take(19), DateTimeFormatter.ISO_LOCAL_DATE_TIME)
                                         .format(horaFormatter)
                                 }.getOrElse { horario.inicio.substringAfter('T').take(5) }
+                                val nombreBarbero = uiState.barberoPorHorario[horario.inicio]?.nombre
                                 FilterChip(
                                     selected = seleccionado,
                                     onClick = { viewModel.seleccionarHorario(horario) },
-                                    label = { Text(hora) },
+                                    label = { Text(if (uiState.cualquieraDisponible && !nombreBarbero.isNullOrBlank()) "$hora · $nombreBarbero" else hora) },
                                     border = BorderStroke(1.dp, if (seleccionado) Acento else Borde),
                                     colors = FilterChipDefaults.filterChipColors(
                                         selectedContainerColor = Acento.copy(alpha = 0.2f),
@@ -294,7 +322,7 @@ fun ReservarScreen(
                 OutlinedTextField(
                     value = uiState.notas,
                     onValueChange = { viewModel.actualizarNotas(it) },
-                    label = { Text("Instrucciones o preferencias") },
+                    label = { Text(androidx.compose.ui.res.stringResource(com.bookinghub.app.R.string.instructions_preferences)) },
                     shape = RoundedCornerShape(10.dp),
                     modifier = Modifier.fillMaxWidth(),
                     maxLines = 3
@@ -303,7 +331,9 @@ fun ReservarScreen(
                 Spacer(modifier = Modifier.height(20.dp))
 
                 // RESUMEN
-                if (uiState.serviciosSeleccionados.isNotEmpty() && uiState.barberoSeleccionado != null) {
+                if (uiState.serviciosSeleccionados.isNotEmpty() &&
+                    (uiState.barberoSeleccionado != null || uiState.cualquieraDisponible)
+                ) {
                     Card(
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(10.dp),
@@ -320,10 +350,14 @@ fun ReservarScreen(
                                 color = MaterialTheme.colorScheme.onSurface
                             )
                             Spacer(modifier = Modifier.height(8.dp))
-                            Text("Barbero: ${uiState.barberoSeleccionado?.nombre}")
+                            val barberoElegido = uiState.horarioSeleccionado?.let { uiState.barberoPorHorario[it.inicio] }
+                                ?: uiState.barberoSeleccionado
+                            Text(
+                                "Barbero: ${barberoElegido?.nombre ?: androidx.compose.ui.res.stringResource(com.bookinghub.app.R.string.assigned_after_slot)}"
+                            )
                             Text("Duración estimada: ${uiState.duracionTotalMin} minutos")
                             Text(
-                                text = "Total estimado: RD$ ${String.format(Locale("es", "DO"), "%.2f", uiState.totalEstimado)}",
+                                text = "Total estimado: RD$ ${String.format(locale, "%,.2f", uiState.totalEstimado)}",
                                 fontWeight = FontWeight.Bold,
                                 color = Acento
                             )
@@ -341,8 +375,15 @@ fun ReservarScreen(
                     Spacer(modifier = Modifier.height(8.dp))
                 }
 
+                if (necesitaPermisoNotificaciones) {
+                    OutlinedButton(
+                        onClick = { solicitarNotificaciones.launch(Manifest.permission.POST_NOTIFICATIONS) },
+                        modifier = Modifier.fillMaxWidth()
+                    ) { Text(androidx.compose.ui.res.stringResource(com.bookinghub.app.R.string.enable_appointment_reminders)) }
+                }
+
                 // BOTÓN CREAR CITA
-                val formularioValido = uiState.barberoSeleccionado != null &&
+                val formularioValido = (uiState.barberoSeleccionado != null || uiState.cualquieraDisponible) &&
                         uiState.serviciosSeleccionados.isNotEmpty() &&
                         uiState.fechaSeleccionada != null &&
                         uiState.horarioSeleccionado != null &&
