@@ -48,7 +48,7 @@ object SesionBarbero {
     }
 
     private fun sigueVigente(sesion: SesionDto): Boolean = runCatching {
-        Instant.parse(sesion.expira).isAfter(Instant.now())
+        !sesion.refreshToken.isNullOrBlank() || Instant.parse(sesion.expira).isAfter(Instant.now())
     }.getOrDefault(false)
 
     private fun preferencias(context: Context) =

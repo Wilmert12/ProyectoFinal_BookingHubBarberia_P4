@@ -1,17 +1,24 @@
 package com.bookinghub.app.util
 
 import android.content.Context
-import com.bookinghub.app.data.model.ClienteDto
+import com.bookinghub.app.data.model.SesionDto
 import com.google.gson.Gson
+import java.time.Instant
 
 data class ClienteSesion(
     val clienteId: Int,
-    val nombre: String
+    val nombre: String,
+    val email: String = "",
+    val token: String = "",
+    val refreshToken: String? = null,
+    val expira: String = ""
 )
 
+/** Guarda con Android Keystore únicamente la sesión autenticada del cliente. */
 object SesionCliente {
     private const val PREFERENCIAS = "sesion_cliente"
-    private const val CLAVE_CLIENTE = "cliente_cifrado"
+    private const val CLAVE_SESION = "sesion_cifrada"
+    private const val CLAVE_PERFIL_ANTERIOR = "cliente_cifrado"
     private const val ALIAS_CLAVE = "bookinghub_cliente_aes"
     private val gson = Gson()
 
@@ -20,40 +27,64 @@ object SesionCliente {
         private set
 
     val hayPerfilGuardado: Boolean
-        get() = clienteActual != null
+        get() = sesionValida(clienteActual)
 
     fun inicializar(context: Context) {
-        val preferencias = preferencias(context)
-        val contenido = preferencias.getString(CLAVE_CLIENTE, null) ?: return
-        clienteActual = runCatching { descifrar(contenido) }.getOrNull()
-        if (clienteActual == null) {
-            preferencias.edit().remove(CLAVE_CLIENTE).apply()
+        preferencias(context).edit().remove(CLAVE_PERFIL_ANTERIOR).apply()
+        val cifrado = preferencias(context).getString(CLAVE_SESION, null) ?: return
+        val sesion = runCatching {
+            gson.fromJson(CifradoLocal.descifrar(cifrado, ALIAS_CLAVE), ClienteSesion::class.java)
+        }.getOrNull()
+        if (sesionValida(sesion)) {
+            clienteActual = sesion
+        } else {
+            borrarPerfil(context)
         }
     }
 
-    fun guardarPerfil(context: Context, cliente: ClienteDto) {
-        val sesion = ClienteSesion(cliente.clienteId, cliente.nombre)
-        clienteActual = sesion
-        runCatching {
-            val cifrado = cifrar(gson.toJson(sesion))
-            preferencias(context).edit().putString(CLAVE_CLIENTE, cifrado).commit()
-        }
+    fun guardar(context: Context, sesion: SesionDto): Boolean {
+        val clienteId = sesion.clienteId ?: return false
+        if (!sesion.rol.equals("Cliente", ignoreCase = true) || sesion.token.isBlank()) return false
+        val perfil = ClienteSesion(
+            clienteId = clienteId,
+            nombre = sesion.nombre,
+            email = sesion.email,
+            token = sesion.token,
+            refreshToken = sesion.refreshToken,
+            expira = sesion.expira
+        )
+        return runCatching {
+            val cifrado = CifradoLocal.cifrar(gson.toJson(perfil), ALIAS_CLAVE)
+            val guardado = preferencias(context).edit().putString(CLAVE_SESION, cifrado).commit()
+            if (guardado) clienteActual = perfil
+            guardado
+        }.getOrDefault(false)
+    }
+
+    fun reemplazarTokens(context: Context, sesion: SesionDto): Boolean = guardar(context, sesion)
+
+    fun actualizarDatos(context: Context, nombre: String, email: String?): Boolean {
+        val actual = clienteActual ?: return false
+        val perfil = actual.copy(nombre = nombre, email = email.orEmpty())
+        return runCatching {
+            val cifrado = CifradoLocal.cifrar(gson.toJson(perfil), ALIAS_CLAVE)
+            val guardado = preferencias(context).edit().putString(CLAVE_SESION, cifrado).commit()
+            if (guardado) clienteActual = perfil
+            guardado
+        }.getOrDefault(false)
     }
 
     fun borrarPerfil(context: Context) {
-        preferencias(context).edit().remove(CLAVE_CLIENTE).apply()
+        preferencias(context).edit().remove(CLAVE_SESION).remove(CLAVE_PERFIL_ANTERIOR).commit()
         clienteActual = null
+    }
+
+    private fun sesionValida(sesion: ClienteSesion?): Boolean {
+        if (sesion == null || sesion.clienteId <= 0 || sesion.token.isBlank()) return false
+        if (!sesion.refreshToken.isNullOrBlank()) return true
+        return runCatching { Instant.parse(sesion.expira).isAfter(Instant.now()) }.getOrDefault(false)
     }
 
     private fun preferencias(context: Context) =
         context.getSharedPreferences(PREFERENCIAS, Context.MODE_PRIVATE)
-
-    private fun cifrar(valor: String): String {
-        return CifradoLocal.cifrar(valor, ALIAS_CLAVE)
-    }
-
-    private fun descifrar(valor: String): ClienteSesion? {
-        val contenido = CifradoLocal.descifrar(valor, ALIAS_CLAVE)
-        return gson.fromJson(contenido, ClienteSesion::class.java)
-    }
 }

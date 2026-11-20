@@ -2,6 +2,8 @@ package com.bookinghub.app.util
 
 import android.content.Context
 import com.bookinghub.app.data.model.CitaDto
+import com.bookinghub.app.data.model.BarberoDto
+import com.bookinghub.app.data.model.CatalogoItemDto
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 
@@ -11,8 +13,24 @@ object CitasCache {
     private const val ALIAS_CLAVE = "bookinghub_citas_cache_aes"
     private const val PREFIJO_CLIENTE = "cliente_"
     private const val PREFIJO_BARBERO = "barbero_"
+    private const val CLAVE_BARBEROS = "catalogo_barberos"
+    private const val CLAVE_SERVICIOS = "catalogo_servicios"
     private val gson = Gson()
     private val tipoLista = object : TypeToken<List<CitaDto>>() {}.type
+    private val tipoListaBarberos = object : TypeToken<List<BarberoDto>>() {}.type
+    private val tipoListaCatalogo = object : TypeToken<List<CatalogoItemDto>>() {}.type
+
+    fun leerBarberos(context: Context): List<BarberoDto>? = leerLista(context, CLAVE_BARBEROS, tipoListaBarberos)
+
+    fun guardarBarberos(context: Context, barberos: List<BarberoDto>) {
+        guardarLista(context, CLAVE_BARBEROS, barberos.map { it.copy(cedula = null) }, tipoListaBarberos)
+    }
+
+    fun leerCatalogo(context: Context): List<CatalogoItemDto>? = leerLista(context, CLAVE_SERVICIOS, tipoListaCatalogo)
+
+    fun guardarCatalogo(context: Context, servicios: List<CatalogoItemDto>) {
+        guardarLista(context, CLAVE_SERVICIOS, servicios, tipoListaCatalogo)
+    }
 
     fun leerCliente(context: Context, clienteId: Int): List<CitaDto>? =
         leer(context, "$PREFIJO_CLIENTE$clienteId")
@@ -53,8 +71,23 @@ object CitasCache {
     }
 
     private fun guardar(context: Context, clave: String, citas: List<CitaDto>) {
+        guardarLista(context, clave, citas, tipoLista)
+    }
+
+    private fun <T> leerLista(context: Context, clave: String, tipo: java.lang.reflect.Type): List<T>? {
+        val cifrado = preferencias(context).getString(clave, null) ?: return null
+        return runCatching {
+            val json = CifradoLocal.descifrar(cifrado, ALIAS_CLAVE)
+            gson.fromJson<List<T>>(json, tipo)
+        }.getOrNull() ?: run {
+            preferencias(context).edit().remove(clave).apply()
+            null
+        }
+    }
+
+    private fun <T> guardarLista(context: Context, clave: String, lista: List<T>, tipo: java.lang.reflect.Type) {
         runCatching {
-            val cifrado = CifradoLocal.cifrar(gson.toJson(citas), ALIAS_CLAVE)
+            val cifrado = CifradoLocal.cifrar(gson.toJson(lista, tipo), ALIAS_CLAVE)
             preferencias(context).edit().putString(clave, cifrado).commit()
         }
     }

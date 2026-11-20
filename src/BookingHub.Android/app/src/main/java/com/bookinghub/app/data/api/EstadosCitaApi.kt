@@ -5,6 +5,6 @@ import retrofit2.Response
 import retrofit2.http.GET
 
 interface EstadosCitaApi {
-    @GET("api/EstadosCita")
+    @GET("api/Catalogos/EstadosCita")
     suspend fun getEstadosCita(): Response<List<EstadoCitaDto>>
 }

@@ -6,6 +6,7 @@ data class CatalogoItemDto(
     val catalogoItemId: Int = 0,
     val nombre: String = "",
     val descripcion: String? = null,
+    val categoria: String? = null,
     val esServicio: Boolean = false,
     val precio: BigDecimal = BigDecimal.ZERO,
     val duracionMin: Int? = null,

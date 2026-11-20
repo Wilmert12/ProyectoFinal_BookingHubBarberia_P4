@@ -1,9 +1,14 @@
 .gradle/
+.gradle-user-home/
 .idea/
 .kotlin/
 build/
 app/build/
 local.properties
+google-services.json
+app/google-services.json
+*.jks
+*.keystore
 *.iml
 captures/
 .externalNativeBuild/
