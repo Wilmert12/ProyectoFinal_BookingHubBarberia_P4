@@ -24,7 +24,7 @@ El poste de barbero con terminales doradas está integrado como vector nativo (`
 
 - **Nombre de la App:** CerquilloApp
 - **Lenguaje:** Kotlin 2.4.21 (Target JVM 17)
-- **Build:** Android Gradle Plugin 9.5.1, Gradle 9.6, compileSdk 37 y targetSdk 36
+- **Build:** Android Gradle Plugin 9.4.0, Gradle 9.6, compileSdk 37 y targetSdk 36
 - **UI:** Jetpack Compose (Material Design 3)
 - **Arquitectura:** MVVM + StateFlow, repositorios y DI con Hilt
 - **Navegación:** Jetpack Navigation Compose con barra inferior persistente
@@ -58,11 +58,14 @@ La API de producción sigue siendo Azure. Android programa recordatorios locales
 
 1. Abre **Android Studio**.
 2. Selecciona **File > Open** y elige:
-   `c:\PROGRAMACION 4\ProyectoFinal_BookingHubBarberia_P4\src\BookingHub.Android`
+   `src/BookingHub.Android` dentro de la carpeta clonada del repositorio.
 3. Espera la sincronización de Gradle.
-4. Las variantes **debug** y **release** usan por defecto la API HTTPS de Azure, accesible desde emuladores y dispositivos físicos. Para probar una API local, configura `bookinghubApiBaseUrl` en `local.properties` (archivo local ignorado por Git) o pásala como `-PbookinghubApiBaseUrl=http://<IP_DE_TU_PC>:5058/`. Desde un teléfono físico, la API local debe escuchar en la interfaz de red y el firewall debe permitir el puerto `5058`.
-5. La URL de producción se puede sustituir con `bookinghubProductionApiBaseUrl`. El tráfico HTTP claro queda habilitado solo en debug.
-6. Presiona **Run ▶ (Shift + F10)**.
+4. En **Tools > SDK Manager**, instala **Android SDK Platform 37**. Para crear un emulador, abre **Tools > Device Manager > Create Virtual Device**, elige un teléfono y descarga una imagen **API 36** (Google APIs o Google Play).
+5. En **File > Settings > Build, Execution, Deployment > Build Tools > Gradle**, selecciona **GRADLE_LOCAL_JAVA_HOME** o el JDK incluido con Android Studio.
+6. Las variantes **debug** y **release** usan por defecto la API HTTPS de Azure, accesible desde emuladores y dispositivos físicos. Para probar una API local, configura `bookinghubApiBaseUrl` en `local.properties` (archivo local ignorado por Git) o pásala como `-PbookinghubApiBaseUrl=http://<IP_DE_TU_PC>:5058/`. Desde un teléfono físico, la API local debe escuchar en la interfaz de red y el firewall debe permitir el puerto `5058`.
+7. Selecciona el emulador en la lista de dispositivos y presiona **Run ▶ (Shift + F10)**.
+
+La configuración de AGP 9.4.0 es compatible con Android Studio Quail 4 (2026.1.4) y conserva `compileSdk 37`. En una clonación nueva, Android Studio descargará las dependencias Gradle que falten durante la primera sincronización.
 
 Para compilar desde una terminal, ejecuta `gradlew.bat :app:assembleDebug` en Windows o `./gradlew :app:assembleDebug` en macOS/Linux. El APK se genera en `app/build/outputs/apk/debug/app-debug.apk`.
 
