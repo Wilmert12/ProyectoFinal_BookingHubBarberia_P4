@@ -54,7 +54,12 @@ fun HomeScreen(
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.surface
-                )
+                ),
+                actions = {
+                    IconButton(onClick = { onNavigate(Ruta.Ajustes.ruta) }) {
+                        Icon(Icons.Default.Settings, contentDescription = "Ajustes")
+                    }
+                }
             )
         }
     ) { paddingValues ->
@@ -174,6 +179,12 @@ fun HomeScreen(
             )
 
             Spacer(modifier = Modifier.height(24.dp))
+            TextButton(
+                onClick = { onNavigate(Ruta.AccesoBarbero.ruta) },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("Acceso para barberos")
+            }
         }
     }
 }

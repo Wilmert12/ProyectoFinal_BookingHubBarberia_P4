@@ -16,6 +16,9 @@ interface CitaApi {
         @Query("fecha") fecha: String? = null
     ): Response<List<CitaDto>>
 
+    @GET("api/Citas/mias")
+    suspend fun getMisCitasBarbero(@Query("fecha") fecha: String): Response<List<CitaDto>>
+
     @POST("api/Citas")
     suspend fun crearCita(@Body cita: CitaDto): Response<CitaDto>
 }

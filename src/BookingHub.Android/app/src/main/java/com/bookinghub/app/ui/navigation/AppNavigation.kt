@@ -7,9 +7,12 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.compose.*
 import com.bookinghub.app.ui.screens.*
 import com.bookinghub.app.ui.theme.Acento
+import com.bookinghub.app.util.CitasCache
+import com.bookinghub.app.util.SesionBarbero
 import com.bookinghub.app.util.SesionCliente
 
 sealed class Ruta(val ruta: String, val titulo: String, val icono: ImageVector) {
@@ -19,19 +22,61 @@ sealed class Ruta(val ruta: String, val titulo: String, val icono: ImageVector) 
     object Reservar : Ruta("reservar", "Reservar", Icons.Default.Add)
     object MisCitas : Ruta("mis_citas", "Mis Citas", Icons.Default.DateRange)
     object Registro : Ruta("registro", "Registro", Icons.Default.PersonAdd)
+    object AccesoBarbero : Ruta("acceso_barbero", "Acceso barbero", Icons.Default.Badge)
+    object AgendaBarbero : Ruta("agenda_barbero", "Mi agenda", Icons.Default.EventNote)
+    object Ajustes : Ruta("ajustes", "Ajustes", Icons.Default.Settings)
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AppNavigation() {
     val navController = rememberNavController()
+    val context = LocalContext.current
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val rutaActual = navBackStackEntry?.destination?.route
+    val destinoInicial = remember {
+        when {
+            SesionBarbero.haySesion -> Ruta.AgendaBarbero.ruta
+            SesionCliente.hayPerfilGuardado -> Ruta.Home.ruta
+            else -> Ruta.Registro.ruta
+        }
+    }
 
     val pantallasConNavBar = listOf(
         Ruta.Home, Ruta.Catalogo, Ruta.Barberos, Ruta.Reservar, Ruta.MisCitas
     )
     val mostrarNavBar = rutaActual in pantallasConNavBar.map { it.ruta }
+
+    // El controlador puede restaurar una ruta antigua después de cerrar sesión o reiniciar la app.
+    LaunchedEffect(rutaActual) {
+        val tieneSesionBarbero = SesionBarbero.haySesion
+        val tienePerfilCliente = SesionCliente.hayPerfilGuardado
+        val rutasCliente = setOf(
+            Ruta.Home.ruta,
+            Ruta.Catalogo.ruta,
+            Ruta.Barberos.ruta,
+            Ruta.Reservar.ruta,
+            Ruta.MisCitas.ruta,
+            Ruta.Ajustes.ruta
+        )
+        val rutasBarbero = setOf(Ruta.AgendaBarbero.ruta, Ruta.Ajustes.ruta)
+        val destinoSeguro = when {
+            tieneSesionBarbero && rutaActual !in rutasBarbero -> Ruta.AgendaBarbero.ruta
+            !tieneSesionBarbero && rutaActual == Ruta.AgendaBarbero.ruta -> {
+                if (tienePerfilCliente) Ruta.Home.ruta else Ruta.Registro.ruta
+            }
+            !tieneSesionBarbero && !tienePerfilCliente && rutaActual in rutasCliente -> Ruta.Registro.ruta
+            !tieneSesionBarbero && tienePerfilCliente && rutaActual == Ruta.Registro.ruta -> Ruta.Home.ruta
+            else -> null
+        }
+
+        if (destinoSeguro != null && destinoSeguro != rutaActual) {
+            navController.navigate(destinoSeguro) {
+                popUpTo(navController.graph.startDestinationId) { inclusive = true }
+                launchSingleTop = true
+            }
+        }
+    }
 
     Scaffold(
         bottomBar = {
@@ -67,15 +112,18 @@ fun AppNavigation() {
     ) { paddingValues ->
         NavHost(
             navController = navController,
-            startDestination = if (SesionCliente.hayPerfilGuardado) Ruta.Home.ruta else Ruta.Registro.ruta,
+            startDestination = destinoInicial,
             modifier = Modifier.padding(paddingValues)
         ) {
             composable(Ruta.Registro.ruta) {
-                RegistroScreen(onRegistroExitoso = {
-                    navController.navigate(Ruta.Home.ruta) {
-                        popUpTo(Ruta.Registro.ruta) { inclusive = true }
-                    }
-                })
+                RegistroScreen(
+                    onRegistroExitoso = {
+                        navController.navigate(Ruta.Home.ruta) {
+                            popUpTo(Ruta.Registro.ruta) { inclusive = true }
+                        }
+                    },
+                    onAccesoBarbero = { navController.navigate(Ruta.AccesoBarbero.ruta) }
+                )
             }
             composable(Ruta.Home.ruta) {
                 HomeScreen(onNavigate = { ruta -> navController.navigate(ruta) })
@@ -90,6 +138,76 @@ fun AppNavigation() {
                 })
             }
             composable(Ruta.MisCitas.ruta) { MisCitasScreen() }
+            composable(Ruta.AccesoBarbero.ruta) {
+                AccesoBarberoScreen(
+                    onAccesoExitoso = {
+                        navController.navigate(Ruta.AgendaBarbero.ruta) {
+                            popUpTo(navController.graph.startDestinationId) { inclusive = true }
+                            launchSingleTop = true
+                        }
+                    },
+                    onVolver = {
+                        if (!navController.popBackStack()) {
+                            val rutaDeRegreso = if (SesionCliente.hayPerfilGuardado) {
+                                Ruta.Home.ruta
+                            } else {
+                                Ruta.Registro.ruta
+                            }
+                            navController.navigate(rutaDeRegreso) { launchSingleTop = true }
+                        }
+                    }
+                )
+            }
+            composable(Ruta.AgendaBarbero.ruta) {
+                AgendaBarberoScreen(
+                    onAbrirAjustes = { navController.navigate(Ruta.Ajustes.ruta) },
+                    onSesionExpirada = {
+                        val usuarioId = SesionBarbero.sesionActual?.usuarioId
+                        SesionBarbero.borrar(context)
+                        if (usuarioId != null) CitasCache.borrarAgendaBarbero(context, usuarioId)
+                        navController.navigate(Ruta.AccesoBarbero.ruta) {
+                            popUpTo(Ruta.AgendaBarbero.ruta) { inclusive = true }
+                            launchSingleTop = true
+                        }
+                    }
+                )
+            }
+            composable(Ruta.Ajustes.ruta) {
+                AjustesScreen(
+                    onVolver = { navController.popBackStack() },
+                    onCerrarSesion = {
+                        val idBarbero = SesionBarbero.sesionActual?.usuarioId
+                        val idCliente = SesionCliente.clienteActual?.clienteId
+                        if (idBarbero != null) {
+                            SesionBarbero.borrar(context)
+                            CitasCache.borrarAgendaBarbero(context, idBarbero)
+                        } else {
+                            SesionCliente.borrarPerfil(context)
+                            if (idCliente != null) CitasCache.borrarCliente(context, idCliente)
+                        }
+                        val siguienteRuta = if (SesionBarbero.haySesion) {
+                            Ruta.AgendaBarbero.ruta
+                        } else if (SesionCliente.hayPerfilGuardado) {
+                            Ruta.Home.ruta
+                        } else {
+                            Ruta.Registro.ruta
+                        }
+                        navController.navigate(siguienteRuta) {
+                            popUpTo(navController.graph.startDestinationId) { inclusive = true }
+                            launchSingleTop = true
+                        }
+                    },
+                    onRegistrarOtroCliente = {
+                        val idCliente = SesionCliente.clienteActual?.clienteId
+                        SesionCliente.borrarPerfil(context)
+                        if (idCliente != null) CitasCache.borrarCliente(context, idCliente)
+                        navController.navigate(Ruta.Registro.ruta) {
+                            popUpTo(navController.graph.startDestinationId) { inclusive = true }
+                            launchSingleTop = true
+                        }
+                    }
+                )
+            }
         }
     }
 }
