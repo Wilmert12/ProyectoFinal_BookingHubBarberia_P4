@@ -53,7 +53,7 @@ jobs:
 
       - name: Validar Android
         run: >-
-          ./src/BookingHub.Android/gradlew
+          bash ./src/BookingHub.Android/gradlew
           -p src/BookingHub.Android
           --no-daemon
           :app:lintDebug
@@ -118,7 +118,7 @@ jobs:
           profile: pixel_6
           disable-animations: true
           script: >-
-            ./src/BookingHub.Android/gradlew
+            bash ./src/BookingHub.Android/gradlew
             -p src/BookingHub.Android
             --no-daemon
             :app:connectedDebugAndroidTest
