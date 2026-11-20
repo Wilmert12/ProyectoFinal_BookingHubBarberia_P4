@@ -24,6 +24,7 @@ sealed class Ruta(val ruta: String, val titulo: String, val icono: ImageVector) 
     object Registro : Ruta("registro", "Registro", Icons.Default.PersonAdd)
     object AccesoBarbero : Ruta("acceso_barbero", "Acceso barbero", Icons.Default.Badge)
     object AgendaBarbero : Ruta("agenda_barbero", "Mi agenda", Icons.Default.EventNote)
+    object Ajustes : Ruta("ajustes", "Ajustes", Icons.Default.Settings)
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -45,6 +46,37 @@ fun AppNavigation() {
         Ruta.Home, Ruta.Catalogo, Ruta.Barberos, Ruta.Reservar, Ruta.MisCitas
     )
     val mostrarNavBar = rutaActual in pantallasConNavBar.map { it.ruta }
+
+    // El controlador puede restaurar una ruta antigua después de cerrar sesión o reiniciar la app.
+    LaunchedEffect(rutaActual) {
+        val tieneSesionBarbero = SesionBarbero.haySesion
+        val tienePerfilCliente = SesionCliente.hayPerfilGuardado
+        val rutasCliente = setOf(
+            Ruta.Home.ruta,
+            Ruta.Catalogo.ruta,
+            Ruta.Barberos.ruta,
+            Ruta.Reservar.ruta,
+            Ruta.MisCitas.ruta,
+            Ruta.Ajustes.ruta
+        )
+        val rutasBarbero = setOf(Ruta.AgendaBarbero.ruta, Ruta.Ajustes.ruta)
+        val destinoSeguro = when {
+            tieneSesionBarbero && rutaActual !in rutasBarbero -> Ruta.AgendaBarbero.ruta
+            !tieneSesionBarbero && rutaActual == Ruta.AgendaBarbero.ruta -> {
+                if (tienePerfilCliente) Ruta.Home.ruta else Ruta.Registro.ruta
+            }
+            !tieneSesionBarbero && !tienePerfilCliente && rutaActual in rutasCliente -> Ruta.Registro.ruta
+            !tieneSesionBarbero && tienePerfilCliente && rutaActual == Ruta.Registro.ruta -> Ruta.Home.ruta
+            else -> null
+        }
+
+        if (destinoSeguro != null && destinoSeguro != rutaActual) {
+            navController.navigate(destinoSeguro) {
+                popUpTo(navController.graph.startDestinationId) { inclusive = true }
+                launchSingleTop = true
+            }
+        }
+    }
 
     Scaffold(
         bottomBar = {
@@ -114,21 +146,62 @@ fun AppNavigation() {
                             launchSingleTop = true
                         }
                     },
-                    onVolver = { navController.popBackStack() }
+                    onVolver = {
+                        if (!navController.popBackStack()) {
+                            val rutaDeRegreso = if (SesionCliente.hayPerfilGuardado) {
+                                Ruta.Home.ruta
+                            } else {
+                                Ruta.Registro.ruta
+                            }
+                            navController.navigate(rutaDeRegreso) { launchSingleTop = true }
+                        }
+                    }
                 )
             }
             composable(Ruta.AgendaBarbero.ruta) {
                 AgendaBarberoScreen(
-                    onCerrarSesion = {
+                    onAbrirAjustes = { navController.navigate(Ruta.Ajustes.ruta) },
+                    onSesionExpirada = {
                         val usuarioId = SesionBarbero.sesionActual?.usuarioId
                         SesionBarbero.borrar(context)
                         if (usuarioId != null) CitasCache.borrarAgendaBarbero(context, usuarioId)
-                        val siguienteRuta = if (SesionCliente.hayPerfilGuardado) {
+                        navController.navigate(Ruta.AccesoBarbero.ruta) {
+                            popUpTo(Ruta.AgendaBarbero.ruta) { inclusive = true }
+                            launchSingleTop = true
+                        }
+                    }
+                )
+            }
+            composable(Ruta.Ajustes.ruta) {
+                AjustesScreen(
+                    onVolver = { navController.popBackStack() },
+                    onCerrarSesion = {
+                        val idBarbero = SesionBarbero.sesionActual?.usuarioId
+                        val idCliente = SesionCliente.clienteActual?.clienteId
+                        if (idBarbero != null) {
+                            SesionBarbero.borrar(context)
+                            CitasCache.borrarAgendaBarbero(context, idBarbero)
+                        } else {
+                            SesionCliente.borrarPerfil(context)
+                            if (idCliente != null) CitasCache.borrarCliente(context, idCliente)
+                        }
+                        val siguienteRuta = if (SesionBarbero.haySesion) {
+                            Ruta.AgendaBarbero.ruta
+                        } else if (SesionCliente.hayPerfilGuardado) {
                             Ruta.Home.ruta
                         } else {
                             Ruta.Registro.ruta
                         }
                         navController.navigate(siguienteRuta) {
+                            popUpTo(navController.graph.startDestinationId) { inclusive = true }
+                            launchSingleTop = true
+                        }
+                    },
+                    onRegistrarOtroCliente = {
+                        val idCliente = SesionCliente.clienteActual?.clienteId
+                        SesionCliente.borrarPerfil(context)
+                        if (idCliente != null) CitasCache.borrarCliente(context, idCliente)
+                        navController.navigate(Ruta.Registro.ruta) {
                             popUpTo(navController.graph.startDestinationId) { inclusive = true }
                             launchSingleTop = true
                         }

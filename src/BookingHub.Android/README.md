@@ -36,13 +36,14 @@ El logo oficial del poste de barbero con terminales doradas (`logo.svg` / `icon-
 ## 💈 Funcionalidades
 
 1. **Registro:** Registro local de cliente con nombre, teléfono y correo electrónico opcional.
-2. **Inicio (Home):** Saludo personalizado, número de cliente y accesos rápidos a reservas.
+2. **Inicio (Home):** Saludo personalizado, número de cliente, accesos rápidos y ajustes de cuenta.
 3. **Catálogo:** Lista de servicios y productos con filtros, duración estimada y precios en RD$.
 4. **Equipo de Barberos:** Especialistas con sus identificadores de color y estado activo.
 5. **Reservar Cita:** Selección de servicios, fechas y horas consultadas a la disponibilidad real de cada barbero.
 6. **Mis Citas:** Historial con estado y una vista expandible con horario, cantidades, precios, descuentos y notas.
-7. **Acceso de barbero:** Inicio con las credenciales del personal, sesión guardada de forma cifrada y agenda propia por fecha.
+7. **Acceso de barbero:** Inicio con las credenciales del personal, sesión guardada de forma cifrada, agenda propia por fecha y opciones para recorrer días.
 8. **Persistencia local:** La última respuesta de citas y agendas queda cifrada para poder consultarla si no hay conexión.
+9. **Ajustes:** Cierre de sesión y acceso al registro de otro cliente desde el perfil actual.
 
 ---
 
@@ -74,10 +75,11 @@ La compilación limita el paralelismo de Gradle para reducir el consumo de memor
 - El área **Mi agenda** consulta `GET /api/Citas/mias?fecha=AAAA-MM-DD`. La API identifica al usuario por el token y filtra las citas del barbero asociado; la app permite elegir el día y mostrar cliente, servicios, horario, estado, total y notas.
 - En **Mis Citas** del cliente y en **Mi agenda** del barbero, cada tarjeta se puede expandir para revisar precios por servicio, cantidad, descuento y notas.
 - Las respuestas se guardan cifradas en el dispositivo y separadas por `ClienteId` o por usuario de barbero y fecha. Si no hay conexión, Android presenta la última copia disponible e indica que no pudo actualizarla. El servidor sigue siendo la fuente oficial de las citas.
-- Al cerrar sesión de barbero, Android elimina el token y la caché local de su agenda.
+- En **Ajustes**, el barbero puede cerrar sesión y el cliente puede cerrar su perfil o registrar a otra persona. Al salir, Android elimina la sesión y la caché del perfil correspondiente.
 
 ## Límites del contrato actual de la API
 
 - El backend actual crea clientes sin credenciales y permite consultar citas pasando un `clienteId`. La sesión cifrada del dispositivo conserva el perfil entre reinicios, pero **no autentica al cliente ante la API** ni protege sus citas contra acceso desde otro cliente. Se necesita autenticación/autorización de clientes en el backend antes de publicar la app con datos reales.
 - La app consulta la disponibilidad y envía los detalles de servicio, pero el backend todavía debe volver a validar al guardar que el cliente sea dueño de la reserva, que cada servicio exista y esté activo, que sus precios vengan del catálogo y que el horario siga dentro de la jornada disponible.
 - La API actual solo permite al personal eliminar citas. Por eso la app no muestra una acción de cancelación; indica al cliente que contacte a la barbería.
+- Los barberos pueden consultar su agenda con `GET /api/Citas/mias`, pero la API restringe `PUT /api/Citas/{id}` al rol de personal (Admin/Recepción). Android no ofrece el cambio de estado desde el perfil Barbero porque el backend actual lo rechaza.
