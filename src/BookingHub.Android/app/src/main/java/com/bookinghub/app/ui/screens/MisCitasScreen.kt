@@ -189,12 +189,13 @@ fun CitaDetalleCard(
     acciones: (@Composable RowScope.() -> Unit)? = null
 ) {
     var detallesExpandidos by remember(cita.citaId) { mutableStateOf(false) }
+    // "Viernes 20 de noviembre · 10:00" (como en la web), en vez de la fecha técnica.
     val fechaMostrar = remember(cita.fechaInicio) {
-        try {
-            cita.fechaInicio.replace("T", " ").take(16)
-        } catch (_: Exception) {
-            cita.fechaInicio
-        }
+        runCatching {
+            val inicio = java.time.LocalDateTime.parse(cita.fechaInicio.take(19))
+            inicio.format(java.time.format.DateTimeFormatter.ofPattern("EEEE d 'de' MMMM · HH:mm", java.util.Locale.forLanguageTag("es-DO")))
+                .replaceFirstChar { it.uppercase() }
+        }.getOrDefault(cita.fechaInicio.replace("T", " ").take(16))
     }
 
     Card(
@@ -224,7 +225,7 @@ fun CitaDetalleCard(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
+                Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
                     Icon(
                         imageVector = Icons.Default.Event,
                         contentDescription = null,
@@ -234,6 +235,7 @@ fun CitaDetalleCard(
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
                         text = fechaMostrar,
+                        modifier = Modifier.padding(end = 8.dp),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurface
@@ -281,7 +283,7 @@ fun CitaDetalleCard(
                 HorizontalDivider()
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
-                    text = "Horario: ${fechaMostrar.substringAfter(' ')} - ${formatearHora(cita.fechaFin)}",
+                    text = "Horario: ${formatearHora(cita.fechaInicio)} - ${formatearHora(cita.fechaFin)}",
                     style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.SemiBold
                 )
