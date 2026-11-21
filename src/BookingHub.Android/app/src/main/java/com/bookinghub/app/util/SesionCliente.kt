@@ -28,14 +28,20 @@ object SesionCliente {
     fun inicializar(context: Context) {
         val preferencias = preferencias(context)
         val contenido = preferencias.getString(CLAVE_CLIENTE, null) ?: return
+        // Un perfil guardado sin teléfono (versiones anteriores) ya no sirve: la API lo pide
+        // para ver y reservar citas. Se borra y la app pide entrar de nuevo con "Ya soy cliente".
         clienteActual = runCatching { descifrar(contenido) }.getOrNull()
+            ?.takeIf { !it.telefono.isNullOrBlank() }
         if (clienteActual == null) {
             preferencias.edit().remove(CLAVE_CLIENTE).apply()
         }
     }
 
-    fun guardarPerfil(context: Context, cliente: ClienteDto) {
-        val sesion = ClienteSesion(cliente.clienteId, cliente.nombre, cliente.telefono)
+    fun guardarPerfil(context: Context, cliente: ClienteDto) =
+        guardarPerfil(context, cliente.clienteId, cliente.nombre, cliente.telefono)
+
+    fun guardarPerfil(context: Context, clienteId: Int, nombre: String, telefono: String) {
+        val sesion = ClienteSesion(clienteId, nombre, telefono.trim())
         clienteActual = sesion
         runCatching {
             val cifrado = cifrar(gson.toJson(sesion))

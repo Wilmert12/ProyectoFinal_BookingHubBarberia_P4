@@ -19,6 +19,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.bookinghub.app.ui.theme.Acento
 import com.bookinghub.app.ui.theme.Borde
+import com.bookinghub.app.ui.theme.VidrioBorde
 import com.bookinghub.app.ui.viewmodel.ReservarViewModel
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -106,7 +107,7 @@ fun ReservarScreen(
                             selected = seleccionado,
                             onClick = { viewModel.seleccionarBarbero(barbero) },
                             label = { Text(barbero.nombre ?: "Barbero") },
-                            border = BorderStroke(1.dp, if (seleccionado) Acento else Borde),
+                            border = BorderStroke(1.dp, if (seleccionado) Acento else VidrioBorde),
                             colors = FilterChipDefaults.filterChipColors(
                                 selectedContainerColor = Acento.copy(alpha = 0.2f),
                                 selectedLabelColor = MaterialTheme.colorScheme.onBackground
@@ -143,7 +144,7 @@ fun ReservarScreen(
                         colors = CardDefaults.cardColors(
                             containerColor = MaterialTheme.colorScheme.surface
                         ),
-                        border = BorderStroke(if (seleccionado) 1.5.dp else 1.dp, if (seleccionado) Acento else Borde)
+                        border = BorderStroke(if (seleccionado) 1.5.dp else 1.dp, if (seleccionado) Acento else VidrioBorde)
                     ) {
                         Row(
                             modifier = Modifier
@@ -173,7 +174,7 @@ fun ReservarScreen(
                                 )
                             }
                             Text(
-                                text = "RD$ ${String.format(Locale("es", "DO"), "%.2f", servicio.precio)}",
+                                text = "RD$ ${String.format(Locale.forLanguageTag("es-DO"), "%.2f", servicio.precio)}",
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold,
                                 color = Acento
@@ -196,7 +197,7 @@ fun ReservarScreen(
                 )
                 Spacer(modifier = Modifier.height(8.dp))
 
-                val diaFormatter = remember { DateTimeFormatter.ofPattern("EEE d", Locale("es")) }
+                val diaFormatter = remember { DateTimeFormatter.ofPattern("EEE d", Locale.forLanguageTag("es")) }
                 LazyRow(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     modifier = Modifier.fillMaxWidth()
@@ -207,7 +208,7 @@ fun ReservarScreen(
                             selected = seleccionado,
                             onClick = { viewModel.seleccionarFecha(fecha) },
                             label = { Text(fecha.format(diaFormatter).replaceFirstChar { it.uppercase() }) },
-                            border = BorderStroke(1.dp, if (seleccionado) Acento else Borde),
+                            border = BorderStroke(1.dp, if (seleccionado) Acento else VidrioBorde),
                             colors = FilterChipDefaults.filterChipColors(
                                 selectedContainerColor = Acento.copy(alpha = 0.2f),
                                 selectedLabelColor = MaterialTheme.colorScheme.onBackground
@@ -266,7 +267,7 @@ fun ReservarScreen(
                                     selected = seleccionado,
                                     onClick = { viewModel.seleccionarHorario(horario) },
                                     label = { Text(hora) },
-                                    border = BorderStroke(1.dp, if (seleccionado) Acento else Borde),
+                                    border = BorderStroke(1.dp, if (seleccionado) Acento else VidrioBorde),
                                     colors = FilterChipDefaults.filterChipColors(
                                         selectedContainerColor = Acento.copy(alpha = 0.2f),
                                         selectedLabelColor = MaterialTheme.colorScheme.onBackground
@@ -323,7 +324,7 @@ fun ReservarScreen(
                             Text("Barbero: ${uiState.barberoSeleccionado?.nombre}")
                             Text("Duración estimada: ${uiState.duracionTotalMin} minutos")
                             Text(
-                                text = "Total estimado: RD$ ${String.format(Locale("es", "DO"), "%.2f", uiState.totalEstimado)}",
+                                text = "Total estimado: RD$ ${String.format(Locale.forLanguageTag("es-DO"), "%.2f", uiState.totalEstimado)}",
                                 fontWeight = FontWeight.Bold,
                                 color = Acento
                             )

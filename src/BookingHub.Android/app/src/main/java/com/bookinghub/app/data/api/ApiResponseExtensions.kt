@@ -10,7 +10,7 @@ fun <T> Response<T>.mensajeError(predeterminado: String): String {
             val json = JsonParser().parse(raw)
             when {
                 json.isJsonPrimitive -> json.asJsonPrimitive.asString
-                json.isJsonObject -> listOf("message", "error", "title", "detail")
+                json.isJsonObject -> listOf("description", "message", "error", "title", "detail")
                     .firstNotNullOfOrNull { key ->
                         json.asJsonObject.get(key)?.let { value ->
                             if (value.isJsonPrimitive) value.asJsonPrimitive.asString else null
@@ -24,5 +24,8 @@ fun <T> Response<T>.mensajeError(predeterminado: String): String {
     }
 
     return message?.takeIf { it.isNotBlank() }?.take(240)
-        ?: "$predeterminado (HTTP ${code()})"
+        ?: when (code()) {
+            429 -> "Demasiados intentos seguidos. Espera un minuto y vuelve a intentar."
+            else -> "$predeterminado (HTTP ${code()})"
+        }
 }

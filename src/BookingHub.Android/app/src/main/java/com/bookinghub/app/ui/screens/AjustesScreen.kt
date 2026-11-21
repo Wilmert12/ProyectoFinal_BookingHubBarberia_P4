@@ -11,6 +11,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.*
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Badge
 import androidx.compose.material.icons.filled.Logout
@@ -52,7 +53,7 @@ fun AjustesScreen(
                 title = { Text("Ajustes") },
                 navigationIcon = {
                     IconButton(onClick = onVolver) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Volver")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver")
                     }
                 }
             )
@@ -114,7 +115,7 @@ fun AjustesScreen(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(10.dp)
             ) {
-                Icon(Icons.Default.Logout, contentDescription = null)
+                Icon(Icons.AutoMirrored.Filled.Logout, contentDescription = null)
                 Text("Cerrar sesión", modifier = Modifier.padding(start = 8.dp))
             }
 

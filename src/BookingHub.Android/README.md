@@ -65,7 +65,9 @@ La compilación limita el paralelismo de Gradle para reducir el consumo de memor
 
 - Android guarda el `ClienteId` que devuelve `POST /api/Clientes`; en **Inicio** aparece como **Número de cliente** y se puede copiar. Es el identificador de cliente, no un `UsuarioId` ni una cuenta con contraseña.
 - En Blazor abre **Mis Citas**, pega ese número en **Número de cliente**, escribe el teléfono del registro y pulsa **Buscar**. La página consulta `GET /api/Citas?clienteId=<id>`.
-- La API solo muestra o crea citas de un cliente si recibe su teléfono en el encabezado `X-Cliente-Telefono`. Android lo guarda al registrarse y lo envía solo; un perfil guardado antes de este cambio no tiene teléfono y hay que borrarlo y registrarse de nuevo.
+- La API solo muestra, crea o cancela citas de un cliente si recibe su teléfono en el encabezado `X-Cliente-Telefono`. Android lo guarda al registrarse y lo envía solo. Un perfil guardado sin teléfono (versiones anteriores) se descarta al abrir la app.
+- **Ya soy cliente**: quien se registró en la web o en recepción entra con su nombre y teléfono (`POST /api/Clientes/recuperar`), sin crear un cliente repetido.
+- En **Mis Citas** se pueden cancelar las citas pendientes o confirmadas que todavía no empiezan (`POST /api/Citas/{id}/cancelar`).
 - Android y Blazor publicado usan por defecto la misma API de Azure. WinForms y Blazor en desarrollo apuntan a `https://localhost:7109/`; para probar Android contra esa API local, configura `bookinghubApiBaseUrl=http://<IP_DE_TU_PC>:5058/` en el `local.properties` de Android. Los tres clientes solo comparten citas si consultan el mismo servidor y la misma base de datos.
 - En **Mis Citas** de Android también aparece el ID de cada cita, para poder contrastarlo con la agenda del personal en WinForms.
 
@@ -83,4 +85,5 @@ La compilación limita el paralelismo de Gradle para reducir el consumo de memor
 - El backend actual crea clientes sin credenciales y permite consultar citas pasando un `clienteId`. La sesión cifrada del dispositivo conserva el perfil entre reinicios, pero **no autentica al cliente ante la API** ni protege sus citas contra acceso desde otro cliente. Se necesita autenticación/autorización de clientes en el backend antes de publicar la app con datos reales.
 - La app consulta la disponibilidad y envía los detalles de servicio, pero el backend todavía debe volver a validar al guardar que el cliente sea dueño de la reserva, que cada servicio exista y esté activo, que sus precios vengan del catálogo y que el horario siga dentro de la jornada disponible.
 - La API actual solo permite al personal eliminar citas. Por eso la app no muestra una acción de cancelación; indica al cliente que contacte a la barbería.
-- Los barberos pueden consultar su agenda con `GET /api/Citas/mias`, pero la API restringe `PUT /api/Citas/{id}` al rol de personal (Admin/Recepción). Android no ofrece el cambio de estado desde el perfil Barbero porque el backend actual lo rechaza.
+- Los barberos ven su agenda por día o por semana (`GET /api/Citas/mias?fecha=AAAA-MM-DD&dias=1..7`) y marcan sus citas como confirmada, en proceso, completada o "no vino" (`PUT /api/Citas/{id}/estado`).
+- Los mensajes de error muestran el motivo que da la API (`description`), por ejemplo "Esa hora ya no está disponible" o el límite de intentos.
