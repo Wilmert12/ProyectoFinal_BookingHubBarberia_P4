@@ -52,6 +52,10 @@ public static class Formato
 
     public static string Precio(decimal valor) => valor.ToString("C2", Moneda);
 
+    /// <summary>Lo que explica la API (por ejemplo "Demasiados intentos...") o, si no hay, el texto por defecto.</summary>
+    public static string Mensaje(Exception ex, string porDefecto) =>
+        ex is Refit.ApiException api && DescripcionError(api) is { Length: > 0 } descripcion ? descripcion : porDefecto;
+
     public static bool EsErrorDeApi(Exception ex) =>
         ex is HttpRequestException or Refit.ApiException or Refit.ApiRequestException;
 }

@@ -144,6 +144,37 @@ public class ReservaService(
         return Result.Success<bool?>(true);
     }
 
+    /// <summary>
+    /// Devuelve el número del cliente activo cuyo teléfono y nombre coinciden
+    /// (sin importar mayúsculas, tildes ni espacios de más). Null si no hay uno.
+    /// </summary>
+    public async Task<NumeroClienteDto?> RecuperarNumero(string? nombre, string? telefono)
+    {
+        var digitos = SoloDigitos(telefono);
+        var buscado = Normalizar(nombre);
+        if (digitos.Length < DigitosMinimos || buscado.Length == 0)
+            return null;
+
+        await using var contexto = await contextFactory.CreateDbContextAsync();
+        var candidatos = await contexto.Clientes
+            .AsNoTracking()
+            .Where(c => c.Activo)
+            .Select(c => new { c.ClienteId, c.Nombre, c.Telefono })
+            .ToListAsync();
+
+        var cliente = candidatos.FirstOrDefault(c => SoloDigitos(c.Telefono) == digitos && Normalizar(c.Nombre) == buscado);
+        return cliente is null ? null : new NumeroClienteDto(cliente.ClienteId, cliente.Nombre);
+    }
+
+    private static string Normalizar(string? texto)
+    {
+        var sinTildes = new string((texto ?? string.Empty)
+            .Normalize(System.Text.NormalizationForm.FormD)
+            .Where(c => System.Globalization.CharUnicodeInfo.GetUnicodeCategory(c) != System.Globalization.UnicodeCategory.NonSpacingMark)
+            .ToArray());
+        return string.Join(' ', sinTildes.ToLowerInvariant().Split(' ', StringSplitOptions.RemoveEmptyEntries));
+    }
+
     private static string SoloDigitos(string? texto) =>
         new((texto ?? string.Empty).Where(char.IsDigit).ToArray());
 }

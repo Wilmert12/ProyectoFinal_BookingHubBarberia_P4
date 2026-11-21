@@ -3,6 +3,7 @@ using BookingHub.Application.DTOs;
 using BookingHub.Application.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace BookingHub.API.Controllers;
 
@@ -18,6 +19,7 @@ public class CitasController(CitaService citaService, BarberoService barberoServ
     /// El personal ve cualquier agenda. Un cliente solo ve sus citas y tiene que mandar
     /// su teléfono en el encabezado X-Cliente-Telefono.
     /// </summary>
+    [EnableRateLimiting(LimiteDeIntentos.Clientes)]
     [HttpGet]
     public async Task<ActionResult<List<CitaDto>>> GetCitas(int? clienteId, int? barberoId, DateOnly? fecha)
     {
@@ -43,10 +45,10 @@ public class CitasController(CitaService citaService, BarberoService barberoServ
         return Ok(result.Value);
     }
 
-    /// <summary>Agenda del barbero que inició sesión para un día (hoy si no se indica).</summary>
+    /// <summary>Agenda del barbero que inició sesión desde una fecha (hoy si no se indica) por 1 a 7 días.</summary>
     [Authorize(Roles = RolesSistema.Barbero)]
     [HttpGet("mias")]
-    public async Task<ActionResult<List<CitaDto>>> GetMisCitas(DateOnly? fecha)
+    public async Task<ActionResult<List<CitaDto>>> GetMisCitas(DateOnly? fecha, int dias = 1)
     {
         if (!int.TryParse(User.FindFirst("sub")?.Value, out var usuarioId))
             return Unauthorized();
@@ -60,7 +62,7 @@ public class CitasController(CitaService citaService, BarberoService barberoServ
             return NotFound("Tu usuario no tiene un perfil de barbero.");
 
         var desde = (fecha ?? DateOnly.FromDateTime(HoraLocal.Ahora)).ToDateTime(TimeOnly.MinValue);
-        var hasta = desde.AddDays(1);
+        var hasta = desde.AddDays(Math.Clamp(dias, 1, 7));
 
         var result = await citaService.GetList(c =>
             c.BarberoId == barberoId && c.FechaInicio >= desde && c.FechaInicio < hasta);
@@ -90,6 +92,7 @@ public class CitasController(CitaService citaService, BarberoService barberoServ
     /// El personal crea citas libremente. Un cliente manda su teléfono en X-Cliente-Telefono;
     /// el servidor pone los precios, la duración y el estado Pendiente, y valida la hora.
     /// </summary>
+    [EnableRateLimiting(LimiteDeIntentos.Clientes)]
     [HttpPost]
     public async Task<ActionResult<CitaDto>> PostCita(CitaDto cita)
     {
@@ -110,6 +113,7 @@ public class CitasController(CitaService citaService, BarberoService barberoServ
     }
 
     /// <summary>El cliente cancela una cita suya; manda su teléfono en X-Cliente-Telefono.</summary>
+    [EnableRateLimiting(LimiteDeIntentos.Clientes)]
     [HttpPost("{id}/cancelar")]
     public async Task<IActionResult> CancelarCita(int id)
     {

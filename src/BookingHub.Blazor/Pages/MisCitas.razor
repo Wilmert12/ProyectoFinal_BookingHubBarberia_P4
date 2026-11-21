@@ -18,6 +18,13 @@
     </div>
     <button class="btn btn-primary" type="submit" disabled="@cargando">Buscar</button>
 </form>
+<div class="d-flex flex-wrap gap-3 small mb-4">
+    <a href="recuperar">¿Olvidaste tu número?</a>
+    @if (Sesion.Recordado)
+    {
+        <button type="button" class="btn btn-link btn-sm p-0" @onclick="NoSoyYo">No soy yo (olvidar mis datos en este navegador)</button>
+    }
+</div>
 
 @if (cargando)
 {
@@ -77,6 +84,16 @@ else if (citas is not null)
     private string? aviso;
     private bool avisoEsError;
 
+    private async Task NoSoyYo()
+    {
+        await Sesion.Olvidar();
+        clienteId = null;
+        telefono = null;
+        citas = null;
+        error = null;
+        aviso = null;
+    }
+
     private static bool EsCancelable(CitaDto cita) =>
         cita.Estado is "Pendiente" or "Confirmada" && cita.FechaInicio > Formato.Ahora;
 
@@ -110,10 +127,11 @@ else if (citas is not null)
 
     protected override async Task OnInitializedAsync()
     {
+        await Sesion.Cargar();
         clienteId = Sesion.ClienteId;
         telefono = Sesion.Telefono;
 
-        if (clienteId is not null && !string.IsNullOrWhiteSpace(telefono))
+        if (Sesion.Recordado)
             await Buscar();
     }
 
@@ -132,8 +150,7 @@ else if (citas is not null)
         try
         {
             citas = await CitaApi.GetCitasCliente(clienteId.Value, telefono.Trim());
-            Sesion.ClienteId = clienteId;
-            Sesion.Telefono = telefono.Trim();
+            await Sesion.Recordar(clienteId.Value, telefono);
         }
         catch (Refit.ApiException ex) when (ex.StatusCode == System.Net.HttpStatusCode.Unauthorized)
         {
@@ -141,7 +158,7 @@ else if (citas is not null)
         }
         catch (Exception ex) when (Formato.EsErrorDeApi(ex))
         {
-            error = "No se pudo conectar con la API. Intenta de nuevo.";
+            error = Formato.Mensaje(ex, "No se pudo conectar con la API. Intenta de nuevo.");
         }
         finally
         {

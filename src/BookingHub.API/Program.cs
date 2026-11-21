@@ -57,16 +57,19 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         };
     });
 builder.Services.AddAuthorization();
+builder.Services.AddLimiteDeIntentos();
 
 var app = builder.Build();
 
 app.MapOpenApi();
 app.MapScalarApiReference();
 
+app.UseForwardedHeaders();
 app.UseHttpsRedirection();
 app.UseCors("BookingHubClientes");
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseRateLimiter();
 app.MapControllers();
 
 app.Run();

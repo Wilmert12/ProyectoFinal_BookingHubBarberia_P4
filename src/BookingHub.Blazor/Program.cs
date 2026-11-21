@@ -26,6 +26,6 @@ builder.Services.AddRefitGeneratedClient<IClienteApi>()
 builder.Services.AddRefitGeneratedClient<ICatalogoItemApi>()
     .ConfigureHttpClient(cliente => cliente.BaseAddress = new Uri(apiBaseUrl));
 
-builder.Services.AddScoped<SesionCliente>();
+builder.Services.AddSingleton<SesionCliente>();
 
 await builder.Build().RunAsync();

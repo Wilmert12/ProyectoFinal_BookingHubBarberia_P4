@@ -10,4 +10,8 @@ public interface IClienteApi
 
     [Post("/api/Clientes")]
     Task<ClienteDto> CrearCliente([Body] ClienteDto cliente);
+
+    /// <summary>"¿Olvidaste tu número?": con nombre y teléfono del registro.</summary>
+    [Post("/api/Clientes/recuperar")]
+    Task<NumeroClienteDto> Recuperar([Body] RecuperarNumeroDto datos);
 }
