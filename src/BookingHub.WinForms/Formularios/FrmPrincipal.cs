@@ -202,16 +202,8 @@ public class FrmPrincipal : Form
         Invalidate();
     }
 
-    // WS_EX_COMPOSITED: la ventana se compone completa antes de mostrarse y evita parpadeo con tanto control transparente.
-    protected override CreateParams CreateParams
-    {
-        get
-        {
-            var parametros = base.CreateParams;
-            parametros.ExStyle |= 0x02000000;
-            return parametros;
-        }
-    }
+    // Sin WS_EX_COMPOSITED: junto con los TextBox que tienen PlaceholderText provocaba un ciclo
+    // de repintado infinito (el módulo Personal parpadeaba). Los paneles ya usan doble búfer.
 
     protected override void Dispose(bool disposing)
     {
