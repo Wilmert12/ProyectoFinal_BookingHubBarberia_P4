@@ -38,6 +38,7 @@ static class Program
         AgregarApi<ICatalogosApi>(servicios, apiBaseUrl);
         AgregarApi<IReporteApi>(servicios, apiBaseUrl);
         AgregarApi<IUsuarioApi>(servicios, apiBaseUrl);
+        AgregarApi<IIndisponibilidadApi>(servicios, apiBaseUrl);
         servicios.AddSingleton<Apis>();
 
         using var proveedor = servicios.BuildServiceProvider();

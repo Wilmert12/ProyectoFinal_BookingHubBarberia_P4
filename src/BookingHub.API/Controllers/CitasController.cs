@@ -109,6 +109,51 @@ public class CitasController(CitaService citaService, BarberoService barberoServ
         return CreatedAtAction(nameof(GetCita), new { id = cita.CitaId }, creada.Value);
     }
 
+    /// <summary>El cliente cancela una cita suya; manda su teléfono en X-Cliente-Telefono.</summary>
+    [HttpPost("{id}/cancelar")]
+    public async Task<IActionResult> CancelarCita(int id)
+    {
+        var result = await reservaService.Cancelar(id, TelefonoCliente);
+
+        if (result.IsFailure)
+            return result.Error.Code == ReservaService.ErrorNoVerificado
+                ? Unauthorized(result.Error)
+                : BadRequest(result.Error);
+
+        if (result.Value == null)
+            return NotFound();
+
+        return NoContent();
+    }
+
+    /// <summary>El barbero marca una de sus citas (Confirmada, EnProceso, Completada o NoShow).</summary>
+    [Authorize(Roles = RolesSistema.Barbero)]
+    [HttpPut("{id}/estado")]
+    public async Task<IActionResult> CambiarEstado(int id, CambioEstadoDto cambio)
+    {
+        if (await BarberoDelUsuario() is not { } barberoId)
+            return NotFound("Tu usuario no tiene un perfil de barbero.");
+
+        var result = await citaService.CambiarEstadoPorBarbero(id, barberoId, cambio.EstadoCitaId);
+
+        if (result.IsFailure)
+            return BadRequest(result.Error);
+
+        if (result.Value == null)
+            return NotFound();
+
+        return NoContent();
+    }
+
+    private async Task<int?> BarberoDelUsuario()
+    {
+        if (!int.TryParse(User.FindFirst("sub")?.Value, out var usuarioId))
+            return null;
+
+        var barbero = await barberoService.GetList(b => b.UsuarioId == usuarioId);
+        return barbero.IsSuccess ? barbero.Value!.FirstOrDefault()?.BarberoId : null;
+    }
+
     [Authorize(Roles = RolesSistema.Personal)]
     [HttpPut("{id}")]
     public async Task<IActionResult> PutCita(int id, CitaDto cita)

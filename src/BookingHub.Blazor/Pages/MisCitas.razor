@@ -35,11 +35,32 @@ else if (citas is not null)
     }
     else
     {
+        @if (aviso is not null)
+        {
+            <div class="alert @(avisoEsError ? "alert-danger" : "alert-success") py-2">@aviso</div>
+        }
+
         <h2 class="h4 mb-3">Próximas</h2>
-        <TablaCitas Citas="@citas.Where(c => c.FechaInicio >= DateTime.Now).ToList()" Vacio="No tienes citas próximas." />
+        <TablaCitas Citas="@citas.Where(c => c.FechaInicio >= Formato.Ahora).ToList()" Vacio="No tienes citas próximas.">
+            <Acciones Context="cita">
+                @if (EsCancelable(cita))
+                {
+                    @if (confirmandoId == cita.CitaId)
+                    {
+                        <span class="small me-2">¿Cancelar?</span>
+                        <button type="button" class="btn btn-sm btn-danger" disabled="@cancelando" @onclick="() => Cancelar(cita)">Sí</button>
+                        <button type="button" class="btn btn-sm btn-link" disabled="@cancelando" @onclick="() => confirmandoId = null">No</button>
+                    }
+                    else
+                    {
+                        <button type="button" class="btn btn-sm btn-outline-danger" @onclick="() => confirmandoId = cita.CitaId">Cancelar</button>
+                    }
+                }
+            </Acciones>
+        </TablaCitas>
 
         <h2 class="h4 mb-3">Historial</h2>
-        <TablaCitas Citas="@citas.Where(c => c.FechaInicio < DateTime.Now).OrderByDescending(c => c.FechaInicio).ToList()" Vacio="Aún no tienes visitas pasadas." />
+        <TablaCitas Citas="@citas.Where(c => c.FechaInicio < Formato.Ahora).OrderByDescending(c => c.FechaInicio).ToList()" Vacio="Aún no tienes visitas pasadas." />
     }
 }
 
@@ -49,6 +70,41 @@ else if (citas is not null)
     private List<CitaDto>? citas;
     private bool cargando;
     private string? error;
+    private int? confirmandoId;
+    private bool cancelando;
+    private string? aviso;
+    private bool avisoEsError;
+
+    private static bool EsCancelable(CitaDto cita) =>
+        cita.Estado is "Pendiente" or "Confirmada" && cita.FechaInicio > Formato.Ahora;
+
+    private async Task Cancelar(CitaDto cita)
+    {
+        cancelando = true;
+        aviso = null;
+        try
+        {
+            await CitaApi.CancelarCita(cita.CitaId, Sesion.Telefono ?? telefono ?? "");
+            aviso = $"Cancelaste la cita del {cita.FechaInicio:dd/MM/yyyy} a las {cita.FechaInicio:HH:mm}.";
+            avisoEsError = false;
+            citas = await CitaApi.GetCitasCliente(clienteId!.Value, (Sesion.Telefono ?? telefono)!.Trim());
+        }
+        catch (Refit.ApiException ex)
+        {
+            aviso = Formato.DescripcionError(ex) ?? "No se pudo cancelar la cita. Intenta de nuevo.";
+            avisoEsError = true;
+        }
+        catch (Exception ex) when (Formato.EsErrorDeApi(ex))
+        {
+            aviso = "No se pudo conectar con la API. Intenta de nuevo.";
+            avisoEsError = true;
+        }
+        finally
+        {
+            cancelando = false;
+            confirmandoId = null;
+        }
+    }
 
     protected override async Task OnInitializedAsync()
     {
@@ -62,6 +118,7 @@ else if (citas is not null)
     private async Task Buscar()
     {
         error = null;
+        aviso = null;
         citas = null;
         if (clienteId is null or < 1 || string.IsNullOrWhiteSpace(telefono))
         {

@@ -163,6 +163,41 @@ public class CitaService(
             .ToListAsync();
     }
 
+    /// <summary>Estados que un barbero puede poner en sus propias citas.</summary>
+    public static readonly string[] EstadosDelBarbero = ["Confirmada", "EnProceso", "Completada", "NoShow"];
+
+    /// <summary>
+    /// El barbero marca una de sus citas. No puede tocar citas canceladas ni de otro barbero.
+    /// Devuelve null si la cita no existe o no es suya.
+    /// </summary>
+    public async Task<Result<bool?>> CambiarEstadoPorBarbero(int citaId, int barberoId, int estadoId)
+    {
+        await using var contexto = await contextFactory.CreateDbContextAsync();
+
+        var cita = await contexto.Citas
+            .AsNoTracking()
+            .Where(c => c.CitaId == citaId && c.BarberoId == barberoId)
+            .Select(c => new { c.EstadoCita.Descripcion })
+            .FirstOrDefaultAsync();
+        if (cita is null)
+            return Result.Success<bool?>(null);
+
+        if (cita.Descripcion == "Cancelada")
+            return Result.Failure<bool?>(new Error("CITA_CANCELADA", "La cita está cancelada."));
+
+        var estado = await contexto.EstadosCita
+            .Where(e => e.EstadoCitaId == estadoId)
+            .Select(e => e.Descripcion)
+            .FirstOrDefaultAsync();
+        if (estado is null || !EstadosDelBarbero.Contains(estado))
+            return Result.Failure<bool?>(new Error("ESTADO_NO_PERMITIDO", "Ese estado no se puede poner desde la agenda del barbero."));
+
+        await contexto.Citas
+            .Where(c => c.CitaId == citaId)
+            .ExecuteUpdateAsync(s => s.SetProperty(c => c.EstadoCitaId, estadoId));
+        return Result.Success<bool?>(true);
+    }
+
     public async Task<Result> Eliminar(int citaId)
     {
         await using var contexto = await contextFactory.CreateDbContextAsync();

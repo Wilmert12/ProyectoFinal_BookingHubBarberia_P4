@@ -108,6 +108,42 @@ public class ReservaService(
         return await citaService.Guardar(cita);
     }
 
+    /// <summary>
+    /// El cliente cancela una cita suya que todavía no empieza.
+    /// Devuelve null si la cita no existe.
+    /// </summary>
+    public async Task<Result<bool?>> Cancelar(int citaId, string? telefono)
+    {
+        await using var contexto = await contextFactory.CreateDbContextAsync();
+
+        var cita = await contexto.Citas
+            .AsNoTracking()
+            .Where(c => c.CitaId == citaId)
+            .Select(c => new { c.ClienteId, c.FechaInicio, c.EstadoCita.Descripcion, c.EstadoCita.LiberaHorario })
+            .FirstOrDefaultAsync();
+        if (cita is null)
+            return Result.Success<bool?>(null);
+
+        if (!await TelefonoCoincide(cita.ClienteId, telefono))
+            return Result.Failure<bool?>(new Error(ErrorNoVerificado, "El número de cliente y el teléfono no coinciden."));
+        if (cita.LiberaHorario)
+            return Result.Failure<bool?>(new Error("CITA_CANCELADA", "La cita ya estaba cancelada."));
+        if (cita.Descripcion is not ("Pendiente" or "Confirmada") || cita.FechaInicio <= HoraLocal.Ahora)
+            return Result.Failure<bool?>(new Error("CITA_NO_CANCELABLE", "Solo se pueden cancelar citas que todavía no empiezan."));
+
+        var canceladaId = await contexto.EstadosCita
+            .Where(e => e.Descripcion == "Cancelada")
+            .Select(e => (int?)e.EstadoCitaId)
+            .FirstOrDefaultAsync();
+        if (canceladaId is null)
+            return Result.Failure<bool?>(new Error("RESERVA_ESTADO", "No existe el estado Cancelada."));
+
+        await contexto.Citas
+            .Where(c => c.CitaId == citaId)
+            .ExecuteUpdateAsync(s => s.SetProperty(c => c.EstadoCitaId, canceladaId.Value));
+        return Result.Success<bool?>(true);
+    }
+
     private static string SoloDigitos(string? texto) =>
         new((texto ?? string.Empty).Where(char.IsDigit).ToArray());
 }

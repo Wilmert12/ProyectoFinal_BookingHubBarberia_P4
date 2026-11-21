@@ -11,7 +11,8 @@ public class Apis(
     IPagoApi pagos,
     ICatalogosApi catalogos,
     IReporteApi reportes,
-    IUsuarioApi usuarios)
+    IUsuarioApi usuarios,
+    IIndisponibilidadApi indisponibilidades)
 {
     public IAuthApi Auth => auth;
     public ICitaApi Citas => citas;
@@ -22,4 +23,5 @@ public class Apis(
     public ICatalogosApi Catalogos => catalogos;
     public IReporteApi Reportes => reportes;
     public IUsuarioApi Usuarios => usuarios;
+    public IIndisponibilidadApi Indisponibilidades => indisponibilidades;
 }

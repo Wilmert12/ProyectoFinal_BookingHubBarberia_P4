@@ -10,7 +10,7 @@ public class FrmNuevaCita : Form
     private readonly CheckBox _clienteNuevo = new() { Text = "Es un cliente nuevo", AutoSize = true };
     private readonly TextBox _nombre = new() { Enabled = false };
     private readonly TextBox _telefono = new() { Enabled = false };
-    private readonly ComboBox _servicio = Ui.Lista();
+    private readonly CheckedListBox _servicio = new() { CheckOnClick = true, IntegralHeight = false, Height = 110, MinimumSize = new Size(0, 110), BorderStyle = BorderStyle.FixedSingle };
     private readonly ComboBox _barbero = Ui.Lista();
     private readonly ComboBox _estado = Ui.Lista();
     private readonly DateTimePicker _fecha = new() { Format = DateTimePickerFormat.Short };
@@ -31,6 +31,11 @@ public class FrmNuevaCita : Form
     private record OpcionCliente(int ClienteId, string Texto);
     private record OpcionHora(DateTime Inicio, string Texto);
 
+    private record OpcionServicio(CatalogoItemDto Item)
+    {
+        public override string ToString() => $"{Item.Nombre} · {Mensajes.Precio(Item.Precio)} · {Item.DuracionMin ?? 30} min";
+    }
+
     public FrmNuevaCita(Apis apis, DateTime fecha)
     {
         _apis = apis;
@@ -40,7 +45,7 @@ public class FrmNuevaCita : Form
         FormBorderStyle = FormBorderStyle.FixedDialog;
         MaximizeBox = false;
         MinimizeBox = false;
-        ClientSize = new Size(540, 600);
+        ClientSize = new Size(560, 700);
         BackColor = Ui.Superficie;
         Icon = Ui.Icono();
         AcceptButton = _guardar;
@@ -55,7 +60,7 @@ public class FrmNuevaCita : Form
             ("", _clienteNuevo),
             ("Nombre", _nombre),
             ("Teléfono", _telefono),
-            ("Servicio", _servicio),
+            ("Servicios", _servicio),
             ("Barbero", _barbero),
             ("Fecha", _fecha),
             ("Hora libre", _horaLibre),
@@ -85,7 +90,8 @@ public class FrmNuevaCita : Form
         };
         _nombre.TextChanged += (_, _) => _clienteCreadoId = null;
         _telefono.TextChanged += (_, _) => _clienteCreadoId = null;
-        _servicio.SelectedIndexChanged += async (_, _) => await CargarHoras();
+        // ItemCheck llega antes de que cambie la marca; se espera a que se aplique.
+        _servicio.ItemCheck += (_, _) => BeginInvoke(new Action(async () => await CargarHoras()));
         _barbero.SelectedIndexChanged += async (_, _) => await CargarHoras();
         _fecha.ValueChanged += async (_, _) => await CargarHoras();
         _horaLibre.SelectedIndexChanged += (_, _) => ActualizarResumen();
@@ -112,9 +118,10 @@ public class FrmNuevaCita : Form
             _cliente.ValueMember = nameof(OpcionCliente.ClienteId);
             _cliente.DataSource = clientes.Select(c => new OpcionCliente(c.ClienteId, $"{c.Nombre} · {c.Telefono}")).ToList();
 
-            _servicio.DisplayMember = nameof(CatalogoItemDto.Nombre);
-            _servicio.ValueMember = nameof(CatalogoItemDto.CatalogoItemId);
-            _servicio.DataSource = _servicios;
+            _servicio.Items.Clear();
+            _servicio.Items.AddRange(_servicios.Select(s => (object)new OpcionServicio(s)).ToArray());
+            if (_servicio.Items.Count > 0)
+                _servicio.SetItemChecked(0, true);
 
             _barbero.DisplayMember = nameof(BarberoDto.Nombre);
             _barbero.ValueMember = nameof(BarberoDto.BarberoId);
@@ -134,10 +141,13 @@ public class FrmNuevaCita : Form
         }
     }
 
-    private CatalogoItemDto? ServicioSeleccionado =>
-        _servicios.FirstOrDefault(s => s.CatalogoItemId == (_servicio.SelectedValue as int? ?? 0));
+    private List<CatalogoItemDto> ServiciosElegidos =>
+        _servicio.CheckedItems.Cast<OpcionServicio>().Select(o => o.Item).ToList();
 
-    private int DuracionMin => ServicioSeleccionado?.DuracionMin ?? 30;
+    /// <summary>La cita dura lo que suman los servicios elegidos.</summary>
+    private int DuracionMin => Math.Max(ServiciosElegidos.Sum(s => s.DuracionMin ?? 30), 5);
+
+    private decimal Total => ServiciosElegidos.Sum(s => s.Precio);
 
     /// <summary>Pide a la API las horas libres del barbero para el servicio y la fecha elegidos.</summary>
     private async Task CargarHoras()
@@ -148,9 +158,9 @@ public class FrmNuevaCita : Form
         var consulta = ++_consultaHoras;
         _horaLibre.DataSource = null;
 
-        if (ServicioSeleccionado is null || _barbero.SelectedValue is not int barberoId)
+        if (ServiciosElegidos.Count == 0 || _barbero.SelectedValue is not int barberoId)
         {
-            _infoHoras.Text = "Elige el servicio y el barbero para ver las horas libres.";
+            _infoHoras.Text = "Elige al menos un servicio y el barbero para ver las horas libres.";
             ActualizarResumen();
             return;
         }
@@ -197,21 +207,24 @@ public class FrmNuevaCita : Form
 
     private void ActualizarResumen()
     {
-        if (ServicioSeleccionado is not { } servicio)
+        if (ServiciosElegidos.Count == 0)
         {
-            _resumen.Text = _cargado ? "No hay servicios activos en el catálogo." : string.Empty;
+            _resumen.Text = !_cargado ? string.Empty
+                : _servicios.Count == 0 ? "No hay servicios activos en el catálogo."
+                : "Elige al menos un servicio.";
             return;
         }
         _resumen.Text = InicioElegido is { } inicio
-            ? $"Total {Mensajes.Precio(servicio.Precio)} · De {inicio:HH:mm} a {inicio.AddMinutes(DuracionMin):HH:mm}"
-            : $"Total {Mensajes.Precio(servicio.Precio)} · Elige una hora";
+            ? $"Total {Mensajes.Precio(Total)} · {DuracionMin} min · De {inicio:HH:mm} a {inicio.AddMinutes(DuracionMin):HH:mm}"
+            : $"Total {Mensajes.Precio(Total)} · {DuracionMin} min · Elige una hora";
     }
 
     private async Task Guardar()
     {
-        if (ServicioSeleccionado is not { } servicio || _barbero.SelectedValue is not int barberoId || _estado.SelectedValue is not int estadoId)
+        var servicios = ServiciosElegidos;
+        if (servicios.Count == 0 || _barbero.SelectedValue is not int barberoId || _estado.SelectedValue is not int estadoId)
         {
-            Mensajes.Informacion(this, "Elige el servicio, el barbero y el estado.");
+            Mensajes.Informacion(this, "Elige al menos un servicio, el barbero y el estado.");
             return;
         }
         if (InicioElegido is not { } inicio)
@@ -245,6 +258,7 @@ public class FrmNuevaCita : Form
             }
 
             var notas = _notas.Text.Trim();
+            var nombres = string.Join(" + ", servicios.Select(s => s.Nombre));
 
             await _apis.Citas.CrearCita(new CitaDto
             {
@@ -253,9 +267,11 @@ public class FrmNuevaCita : Form
                 EstadoCitaId = estadoId,
                 FechaInicio = inicio,
                 FechaFin = inicio.AddMinutes(DuracionMin),
-                Total = servicio.Precio,
-                Notas = string.IsNullOrEmpty(notas) ? servicio.Nombre : $"{servicio.Nombre} - {notas}",
-                Detalles = [new CitaDetalleDto { CatalogoItemId = servicio.CatalogoItemId, Cantidad = 1, PrecioUnitario = servicio.Precio }]
+                Total = Total,
+                Notas = string.IsNullOrEmpty(notas) ? nombres : $"{nombres} - {notas}",
+                Detalles = servicios
+                    .Select(s => new CitaDetalleDto { CatalogoItemId = s.CatalogoItemId, Cantidad = 1, PrecioUnitario = s.Precio })
+                    .ToList()
             });
 
             DialogResult = DialogResult.OK;

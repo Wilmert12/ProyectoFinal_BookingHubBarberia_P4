@@ -61,6 +61,7 @@ public class FrmPrincipal : Form
         {
             AgregarSeccion("Catálogo", new CatalogoControl(apis));
             AgregarSeccion("Personal", new PersonalControl(apis));
+            AgregarSeccion("Horarios", new HorariosControl(apis));
             AgregarSeccion("Reportes", new ReportesControl(apis));
         }
 
@@ -77,6 +78,51 @@ public class FrmPrincipal : Form
         Controls.Add(encabezado);
 
         Mostrar(0);
+        VigilarSesion(sesion);
+    }
+
+    /// <summary>
+    /// Vuelve al login cuando el token vence: por la hora de vencimiento o porque la API respondió 401.
+    /// </summary>
+    private void VigilarSesion(Sesion sesion)
+    {
+        Mensajes.SesionVencida = false;
+
+        void AlExpirar()
+        {
+            Mensajes.SesionVencida = true;
+            if (IsHandleCreated && !IsDisposed)
+                BeginInvoke(CerrarPorVencimiento);
+        }
+
+        var reloj = new System.Windows.Forms.Timer { Interval = 30_000 };
+        reloj.Tick += (_, _) =>
+        {
+            if (sesion.YaVencio)
+                sesion.MarcarExpirada();
+        };
+
+        sesion.Expiro += AlExpirar;
+        reloj.Start();
+        FormClosed += (_, _) =>
+        {
+            sesion.Expiro -= AlExpirar;
+            reloj.Dispose();
+        };
+    }
+
+    private void CerrarPorVencimiento()
+    {
+        if (CerroSesion)
+            return;
+        CerroSesion = true;
+
+        // Cierra primero los diálogos abiertos (nueva cita, cobro...) para no dejarlos huérfanos.
+        foreach (var ventana in Application.OpenForms.Cast<Form>().Where(f => f != this).ToList())
+            ventana.Close();
+
+        Mensajes.Informacion(this, "Tu sesión expiró. Vuelve a iniciar sesión para continuar.");
+        Close();
     }
 
     private void AgregarSeccion(string titulo, UserControl modulo)

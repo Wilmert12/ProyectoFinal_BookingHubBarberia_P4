@@ -16,8 +16,17 @@ public static class Mensajes
 
     public static string Fecha(DateOnly fecha) => fecha.ToString("yyyy-MM-dd");
 
+    /// <summary>
+    /// Mientras la sesión está vencida no se muestran los 401 sueltos de cada módulo:
+    /// la ventana principal avisa una sola vez y vuelve al login.
+    /// </summary>
+    public static bool SesionVencida { get; set; }
+
     public static void Error(IWin32Window? ventana, Exception ex)
     {
+        if (SesionVencida && ex is ApiException { StatusCode: HttpStatusCode.Unauthorized })
+            return;
+
         MessageBox.Show(ventana, Describir(ex), Ui.Marca, MessageBoxButtons.OK, MessageBoxIcon.Warning);
     }
 

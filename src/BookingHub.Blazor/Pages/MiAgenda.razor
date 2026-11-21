@@ -66,6 +66,10 @@
         <div class="row g-4">
             <div class="col-lg-8">
                 <h2 class="h5 mb-3">Citas</h2>
+                @if (avisoEstado is not null)
+                {
+                    <div class="alert alert-danger py-2">@avisoEstado</div>
+                }
                 @if (citas.Count == 0)
                 {
                     <p class="text-body-secondary">No tienes citas este día.</p>
@@ -83,10 +87,20 @@
                                 <div class="flex-grow-1">
                                     <div class="d-flex flex-wrap justify-content-between gap-2">
                                         <span class="fw-semibold">@cita.ClienteNombre</span>
-                                        <span class="badge rounded-pill align-self-start @TablaCitas.ClaseEstado(cita.Estado)">@cita.Estado</span>
+                                        <span class="badge rounded-pill align-self-start @TablaCitas.ClaseEstado(cita.Estado)">@Formato.Estado(cita.Estado)</span>
                                     </div>
                                     <div class="text-body-secondary">@Servicios(cita)</div>
                                     <div class="small">@Formato.Precio(cita.Total)</div>
+                                    @if (Siguientes(cita) is { Count: > 0 } opciones)
+                                    {
+                                        <div class="d-flex flex-wrap gap-2 mt-2">
+                                            @foreach (var (estado, texto, clase) in opciones)
+                                            {
+                                                <button type="button" class="btn btn-sm @clase" disabled="@(cambiandoId == cita.CitaId)"
+                                                        @onclick="() => CambiarEstado(cita, estado)">@texto</button>
+                                            }
+                                        </div>
+                                    }
                                 </div>
                             </li>
                         }
@@ -118,19 +132,19 @@
 }
 
 @code {
-    private DateOnly fecha = DateOnly.FromDateTime(DateTime.Today);
+    private DateOnly fecha = Formato.Hoy;
     private List<CitaDto> citas = [];
     private List<HorarioLibreDto>? libres;
     private int? barberoId;
     private bool cargando = true;
     private string? error;
 
-    private static DateOnly Hoy => DateOnly.FromDateTime(DateTime.Today);
+    private static DateOnly Hoy => Formato.Hoy;
 
     private List<CitaDto> Activas => citas.Where(c => !EsLibre(c)).ToList();
 
     private CitaDto? Proxima => fecha == Hoy
-        ? Activas.FirstOrDefault(c => c.FechaInicio >= DateTime.Now)
+        ? Activas.FirstOrDefault(c => c.FechaInicio >= Formato.Ahora)
         : Activas.FirstOrDefault();
 
     protected override async Task OnInitializedAsync()
@@ -191,6 +205,57 @@
         finally
         {
             cargando = false;
+        }
+    }
+
+    private List<EstadoCitaDto> estados = [];
+    private int? cambiandoId;
+    private string? avisoEstado;
+
+    /// <summary>Botones que tiene sentido mostrar según el estado actual de la cita.</summary>
+    private static List<(string Estado, string Texto, string Clase)> Siguientes(CitaDto cita) => cita.Estado switch
+    {
+        "Pendiente" => [("Confirmada", "Confirmar", "btn-outline-secondary"), ("EnProceso", "Empezar", "btn-outline-primary"), ("NoShow", "No vino", "btn-outline-danger")],
+        "Confirmada" => [("EnProceso", "Empezar", "btn-outline-primary"), ("Completada", "Completada", "btn-outline-success"), ("NoShow", "No vino", "btn-outline-danger")],
+        "EnProceso" => [("Completada", "Completada", "btn-outline-success")],
+        _ => []
+    };
+
+    private async Task CambiarEstado(CitaDto cita, string estado)
+    {
+        cambiandoId = cita.CitaId;
+        avisoEstado = null;
+        try
+        {
+            if (estados.Count == 0)
+                estados = await CitaApi.GetEstados();
+
+            var estadoId = estados.FirstOrDefault(e => e.Descripcion == estado)?.EstadoCitaId;
+            if (estadoId is null)
+            {
+                avisoEstado = $"No existe el estado {estado}.";
+                return;
+            }
+
+            await CitaApi.CambiarEstado(cita.CitaId, new CambioEstadoDto(estadoId.Value));
+            await Cargar();
+        }
+        catch (Refit.ApiException ex) when (ex.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+        {
+            await Sesion.Cerrar();
+            Navegacion.NavigateTo("ingresar");
+        }
+        catch (Refit.ApiException ex)
+        {
+            avisoEstado = Formato.DescripcionError(ex) ?? "No se pudo cambiar el estado de la cita.";
+        }
+        catch (Exception ex) when (Formato.EsErrorDeApi(ex))
+        {
+            avisoEstado = "No se pudo conectar con la API. Intenta de nuevo.";
+        }
+        finally
+        {
+            cambiandoId = null;
         }
     }
 
