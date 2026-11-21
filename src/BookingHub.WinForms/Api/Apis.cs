@@ -41,6 +41,9 @@ public interface IBarberoApi
     [Get("/api/Barberos")]
     Task<List<BarberoDto>> GetBarberos(bool incluirInactivos = false);
 
+    [Get("/api/Barberos/{id}/disponibilidad")]
+    Task<DisponibilidadDto> GetDisponibilidad(int id, [Query(Format = "yyyy-MM-dd")] DateOnly fecha, int duracionMin);
+
     [Post("/api/Barberos")]
     Task<BarberoDto> CrearBarbero([Body] BarberoDto barbero);
 

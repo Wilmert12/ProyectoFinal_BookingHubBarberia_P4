@@ -114,4 +114,8 @@ public record IngresoPorBarberoDto(int BarberoId, string Nombre, int Citas, deci
 
 public record IngresoPorServicioDto(int CatalogoItemId, string Nombre, bool EsServicio, int Cantidad, decimal Ingresos);
 
+public record DisponibilidadDto(int BarberoId, DateOnly Fecha, int DuracionMin, List<HorarioLibreDto> Horarios);
+
+public record HorarioLibreDto(DateTime Inicio, DateTime Fin);
+
 public record ErrorApi(string? Code, string? Description);
