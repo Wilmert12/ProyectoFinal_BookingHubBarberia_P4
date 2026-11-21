@@ -39,7 +39,9 @@ public class CajaControl : UserControl
         Controls.Add(_totales);
         var anular = Ui.Boton("Anular cobro");
         anular.Click += async (_, _) => await Anular();
-        Controls.Add(Ui.Barra(Ui.Etiqueta("Fecha"), _fecha, cargar, imprimir, anular));
+        var exportar = Ui.Boton("Exportar a Excel");
+        exportar.Click += (_, _) => ExportarExcel();
+        Controls.Add(Ui.Barra(Ui.Etiqueta("Fecha"), _fecha, cargar, imprimir, anular, exportar));
         Controls.Add(Ui.TituloModulo("Caja y cierre del día"));
 
         Load += async (_, _) => await Cargar();
@@ -139,5 +141,34 @@ public class CajaControl : UserControl
         {
             Mensajes.Error(this, ex);
         }
+    }
+
+    private void ExportarExcel()
+    {
+        if (_lista.Count == 0)
+        {
+            Mensajes.Informacion(this, "No hay cobros en este día para exportar.");
+            return;
+        }
+
+        var ventas = _lista.Sum(p => p.Monto);
+        var propinas = _lista.Sum(p => p.Propina);
+        Exportar.Csv(this, $"Caja {_fecha.Value:yyyy-MM-dd}.csv",
+            new Exportar.Seccion($"Cobros del {_fecha.Value:dd/MM/yyyy}",
+                ["Hora", "Recibo", "Cliente", "Barbero", "Método", "Monto", "ITBIS incluido", "Propina", "Referencia"],
+                _lista.OrderBy(p => p.FechaPago).Select(p => new object?[]
+                {
+                    p.FechaPago.ToString("HH:mm"), p.PagoId, p.ClienteNombre, p.BarberoNombre, p.MetodoPago,
+                    p.Monto, Impuestos.ItbisIncluido(p.Monto), p.Propina, p.Referencia
+                })),
+            new Exportar.Seccion("Por método de pago", ["Método", "Cobros", "Total"],
+                _lista.GroupBy(p => p.MetodoPago ?? "Sin método").Select(g => new object?[] { g.Key, g.Count(), g.Sum(p => p.Monto) })),
+            new Exportar.Seccion("Totales", ["Concepto", "Valor"],
+            [
+                ["Ventas (ITBIS incluido)", ventas],
+                ["ITBIS (18 %)", Impuestos.ItbisIncluido(ventas)],
+                ["Propinas", propinas],
+                ["Total en caja", ventas + propinas]
+            ]));
     }
 }

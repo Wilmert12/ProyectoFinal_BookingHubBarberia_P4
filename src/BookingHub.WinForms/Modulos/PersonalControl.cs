@@ -17,6 +17,7 @@ public class PersonalControl : UserControl
     private readonly CheckBox _activo = new() { Text = "Activo", AutoSize = true, Checked = true };
     private readonly TextBox _apodo = new();
     private readonly TextBox _cedula = new();
+    private readonly NumericUpDown _comision = Ui.Numero(100, 0);
     private readonly Button _color = Ui.Boton("Elegir color");
     private readonly GroupBox _grupoBarbero = new() { Text = "Datos de barbero", AutoSize = true, Padding = new Padding(10) };
     private readonly Label _modo = new() { AutoSize = true, Font = Ui.Destacado, Padding = new Padding(0, 0, 0, 6) };
@@ -31,7 +32,8 @@ public class PersonalControl : UserControl
     {
         _apis = apis;
 
-        _grupoBarbero.Controls.Add(Ui.Formulario(("Apodo", _apodo), ("Cédula", _cedula), ("Color", _color)));
+        _comision.Value = 50;
+        _grupoBarbero.Controls.Add(Ui.Formulario(("Apodo", _apodo), ("Cédula", _cedula), ("Comisión (%)", _comision), ("Color", _color)));
         var nuevo = Ui.Boton("Nuevo");
         var guardar = Ui.Boton("Guardar", primario: true);
 
@@ -122,6 +124,7 @@ public class PersonalControl : UserControl
 
         var barbero = BarberoDe(usuario.UsuarioId);
         _apodo.Text = barbero?.Apodo;
+        _comision.Value = Math.Clamp(barbero?.ComisionPorcentaje ?? 50, 0, 100);
         _cedula.Text = string.Empty;
         _cedula.PlaceholderText = barbero is null ? "Obligatoria" : "Vacío = no cambiar";
         PonerColor(barbero?.ColorHex ?? "#1E88E5");
@@ -132,6 +135,7 @@ public class PersonalControl : UserControl
         _usuarioId = 0;
         _modo.Text = "Nuevo usuario";
         _nombre.Text = _email.Text = _telefono.Text = _password.Text = _apodo.Text = _cedula.Text = string.Empty;
+        _comision.Value = 50;
         _password.PlaceholderText = "Mínimo 8 caracteres";
         _cedula.PlaceholderText = "Obligatoria";
         _activo.Checked = true;
@@ -220,6 +224,7 @@ public class PersonalControl : UserControl
             UsuarioId = usuarioId,
             Apodo = string.IsNullOrWhiteSpace(_apodo.Text) ? null : _apodo.Text.Trim(),
             Cedula = string.IsNullOrWhiteSpace(_cedula.Text) ? null : _cedula.Text.Trim(),
+            ComisionPorcentaje = _comision.Value,
             ColorHex = _colorHex,
             Activo = activo
         };

@@ -15,6 +15,9 @@ public partial class Barbero
 
     public bool Activo { get; set; }
 
+    /// <summary>Porcentaje de lo cobrado (sin ITBIS) que le toca al barbero. Columna nueva: ver Database/Migraciones.</summary>
+    public decimal ComisionPorcentaje { get; set; } = 50;
+
     public DateTime FechaRegistro { get; set; }
 
     public int BarberoId { get; set; }

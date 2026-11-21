@@ -13,4 +13,8 @@ public record BarberoDto
 
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public string? Cedula { get; set; }
+
+    /// <summary>Solo lo ve el personal; en la web pública llega vacío. Null al guardar = no cambiar.</summary>
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public decimal? ComisionPorcentaje { get; set; }
 }

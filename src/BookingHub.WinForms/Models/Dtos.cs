@@ -47,6 +47,7 @@ public record BarberoDto
     public string ColorHex { get; set; } = "#000000";
     public bool Activo { get; set; } = true;
     public string? Cedula { get; set; }
+    public decimal? ComisionPorcentaje { get; set; }
 }
 
 public record CatalogoItemDto
@@ -115,7 +116,8 @@ public record ReporteIngresosDto
 
 public record IngresoPorMetodoDto(string MetodoPago, int Cantidad, decimal Total);
 
-public record IngresoPorBarberoDto(int BarberoId, string Nombre, int Citas, decimal Ingresos);
+public record IngresoPorBarberoDto(int BarberoId, string Nombre, int Citas, decimal Ingresos,
+    decimal ComisionPorcentaje = 0, decimal Comision = 0, decimal Propinas = 0, decimal APagar = 0);
 
 public record IngresoPorServicioDto(int CatalogoItemId, string Nombre, bool EsServicio, int Cantidad, decimal Ingresos);
 

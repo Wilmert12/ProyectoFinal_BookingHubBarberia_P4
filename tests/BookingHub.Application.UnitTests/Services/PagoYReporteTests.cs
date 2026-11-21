@@ -102,6 +102,36 @@ public class PagoYReporteTests : IDisposable
     }
 
     [Fact]
+    public async Task GetIngresos_ComisionSobreLoCobradoSinItbisMasPropinas()
+    {
+        using (var contexto = _baseDeDatos.CrearContexto())
+        {
+            contexto.Barberos.Find(2)!.ComisionPorcentaje = 40m;
+            contexto.SaveChanges();
+        }
+        var dia = new DateTime(2026, 11, 20, 9, 0, 0);
+        // Carlos: RD$118 con 50 % (por defecto) y RD$20 de propina.
+        await CitaCobrada(1, 1, dia, 20m,
+            new CitaDetalleDto { CatalogoItemId = _corteId, Cantidad = 1, PrecioUnitario = 118m });
+        // Luis: RD$118 con 40 %, sin propina.
+        await CitaCobrada(2, 1, dia.AddHours(1), 0m,
+            new CitaDetalleDto { CatalogoItemId = _corteId, Cantidad = 1, PrecioUnitario = 118m });
+
+        var reporte = (await _reporteService.GetIngresos(new DateOnly(2026, 11, 20), new DateOnly(2026, 11, 20))).Value!;
+
+        // RD$118 con ITBIS incluido = RD$100 sin ITBIS.
+        var carlos = reporte.PorBarbero.Single(b => b.Nombre == "Carlos Pérez");
+        Assert.Equal(50m, carlos.ComisionPorcentaje);
+        Assert.Equal(50m, carlos.Comision);
+        Assert.Equal(20m, carlos.Propinas);
+        Assert.Equal(70m, carlos.APagar);
+
+        var luis = reporte.PorBarbero.Single(b => b.Nombre == "Luis Gómez");
+        Assert.Equal(40m, luis.Comision);
+        Assert.Equal(40m, luis.APagar);
+    }
+
+    [Fact]
     public async Task GetIngresos_FechaFinalAnterior_Falla()
     {
         var result = await _reporteService.GetIngresos(new DateOnly(2026, 11, 20), new DateOnly(2026, 11, 19));
