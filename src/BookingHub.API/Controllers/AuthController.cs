@@ -3,6 +3,7 @@ using BookingHub.Application.DTOs;
 using BookingHub.Application.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace BookingHub.API.Controllers;
 
@@ -10,6 +11,7 @@ namespace BookingHub.API.Controllers;
 [Route("api/[controller]")]
 public class AuthController(UsuarioService usuarioService, GeneradorToken generadorToken) : ControllerBase
 {
+    [EnableRateLimiting(LimiteDeIntentos.Login)]
     [HttpPost("login")]
     public async Task<ActionResult<SesionDto>> Login(LoginDto login)
     {

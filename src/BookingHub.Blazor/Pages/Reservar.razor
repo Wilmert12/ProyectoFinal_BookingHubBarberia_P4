@@ -71,7 +71,7 @@
                 <div class="d-flex flex-column gap-1">
                     <label class="form-label fw-semibold mb-0" for="cliente">Número de cliente</label>
                     <input id="cliente" class="form-control" type="number" min="1" @bind="clienteId" />
-                    <small class="text-body-secondary">¿No tienes uno? <a href="registro">Regístrate</a>.</small>
+                    <small class="text-body-secondary">¿No tienes uno? <a href="registro">Regístrate</a>. ¿Lo olvidaste? <a href="recuperar">Recupéralo</a>.</small>
                 </div>
 
                 <div class="d-flex flex-column gap-1">
@@ -178,6 +178,7 @@
 
     protected override async Task OnInitializedAsync()
     {
+        await Sesion.Cargar();
         clienteId = Sesion.ClienteId;
         telefono = Sesion.Telefono;
 
@@ -266,8 +267,7 @@
         try
         {
             reservada = await CitaApi.CrearCita(cita, telefono!.Trim());
-            Sesion.ClienteId = clienteId;
-            Sesion.Telefono = telefono.Trim();
+            await Sesion.Recordar(clienteId!.Value, telefono);
         }
         catch (Refit.ApiException ex) when (ex.StatusCode == System.Net.HttpStatusCode.Unauthorized)
         {
@@ -280,7 +280,7 @@
         }
         catch (Exception ex) when (Formato.EsErrorDeApi(ex))
         {
-            error = "No se pudo reservar la cita. Verifica tu número de cliente e intenta de nuevo.";
+            error = Formato.Mensaje(ex, "No se pudo reservar la cita. Verifica tu número de cliente e intenta de nuevo.");
         }
         finally
         {

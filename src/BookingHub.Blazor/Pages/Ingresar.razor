@@ -74,7 +74,7 @@
         }
         catch (Exception ex) when (Formato.EsErrorDeApi(ex))
         {
-            error = "No se pudo conectar con la API. Intenta de nuevo.";
+            error = Formato.Mensaje(ex, "No se pudo conectar con la API. Intenta de nuevo.");
         }
         finally
         {

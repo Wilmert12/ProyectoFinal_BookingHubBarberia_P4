@@ -69,12 +69,11 @@
         {
             cliente.Email = string.IsNullOrWhiteSpace(cliente.Email) ? null : cliente.Email.Trim();
             registrado = await ClienteApi.CrearCliente(cliente);
-            Sesion.ClienteId = registrado.ClienteId;
-            Sesion.Telefono = registrado.Telefono;
+            await Sesion.Recordar(registrado.ClienteId, registrado.Telefono);
         }
         catch (Exception ex) when (Formato.EsErrorDeApi(ex))
         {
-            error = "No se pudo completar el registro. Intenta de nuevo.";
+            error = Formato.Mensaje(ex, "No se pudo completar el registro. Intenta de nuevo.");
         }
         finally
         {

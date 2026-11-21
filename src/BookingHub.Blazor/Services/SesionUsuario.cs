@@ -9,7 +9,8 @@ namespace BookingHub.Blazor.Services;
 public class SesionUsuario(IJSRuntime js)
 {
     private const string Clave = "cerquilloapp.sesion";
-    private bool cargada;
+    // Una sola lectura compartida: el menú y la página la piden a la vez al recargar.
+    private Task? carga;
 
     public SesionDto? Actual { get; private set; }
 
@@ -17,12 +18,10 @@ public class SesionUsuario(IJSRuntime js)
 
     public event Action? Cambio;
 
-    public async Task Cargar()
-    {
-        if (cargada)
-            return;
-        cargada = true;
+    public Task Cargar() => carga ??= Leer();
 
+    private async Task Leer()
+    {
         try
         {
             var json = await js.InvokeAsync<string?>("localStorage.getItem", Clave);
@@ -40,7 +39,7 @@ public class SesionUsuario(IJSRuntime js)
     public async Task Iniciar(SesionDto sesion)
     {
         Actual = sesion;
-        cargada = true;
+        carga = Task.CompletedTask;
         await Guardar(JsonSerializer.Serialize(sesion));
         Cambio?.Invoke();
     }

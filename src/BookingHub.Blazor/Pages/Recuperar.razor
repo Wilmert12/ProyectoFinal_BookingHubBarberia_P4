@@ -1,0 +1,81 @@
+@page "/recuperar"
+@inject IClienteApi ClienteApi
+@inject SesionCliente Sesion
+@inject NavigationManager Navegacion
+
+<PageTitle>Recuperar número</PageTitle>
+
+<div class="zona-centrada d-flex justify-content-center align-items-center">
+    <div class="vidrio d-flex flex-column gap-4 p-4 w-100" style="max-width: 26rem">
+        <div class="d-flex flex-column gap-1">
+            <h1 class="h3 mb-0">¿Olvidaste tu número?</h1>
+            <p class="text-body-secondary mb-0">Escribe tu nombre y el teléfono tal como te registraste.</p>
+        </div>
+
+        @if (encontrado is not null)
+        {
+            <div class="alert alert-success mb-0">
+                <p class="mb-1">Hola, @encontrado.Nombre. Tu número de cliente es <strong>@encontrado.ClienteId</strong>.</p>
+                <p class="small mb-0">Lo guardamos en este navegador para tu próxima visita.</p>
+            </div>
+            <div class="d-flex flex-wrap gap-2">
+                <a class="btn btn-primary" href="mis-citas">Ver mis citas</a>
+                <a class="btn btn-outline-primary" href="reservar">Reservar</a>
+            </div>
+        }
+        else
+        {
+            <form class="d-flex flex-column gap-3" @onsubmit="Buscar">
+                <div class="d-flex flex-column gap-1">
+                    <label class="form-label fw-semibold mb-0" for="nombre">Nombre completo</label>
+                    <input id="nombre" class="form-control" autocomplete="name" maxlength="200" @bind="nombre" />
+                </div>
+                <div class="d-flex flex-column gap-1">
+                    <label class="form-label fw-semibold mb-0" for="telefono">Teléfono</label>
+                    <input id="telefono" class="form-control" type="tel" autocomplete="tel" maxlength="20" @bind="telefono" />
+                </div>
+
+                @if (error is not null)
+                {
+                    <div class="alert alert-danger mb-0">@error</div>
+                }
+
+                <button class="btn btn-primary" type="submit" disabled="@buscando">@(buscando ? "Buscando..." : "Buscar mi número")</button>
+                <small class="text-body-secondary text-center">¿Nunca te registraste? <a href="registro">Regístrate</a>.</small>
+            </form>
+        }
+    </div>
+</div>
+
+@code {
+    private string? nombre;
+    private string? telefono;
+    private string? error;
+    private bool buscando;
+    private NumeroClienteDto? encontrado;
+
+    private async Task Buscar()
+    {
+        error = null;
+        if (string.IsNullOrWhiteSpace(nombre) || string.IsNullOrWhiteSpace(telefono))
+        {
+            error = "Escribe tu nombre y tu teléfono.";
+            return;
+        }
+
+        buscando = true;
+        try
+        {
+            encontrado = await ClienteApi.Recuperar(new RecuperarNumeroDto(nombre.Trim(), telefono.Trim()));
+            await Sesion.Recordar(encontrado.ClienteId, telefono);
+        }
+        catch (Exception ex) when (Formato.EsErrorDeApi(ex))
+        {
+            error = Formato.Mensaje(ex, "No se pudo buscar tu número. Intenta de nuevo.");
+        }
+        finally
+        {
+            buscando = false;
+        }
+    }
+}

@@ -10,7 +10,7 @@ public interface ICitaApi
     Task<List<CitaDto>> GetCitasCliente(int clienteId, [Header("X-Cliente-Telefono")] string telefono);
 
     [Get("/api/Citas/mias")]
-    Task<List<CitaDto>> GetMisCitas([Query(Format = "yyyy-MM-dd")] DateOnly fecha);
+    Task<List<CitaDto>> GetMisCitas([Query(Format = "yyyy-MM-dd")] DateOnly fecha, int dias = 1);
 
     [Get("/api/Citas/{id}")]
     Task<CitaDto> GetCita(int id);
