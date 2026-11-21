@@ -250,6 +250,9 @@ public static class Ui
     /// Envuelve un control en una tarjeta de vidrio que llena el espacio.
     /// Con <paramref name="llenar"/> en false el contenido queda arriba y la tarjeta se desplaza si no cabe (formularios).
     /// </summary>
+    /// <summary>True si hay un diálogo modal abierto (nueva cita, cobro...): no conviene recargar debajo.</summary>
+    public static bool HayDialogoAbierto => Application.OpenForms.Cast<Form>().Any(f => f.Modal);
+
     public static PanelVidrio EnVidrio(Control contenido, bool llenar = true)
     {
         var tarjeta = new PanelVidrio { Dock = DockStyle.Fill, AutoScroll = !llenar };

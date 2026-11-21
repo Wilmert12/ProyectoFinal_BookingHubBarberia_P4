@@ -49,8 +49,15 @@ public class ReporteService(
             })
             .ToListAsync();
 
-        var citasCompletadas = await contexto.Citas
-            .CountAsync(c => c.EstadoCita.Descripcion == "Completada" && c.FechaInicio >= inicio && c.FechaInicio < fin);
+        var completadas = await contexto.Citas
+            .AsNoTracking()
+            .Where(c => c.EstadoCita.Descripcion == "Completada" && c.FechaInicio >= inicio && c.FechaInicio < fin)
+            .Select(c => new { c.Total, Pagado = c.Pagos.Sum(p => (decimal?)p.Monto) ?? 0m })
+            .ToListAsync();
+        var citasCompletadas = completadas.Count;
+
+        // Completadas por el barbero pero que recepción todavía no cobró: no son ingresos aún.
+        var porCobrar = completadas.Where(c => c.Pagado < c.Total).ToList();
 
         return new ReporteIngresosDto
         {
@@ -60,6 +67,8 @@ public class ReporteService(
             TotalPropinas = pagos.Sum(p => p.Propina),
             CantidadPagos = pagos.Count,
             CitasCompletadas = citasCompletadas,
+            CitasPorCobrar = porCobrar.Count,
+            PorCobrar = porCobrar.Sum(c => c.Total - c.Pagado),
             PorMetodo = pagos
                 .GroupBy(p => p.Metodo)
                 .Select(g => new IngresoPorMetodoDto(g.Key, g.Count(), g.Sum(p => p.Monto)))

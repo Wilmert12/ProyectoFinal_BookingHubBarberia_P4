@@ -8,6 +8,9 @@ public record ReporteIngresosDto
     public decimal TotalPropinas { get; set; }
     public int CantidadPagos { get; set; }
     public int CitasCompletadas { get; set; }
+    /// <summary>Citas completadas en el rango a las que les falta pago, y cuánto falta.</summary>
+    public int CitasPorCobrar { get; set; }
+    public decimal PorCobrar { get; set; }
     public List<IngresoPorMetodoDto> PorMetodo { get; set; } = [];
     public List<IngresoPorBarberoDto> PorBarbero { get; set; } = [];
     public List<IngresoPorServicioDto> PorServicio { get; set; } = [];

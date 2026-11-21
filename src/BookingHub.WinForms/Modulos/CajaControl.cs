@@ -41,16 +41,29 @@ public class CajaControl : UserControl
         Controls.Add(Ui.TituloModulo("Caja y cierre del día"));
 
         Load += async (_, _) => await Cargar();
+        var reloj = new System.Windows.Forms.Timer { Interval = 30_000 };
+        reloj.Tick += async (_, _) =>
+        {
+            if (Visible && !Ui.HayDialogoAbierto)
+                await Cargar(silencioso: true);
+        };
+        VisibleChanged += async (_, _) =>
+        {
+            if (Visible && IsHandleCreated)
+                await Cargar(silencioso: true);
+        };
+        reloj.Start();
+        Disposed += (_, _) => reloj.Dispose();
         _fecha.ValueChanged += async (_, _) => await Cargar();
         cargar.Click += async (_, _) => await Cargar();
         imprimir.Click += (_, _) => ImprimirCierre();
     }
 
-    private async Task Cargar()
+    private async Task Cargar(bool silencioso = false)
     {
         try
         {
-            UseWaitCursor = true;
+            UseWaitCursor = !silencioso;
             _lista = await _apis.Pagos.GetPagos(fecha: Mensajes.Fecha(_fecha.Value));
 
             Ui.Mostrar(_pagos, _lista.Select(p => new FilaPago(
@@ -76,7 +89,10 @@ public class CajaControl : UserControl
         }
         catch (Exception ex)
         {
-            Mensajes.Error(this, ex);
+            if (silencioso)
+                _totales.Text = $"No se pudo actualizar la caja ({DateTime.Now:HH:mm}). Se reintentará sola.";
+            else
+                Mensajes.Error(this, ex);
         }
         finally
         {

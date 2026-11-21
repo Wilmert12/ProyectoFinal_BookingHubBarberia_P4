@@ -12,6 +12,7 @@ public record CitaDto
     public DateTime FechaInicio { get; set; }
     public DateTime FechaFin { get; set; }
     public decimal Total { get; set; }
+    public decimal Pagado { get; set; }
     public string? Notas { get; set; }
     public List<CitaDetalleDto>? Detalles { get; set; }
 }
@@ -103,6 +104,8 @@ public record ReporteIngresosDto
     public decimal TotalPropinas { get; set; }
     public int CantidadPagos { get; set; }
     public int CitasCompletadas { get; set; }
+    public int CitasPorCobrar { get; set; }
+    public decimal PorCobrar { get; set; }
     public List<IngresoPorMetodoDto> PorMetodo { get; set; } = [];
     public List<IngresoPorBarberoDto> PorBarbero { get; set; } = [];
     public List<IngresoPorServicioDto> PorServicio { get; set; } = [];
