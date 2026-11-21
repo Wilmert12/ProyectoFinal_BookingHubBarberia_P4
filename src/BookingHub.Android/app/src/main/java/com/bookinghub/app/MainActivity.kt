@@ -6,6 +6,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import com.bookinghub.app.ui.navigation.AppNavigation
 import com.bookinghub.app.ui.theme.BookingHubTheme
+import com.bookinghub.app.ui.theme.FondoVidrio
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -13,7 +14,10 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             BookingHubTheme {
-                AppNavigation()
+                // Fondo con manchas de color detrás de todas las pantallas (estilo glass, como la web).
+                FondoVidrio {
+                    AppNavigation()
+                }
             }
         }
     }

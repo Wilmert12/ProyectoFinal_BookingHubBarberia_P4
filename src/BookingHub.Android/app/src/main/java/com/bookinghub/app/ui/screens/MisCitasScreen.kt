@@ -4,6 +4,7 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -11,13 +12,17 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.bookinghub.app.data.model.CitaDto
 import com.bookinghub.app.ui.theme.Acento
 import com.bookinghub.app.ui.theme.Borde
+import com.bookinghub.app.ui.theme.VidrioBorde
 import com.bookinghub.app.ui.viewmodel.CitasViewModel
+import com.bookinghub.app.util.EstadosCita
+import java.time.LocalDateTime
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -25,6 +30,24 @@ fun MisCitasScreen(
     viewModel: CitasViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    var aCancelar by remember { mutableStateOf<CitaDto?>(null) }
+
+    aCancelar?.let { cita ->
+        AlertDialog(
+            onDismissRequest = { aCancelar = null },
+            title = { Text("¿Cancelar la cita?") },
+            text = {
+                Text("${cita.fechaInicio.replace("T", " ").take(16)} con ${cita.barberoNombre ?: "tu barbero"}. La hora quedará libre para otra persona.")
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    viewModel.cancelar(cita)
+                    aCancelar = null
+                }) { Text("Sí, cancelar", color = MaterialTheme.colorScheme.error) }
+            },
+            dismissButton = { TextButton(onClick = { aCancelar = null }) { Text("No") } }
+        )
+    }
 
     Scaffold(
         topBar = {
@@ -118,19 +141,36 @@ fun MisCitasScreen(
                                 color = MaterialTheme.colorScheme.error
                             )
                         }
-                        Text(
-                            text = "Para cancelar una cita, comunícate directamente con la barbería.",
-                            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
+                        uiState.mensaje?.let { mensaje ->
+                            Text(
+                                text = mensaje,
+                                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = if (mensaje.startsWith("Cita cancelada")) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.error
+                            )
+                        }
                         LazyColumn(
                             modifier = Modifier.fillMaxSize(),
                             contentPadding = PaddingValues(16.dp),
                             verticalArrangement = Arrangement.spacedBy(12.dp)
                         ) {
                             items(uiState.citas, key = { it.citaId }) { cita ->
-                                CitaDetalleCard(cita = cita)
+                                val cancelable = EstadosCita.cancelablePorCliente(cita.estado) &&
+                                    cita.fechaInicio > LocalDateTime.now().toString()
+                                CitaDetalleCard(
+                                    cita = cita,
+                                    acciones = if (cancelable) {
+                                        {
+                                            OutlinedButton(
+                                                onClick = { aCancelar = cita },
+                                                enabled = uiState.cancelandoId == null,
+                                                colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.error)
+                                            ) {
+                                                Text(if (uiState.cancelandoId == cita.citaId) "Cancelando..." else "Cancelar cita")
+                                            }
+                                        }
+                                    } else null
+                                )
                             }
                         }
                     }
@@ -141,8 +181,13 @@ fun MisCitasScreen(
 }
 
 /** Tarjeta reutilizable para que cliente y barbero consulten los mismos detalles de una cita. */
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun CitaDetalleCard(cita: CitaDto, mostrarCliente: Boolean = false) {
+fun CitaDetalleCard(
+    cita: CitaDto,
+    mostrarCliente: Boolean = false,
+    acciones: (@Composable RowScope.() -> Unit)? = null
+) {
     var detallesExpandidos by remember(cita.citaId) { mutableStateOf(false) }
     val fechaMostrar = remember(cita.fechaInicio) {
         try {
@@ -153,12 +198,14 @@ fun CitaDetalleCard(cita: CitaDto, mostrarCliente: Boolean = false) {
     }
 
     Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(10.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .alpha(if (EstadosCita.estaLibre(cita.estado)) 0.6f else 1f),
+        shape = MaterialTheme.shapes.large,
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surface
         ),
-        border = BorderStroke(1.dp, Borde)
+        border = BorderStroke(1.dp, VidrioBorde)
     ) {
         Column(
             modifier = Modifier
@@ -193,11 +240,16 @@ fun CitaDetalleCard(cita: CitaDto, mostrarCliente: Boolean = false) {
                     )
                 }
 
-                AssistChip(
-                    onClick = {},
-                    label = { Text(cita.estado ?: "Agendada") },
-                    border = BorderStroke(1.dp, Borde)
-                )
+                val colorEstado = EstadosCita.color(cita.estado)
+                Surface(shape = CircleShape, color = colorEstado.copy(alpha = 0.14f)) {
+                    Text(
+                        text = EstadosCita.texto(cita.estado),
+                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
+                        style = MaterialTheme.typography.labelMedium,
+                        fontWeight = FontWeight.SemiBold,
+                        color = colorEstado
+                    )
+                }
             }
 
             Spacer(modifier = Modifier.height(10.dp))
@@ -291,11 +343,21 @@ fun CitaDetalleCard(cita: CitaDto, mostrarCliente: Boolean = false) {
             Spacer(modifier = Modifier.height(8.dp))
 
             Text(
-                text = "Total: RD$ ${String.format(java.util.Locale("es", "DO"), "%.2f", cita.total)}",
+                text = "Total: RD$ ${String.format(java.util.Locale.forLanguageTag("es-DO"), "%,.2f", cita.total)}",
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.ExtraBold,
                 color = Acento
             )
+
+            if (acciones != null) {
+                Spacer(modifier = Modifier.height(10.dp))
+                FlowRow(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp), content = acciones)
+                }
+            }
         }
     }
 }
@@ -304,4 +366,4 @@ private fun formatearHora(fecha: String): String =
     fecha.substringAfter('T', fecha).take(5).ifBlank { "--:--" }
 
 private fun formatearMoneda(valor: java.math.BigDecimal): String =
-    "RD$ ${String.format(java.util.Locale("es", "DO"), "%.2f", valor)}"
+    "RD$ ${String.format(java.util.Locale.forLanguageTag("es-DO"), "%.2f", valor)}"

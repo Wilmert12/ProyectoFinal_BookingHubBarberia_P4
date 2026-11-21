@@ -2,6 +2,7 @@ package com.bookinghub.app.ui.navigation
 
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.*
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -23,7 +24,7 @@ sealed class Ruta(val ruta: String, val titulo: String, val icono: ImageVector) 
     object MisCitas : Ruta("mis_citas", "Mis Citas", Icons.Default.DateRange)
     object Registro : Ruta("registro", "Registro", Icons.Default.PersonAdd)
     object AccesoBarbero : Ruta("acceso_barbero", "Acceso barbero", Icons.Default.Badge)
-    object AgendaBarbero : Ruta("agenda_barbero", "Mi agenda", Icons.Default.EventNote)
+    object AgendaBarbero : Ruta("agenda_barbero", "Mi agenda", Icons.AutoMirrored.Filled.EventNote)
     object Ajustes : Ruta("ajustes", "Ajustes", Icons.Default.Settings)
 }
 

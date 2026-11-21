@@ -21,6 +21,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.bookinghub.app.data.model.BarberoDto
 import com.bookinghub.app.ui.theme.Acento
 import com.bookinghub.app.ui.theme.Borde
+import com.bookinghub.app.ui.theme.VidrioBorde
 import com.bookinghub.app.ui.theme.VerdeExito
 import com.bookinghub.app.ui.theme.RojoError
 import com.bookinghub.app.ui.viewmodel.BarberosViewModel
@@ -123,7 +124,7 @@ private fun BarberoCard(barbero: BarberoDto) {
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surface
         ),
-        border = BorderStroke(1.dp, Borde)
+        border = BorderStroke(1.dp, VidrioBorde)
     ) {
         Row(
             modifier = Modifier

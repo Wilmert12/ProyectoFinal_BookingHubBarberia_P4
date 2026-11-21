@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.*
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Visibility
@@ -42,6 +43,11 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import com.bookinghub.app.ui.theme.VidrioBorde
 import com.bookinghub.app.ui.viewmodel.AccesoBarberoViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -66,7 +72,7 @@ fun AccesoBarberoScreen(
                 title = { Text("Acceso de barbero") },
                 navigationIcon = {
                     IconButton(onClick = onVolver) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Volver")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver")
                     }
                 }
             )
@@ -76,10 +82,18 @@ fun AccesoBarberoScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .padding(24.dp),
+                .padding(20.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
+          // Tarjeta de vidrio centrada, como "Ingresar" en la web.
+          Card(
+            modifier = Modifier.fillMaxWidth().widthIn(max = 480.dp),
+            shape = MaterialTheme.shapes.extraLarge,
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+            border = BorderStroke(1.dp, VidrioBorde)
+          ) {
+           Column(modifier = Modifier.padding(20.dp), horizontalAlignment = Alignment.CenterHorizontally) {
             Text(
                 text = "Bienvenido al área de barberos",
                 style = MaterialTheme.typography.headlineSmall,
@@ -103,7 +117,7 @@ fun AccesoBarberoScreen(
                     imeAction = ImeAction.Next
                 ),
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(10.dp),
+                shape = MaterialTheme.shapes.medium,
                 singleLine = true
             )
             Spacer(modifier = Modifier.height(12.dp))
@@ -126,7 +140,7 @@ fun AccesoBarberoScreen(
                     }
                 },
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(10.dp),
+                shape = MaterialTheme.shapes.medium,
                 singleLine = true
             )
 
@@ -145,8 +159,7 @@ fun AccesoBarberoScreen(
                 enabled = email.isNotBlank() && password.isNotBlank() && !uiState.cargando,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(52.dp),
-                shape = RoundedCornerShape(10.dp)
+                    .height(52.dp)
             ) {
                 if (uiState.cargando) {
                     CircularProgressIndicator(
@@ -158,6 +171,8 @@ fun AccesoBarberoScreen(
                     Text("Iniciar sesión", fontWeight = FontWeight.Bold)
                 }
             }
+           }
+          }
             TextButton(onClick = onVolver) {
                 Text("Volver")
             }

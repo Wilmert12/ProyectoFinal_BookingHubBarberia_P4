@@ -18,6 +18,7 @@ import java.util.Locale
 import com.bookinghub.app.data.model.CatalogoItemDto
 import com.bookinghub.app.ui.theme.Acento
 import com.bookinghub.app.ui.theme.Borde
+import com.bookinghub.app.ui.theme.VidrioBorde
 import com.bookinghub.app.ui.viewmodel.CatalogoViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -76,6 +77,12 @@ fun CatalogoScreen(
                     text = { Text("Productos", fontWeight = if (filtroSeleccionado == 2) FontWeight.Bold else FontWeight.Normal) }
                 )
             }
+            Text(
+                text = "Precios en pesos dominicanos, ITBIS incluido.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+            )
 
             when {
                 uiState.cargando -> {
@@ -149,7 +156,7 @@ private fun CatalogoItemCard(item: CatalogoItemDto) {
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surface
         ),
-        border = BorderStroke(1.dp, Borde)
+        border = BorderStroke(1.dp, VidrioBorde)
     ) {
         Column(
             modifier = Modifier
@@ -170,7 +177,7 @@ private fun CatalogoItemCard(item: CatalogoItemDto) {
                 )
 
                 Text(
-                    text = "RD$ ${String.format(Locale("es", "DO"), "%.2f", item.precio)}",
+                    text = "RD$ ${String.format(Locale.forLanguageTag("es-DO"), "%.2f", item.precio)}",
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.ExtraBold,
                     color = Acento
@@ -195,14 +202,14 @@ private fun CatalogoItemCard(item: CatalogoItemDto) {
                 SuggestionChip(
                     onClick = {},
                     label = { Text(if (item.esServicio) "Servicio" else "Producto") },
-                    border = BorderStroke(1.dp, Borde)
+                    border = BorderStroke(1.dp, VidrioBorde)
                 )
 
                 if (item.esServicio && item.duracionMin != null) {
                     AssistChip(
                         onClick = {},
                         label = { Text("${item.duracionMin} min") },
-                        border = BorderStroke(1.dp, Borde),
+                        border = BorderStroke(1.dp, VidrioBorde),
                         leadingIcon = {
                             Icon(
                                 Icons.Default.Schedule,

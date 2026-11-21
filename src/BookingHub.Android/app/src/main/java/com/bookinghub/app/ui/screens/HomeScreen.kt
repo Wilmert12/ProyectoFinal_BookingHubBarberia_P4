@@ -22,6 +22,7 @@ import com.bookinghub.app.R
 import com.bookinghub.app.ui.navigation.Ruta
 import com.bookinghub.app.ui.theme.Acento
 import com.bookinghub.app.ui.theme.Borde
+import com.bookinghub.app.ui.theme.VidrioBorde
 import com.bookinghub.app.util.SesionCliente
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -125,7 +126,7 @@ fun HomeScreen(
                             }
                         }
                         Text(
-                            text = "Usa este número en Mis Citas de Blazor.",
+                            text = "Con este número y tu teléfono también ves tus citas en la web.",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.75f)
                         )
@@ -204,7 +205,7 @@ private fun AccionCard(
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surface
         ),
-        border = androidx.compose.foundation.BorderStroke(1.dp, Borde)
+        border = androidx.compose.foundation.BorderStroke(1.dp, VidrioBorde)
     ) {
         Row(
             modifier = Modifier

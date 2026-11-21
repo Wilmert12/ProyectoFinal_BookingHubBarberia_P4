@@ -7,6 +7,7 @@ import androidx.lifecycle.viewModelScope
 import com.bookinghub.app.data.api.ApiClient
 import com.bookinghub.app.data.api.mensajeError
 import com.bookinghub.app.data.model.ClienteDto
+import com.bookinghub.app.data.model.RecuperarNumeroDto
 import com.bookinghub.app.util.SesionCliente
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -57,6 +58,41 @@ class ClienteViewModel(application: Application) : AndroidViewModel(application)
                     _uiState.value = RegistroUiState(registroExitoso = true)
                 } else {
                     _uiState.value = RegistroUiState(error = response.mensajeError("No se pudo registrar el cliente"))
+                }
+            } catch (cancelacion: CancellationException) {
+                throw cancelacion
+            } catch (e: Exception) {
+                _uiState.value = RegistroUiState(error = e.localizedMessage ?: "Revisa tu conexión e inténtalo de nuevo.")
+            }
+        }
+    }
+
+    fun limpiarError() {
+        _uiState.value = _uiState.value.copy(error = null)
+    }
+
+    /**
+     * Cliente que ya existe (se registró en la web o en recepción): con su nombre y teléfono
+     * la API devuelve su número, y se guarda el perfil sin crear otro cliente.
+     */
+    fun entrarComoCliente(nombre: String, telefono: String) {
+        val nombreLimpio = nombre.trim()
+        val telefonoLimpio = telefono.trim()
+        if (nombreLimpio.length < 2 || telefonoLimpio.count(Char::isDigit) < 7) {
+            _uiState.value = RegistroUiState(error = "Escribe tu nombre completo y un teléfono válido.")
+            return
+        }
+
+        viewModelScope.launch {
+            _uiState.value = RegistroUiState(cargando = true)
+            try {
+                val response = ApiClient.clienteApi.recuperarNumero(RecuperarNumeroDto(nombreLimpio, telefonoLimpio))
+                val numero = response.body()
+                if (response.isSuccessful && numero != null) {
+                    SesionCliente.guardarPerfil(getApplication(), numero.clienteId, numero.nombre, telefonoLimpio)
+                    _uiState.value = RegistroUiState(registroExitoso = true)
+                } else {
+                    _uiState.value = RegistroUiState(error = response.mensajeError("No encontramos un cliente con ese nombre y teléfono"))
                 }
             } catch (cancelacion: CancellationException) {
                 throw cancelacion
