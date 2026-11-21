@@ -15,6 +15,10 @@ else
                     <th>Estado</th>
                     <th class="text-end">Total</th>
                     <th class="d-none d-md-table-cell">Notas</th>
+                    @if (Acciones is not null)
+                    {
+                        <th><span class="visually-hidden">Acciones</span></th>
+                    }
                 </tr>
             </thead>
             <tbody>
@@ -24,9 +28,13 @@ else
                         <td>@cita.FechaInicio.ToString("dd/MM/yyyy")</td>
                         <td>@cita.FechaInicio.ToString("HH:mm") - @cita.FechaFin.ToString("HH:mm")</td>
                         <td>@cita.BarberoNombre</td>
-                        <td><span class="badge rounded-pill @ClaseEstado(cita.Estado)">@cita.Estado</span></td>
+                        <td><span class="badge rounded-pill @ClaseEstado(cita.Estado)">@Formato.Estado(cita.Estado)</span></td>
                         <td class="text-end">@Formato.Precio(cita.Total)</td>
                         <td class="d-none d-md-table-cell">@cita.Notas</td>
+                        @if (Acciones is not null)
+                        {
+                            <td class="text-end text-nowrap">@Acciones(cita)</td>
+                        }
                     </tr>
                 }
             </tbody>
@@ -40,6 +48,10 @@ else
 
     [Parameter]
     public string Vacio { get; set; } = "Sin citas.";
+
+    /// <summary>Botones opcionales al final de cada fila.</summary>
+    [Parameter]
+    public RenderFragment<CitaDto>? Acciones { get; set; }
 
     public static string ClaseEstado(string? estado) => estado switch
     {

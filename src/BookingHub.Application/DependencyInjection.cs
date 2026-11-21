@@ -17,6 +17,7 @@ public static class DependencyInjection
         services.AddScoped<UsuarioService>();
         services.AddScoped<DisponibilidadService>();
         services.AddScoped<ReservaService>();
+        services.AddScoped<AgendaBarberoService>();
 
         return services;
     }

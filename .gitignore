@@ -3,3 +3,6 @@ obj/
 .vs/
 *.user
 *.suo
+
+# Configuración personal del WinForms (no se sube)
+src/BookingHub.WinForms/appsettings.Local.json

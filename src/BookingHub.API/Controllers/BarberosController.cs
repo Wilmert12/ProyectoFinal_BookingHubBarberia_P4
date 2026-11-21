@@ -8,8 +8,40 @@ namespace BookingHub.API.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-public class BarberosController(BarberoService barberoService, DisponibilidadService disponibilidadService) : ControllerBase
+public class BarberosController(
+    BarberoService barberoService,
+    DisponibilidadService disponibilidadService,
+    AgendaBarberoService agendaService) : ControllerBase
 {
+    /// <summary>Horario semanal del barbero. Vacío = horario por defecto (lunes a sábado, 9:00 a 18:00).</summary>
+    [Authorize(Roles = RolesSistema.Personal)]
+    [HttpGet("{id}/horarios")]
+    public async Task<ActionResult<List<HorarioDto>>> GetHorarios(int id)
+    {
+        var result = await agendaService.GetHorarios(id);
+
+        if (result.IsFailure)
+            return BadRequest(result.Error);
+
+        if (result.Value == null)
+            return NotFound();
+
+        return Ok(result.Value);
+    }
+
+    /// <summary>Reemplaza el horario semanal completo del barbero.</summary>
+    [Authorize(Roles = RolesSistema.Admin)]
+    [HttpPut("{id}/horarios")]
+    public async Task<IActionResult> PutHorarios(int id, List<HorarioDto> horarios)
+    {
+        var result = await agendaService.GuardarHorarios(id, horarios);
+
+        if (result.IsFailure)
+            return result.Error.Code == "BARBERO_NO_EXISTE" ? NotFound() : BadRequest(result.Error);
+
+        return NoContent();
+    }
+
     [HttpGet]
     public async Task<ActionResult<List<BarberoDto>>> GetBarberos(bool incluirInactivos = false)
     {

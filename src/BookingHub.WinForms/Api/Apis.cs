@@ -44,11 +44,32 @@ public interface IBarberoApi
     [Get("/api/Barberos/{id}/disponibilidad")]
     Task<DisponibilidadDto> GetDisponibilidad(int id, [Query(Format = "yyyy-MM-dd")] DateOnly fecha, int duracionMin);
 
+    [Get("/api/Barberos/{id}/horarios")]
+    Task<List<HorarioDto>> GetHorarios(int id);
+
+    [Put("/api/Barberos/{id}/horarios")]
+    Task GuardarHorarios(int id, [Body] List<HorarioDto> horarios);
+
     [Post("/api/Barberos")]
     Task<BarberoDto> CrearBarbero([Body] BarberoDto barbero);
 
     [Put("/api/Barberos/{id}")]
     Task ModificarBarbero(int id, [Body] BarberoDto barbero);
+}
+
+public interface IIndisponibilidadApi
+{
+    [Get("/api/Indisponibilidades")]
+    Task<List<IndisponibilidadDto>> GetIndisponibilidades();
+
+    [Get("/api/Indisponibilidades/tipos")]
+    Task<List<TipoIndisponibilidadDto>> GetTipos();
+
+    [Post("/api/Indisponibilidades")]
+    Task<IndisponibilidadDto> Crear([Body] IndisponibilidadDto indisponibilidad);
+
+    [Delete("/api/Indisponibilidades/{id}")]
+    Task Eliminar(int id);
 }
 
 public interface ICatalogoItemApi
