@@ -37,7 +37,9 @@ public class CajaControl : UserControl
 
         Controls.Add(division);
         Controls.Add(_totales);
-        Controls.Add(Ui.Barra(Ui.Etiqueta("Fecha"), _fecha, cargar, imprimir));
+        var anular = Ui.Boton("Anular cobro");
+        anular.Click += async (_, _) => await Anular();
+        Controls.Add(Ui.Barra(Ui.Etiqueta("Fecha"), _fecha, cargar, imprimir, anular));
         Controls.Add(Ui.TituloModulo("Caja y cierre del día"));
 
         Load += async (_, _) => await Cargar();
@@ -110,5 +112,32 @@ public class CajaControl : UserControl
 
         using var recibo = new FrmRecibo("Cierre de caja", Recibos.DeCierre(_fecha.Value.Date, _lista));
         recibo.ShowDialog(this);
+    }
+
+    /// <summary>
+    /// Borra un cobro hecho por error (monto o método equivocado). La cita vuelve a quedar
+    /// "por cobrar" y se puede cobrar de nuevo desde la Agenda.
+    /// </summary>
+    private async Task Anular()
+    {
+        if (Ui.Seleccionado<FilaPago>(_pagos) is not { } fila || _lista.FirstOrDefault(p => p.PagoId == fila.Id) is not { } pago)
+        {
+            Mensajes.Informacion(this, "Selecciona en la lista el cobro que quieres anular.");
+            return;
+        }
+        if (!Mensajes.Confirmar(this,
+                $"¿Anular el cobro de {pago.ClienteNombre} por {Mensajes.Precio(pago.Monto)} ({pago.MetodoPago}, {pago.FechaPago:HH:mm})?\n\n" +
+                "Se borra de la caja y de los reportes, y la cita queda por cobrar. Esto no se puede deshacer."))
+            return;
+
+        try
+        {
+            await _apis.Pagos.EliminarPago(pago.PagoId);
+            await Cargar();
+        }
+        catch (Exception ex)
+        {
+            Mensajes.Error(this, ex);
+        }
     }
 }

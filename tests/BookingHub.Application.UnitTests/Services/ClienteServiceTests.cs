@@ -30,7 +30,10 @@ public class ClienteServiceTests : IDisposable
     [Fact]
     public async Task Guardar_ClienteExistente_ModificaSinBorrarCamposFueraDelDto()
     {
-        var cliente = new ClienteDto { ClienteId = 1, Nombre = "Cliente Editado", Telefono = "8091111111", Activo = true };
+        DateTime registro;
+        using (var antes = _baseDeDatos.CrearContexto())
+            registro = (await antes.Clientes.FindAsync(1))!.FechaRegistro;
+        var cliente = new ClienteDto { ClienteId = 1, Nombre = "Cliente Editado", Telefono = "8091111111", Notas = "Prefiere la tarde", Activo = true };
 
         var result = await _service.Guardar(cliente);
 
@@ -38,7 +41,20 @@ public class ClienteServiceTests : IDisposable
         using var contexto = _baseDeDatos.CrearContexto();
         var enBaseDeDatos = await contexto.Clientes.FindAsync(1);
         Assert.Equal("Cliente Editado", enBaseDeDatos!.Nombre);
-        Assert.Equal("Prefiere la mañana", enBaseDeDatos.Notas);
+        Assert.Equal("Prefiere la tarde", enBaseDeDatos.Notas);
+        Assert.Equal(registro, enBaseDeDatos.FechaRegistro);
+    }
+
+    [Theory]
+    [InlineData("", "8091234567", "CLIENTE_NOMBRE")]
+    [InlineData("Ana", "", "CLIENTE_TELEFONO")]
+    [InlineData("Ana", "809-12", "CLIENTE_TELEFONO")]
+    public async Task Guardar_DatosInvalidos_DevuelveError(string nombre, string telefono, string codigo)
+    {
+        var result = await _service.Guardar(new ClienteDto { Nombre = nombre, Telefono = telefono });
+
+        Assert.True(result.IsFailure);
+        Assert.Equal(codigo, result.Error.Code);
     }
 
     [Fact]

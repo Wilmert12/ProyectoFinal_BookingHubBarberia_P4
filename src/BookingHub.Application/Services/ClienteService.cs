@@ -15,6 +15,17 @@ public class ClienteService(
 {
     public async Task<Result> Guardar(ClienteDto cliente)
     {
+        // El teléfono es con lo que el cliente ve y reserva sus citas en la web.
+        if (string.IsNullOrWhiteSpace(cliente.Nombre))
+            return Result.Failure(new Error("CLIENTE_NOMBRE", "El nombre del cliente es obligatorio."));
+        if ((cliente.Telefono ?? string.Empty).Count(char.IsDigit) < 7)
+            return Result.Failure(new Error("CLIENTE_TELEFONO", "El teléfono debe tener al menos 7 dígitos."));
+
+        cliente.Nombre = cliente.Nombre.Trim();
+        cliente.Telefono = cliente.Telefono!.Trim();
+        cliente.Email = string.IsNullOrWhiteSpace(cliente.Email) ? null : cliente.Email.Trim();
+        cliente.Notas = string.IsNullOrWhiteSpace(cliente.Notas) ? null : cliente.Notas.Trim();
+
         if (!await Existe(cliente.ClienteId))
         {
             var inserto = await Insertar(cliente);
@@ -53,6 +64,7 @@ public class ClienteService(
                 .SetProperty(c => c.Nombre, clienteDto.Nombre)
                 .SetProperty(c => c.Telefono, clienteDto.Telefono)
                 .SetProperty(c => c.Email, clienteDto.Email)
+                .SetProperty(c => c.Notas, clienteDto.Notas)
                 .SetProperty(c => c.Activo, clienteDto.Activo)) > 0;
     }
 
