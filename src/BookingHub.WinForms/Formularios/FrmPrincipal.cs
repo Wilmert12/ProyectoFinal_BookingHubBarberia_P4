@@ -5,7 +5,8 @@ namespace BookingHub.WinForms.Formularios;
 
 public class FrmPrincipal : Form
 {
-    private readonly Panel _contenido = new() { Dock = DockStyle.Fill, Padding = new Padding(32, 24, 32, 24) };
+    private readonly Panel _contenido = new() { Dock = DockStyle.Fill, Padding = new Padding(32, 24, 32, 24), BackColor = Color.Transparent };
+    private readonly FondoVidrio _fondo = new();
     private readonly FlowLayoutPanel _menu = new()
     {
         AutoSize = true,
@@ -27,9 +28,12 @@ public class FrmPrincipal : Form
         Size = new Size(1200, 780);
         MinimumSize = new Size(960, 620);
         BackColor = Ui.Fondo;
+        DoubleBuffered = true;
+        Ui.EfectoVentana(this);
 
-        var encabezado = new Panel { Dock = DockStyle.Top, Height = 64, BackColor = Ui.Superficie };
-        var linea = new Panel { Dock = DockStyle.Top, Height = 1, BackColor = Ui.Borde };
+        // Encabezado de vidrio sobre el fondo con manchas de color.
+        var encabezado = new Panel { Dock = DockStyle.Top, Height = 64, BackColor = Color.FromArgb(140, 255, 255, 255) };
+        var linea = new Panel { Dock = DockStyle.Top, Height = 1, BackColor = Ui.VidrioBorde };
 
         var logo = Ui.Logo(30);
         logo.Location = new Point(28, 17);
@@ -66,6 +70,9 @@ public class FrmPrincipal : Form
         }
 
         encabezado.Controls.AddRange([logo, marca, _menu, usuario, cerrarSesion]);
+        // Si heredan el blanco semitransparente del encabezado, se ve un recuadro doble.
+        foreach (Control hijo in encabezado.Controls)
+            hijo.BackColor = Color.Transparent;
         encabezado.Resize += (_, _) =>
         {
             _menu.Location = new Point(Math.Max(marca.Right + 40, 200), 0);
@@ -138,14 +145,14 @@ public class FrmPrincipal : Form
             Padding = new Padding(14, 0, 14, 0),
             Margin = Padding.Empty,
             FlatStyle = FlatStyle.Flat,
-            BackColor = Ui.Superficie,
+            BackColor = Color.Transparent,
             ForeColor = Ui.TextoSuave,
             Cursor = Cursors.Hand,
             TabStop = false
         };
         boton.FlatAppearance.BorderSize = 0;
-        boton.FlatAppearance.MouseOverBackColor = Ui.Superficie;
-        boton.FlatAppearance.MouseDownBackColor = Ui.Superficie;
+        boton.FlatAppearance.MouseOverBackColor = Ui.VidrioHover;
+        boton.FlatAppearance.MouseDownBackColor = Ui.VidrioHover;
         boton.Paint += (_, e) =>
         {
             if (_secciones.Count > indice && _secciones[indice].Modulo.Visible)
@@ -157,6 +164,7 @@ public class FrmPrincipal : Form
         boton.Click += (_, _) => Mostrar(indice);
 
         modulo.Dock = DockStyle.Fill;
+        modulo.BackColor = Color.Transparent;
         modulo.Visible = false;
         _contenido.Controls.Add(modulo);
         _menu.Controls.Add(boton);
@@ -173,6 +181,32 @@ public class FrmPrincipal : Form
             boton.ForeColor = activo ? Ui.Tinta : Ui.TextoSuave;
             boton.Invalidate();
         }
+    }
+
+    protected override void OnPaintBackground(PaintEventArgs e) => _fondo.Pintar(e.Graphics, ClientRectangle);
+
+    protected override void OnResize(EventArgs e)
+    {
+        base.OnResize(e);
+        Invalidate();
+    }
+
+    // WS_EX_COMPOSITED: la ventana se compone completa antes de mostrarse y evita parpadeo con tanto control transparente.
+    protected override CreateParams CreateParams
+    {
+        get
+        {
+            var parametros = base.CreateParams;
+            parametros.ExStyle |= 0x02000000;
+            return parametros;
+        }
+    }
+
+    protected override void Dispose(bool disposing)
+    {
+        if (disposing)
+            _fondo.Dispose();
+        base.Dispose(disposing);
     }
 
     private sealed class BotonMenu : Button

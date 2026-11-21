@@ -3,12 +3,12 @@
 @inject SesionUsuario Sesion
 @inject NavigationManager Navegacion
 
-<header class="marca-encabezado d-flex flex-column flex-md-row justify-content-md-between align-items-md-center gap-2 px-4 py-3">
+<header class="marca-encabezado d-flex flex-column flex-md-row justify-content-between align-items-center gap-2 px-4 py-3">
     <a class="d-flex align-items-center gap-2 text-decoration-none" href="">
         <img src="logo.svg" alt="" width="32" height="32" />
         <span class="marca-nombre">CerquilloApp</span>
     </a>
-    <nav class="marca-menu nav d-flex flex-wrap gap-1">
+    <nav class="marca-menu nav d-flex flex-wrap justify-content-center gap-1">
         @if (Sesion.EsBarbero)
         {
             <NavLink class="nav-link" href="mi-agenda">Mi agenda</NavLink>

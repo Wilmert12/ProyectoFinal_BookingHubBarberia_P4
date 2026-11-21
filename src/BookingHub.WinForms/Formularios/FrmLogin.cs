@@ -11,6 +11,8 @@ public class FrmLogin : Form
     private readonly TextBox _password = new() { Width = 280, UseSystemPasswordChar = true };
     private readonly Button _entrar = Ui.Boton("Entrar", primario: true);
     private readonly Label _error = new() { AutoSize = true, ForeColor = Color.Firebrick, MaximumSize = new Size(320, 0) };
+    private readonly FondoVidrio _fondo = new();
+    private readonly PanelVidrio _tarjeta = new() { AutoSize = true, AutoSizeMode = AutoSizeMode.GrowAndShrink, Padding = new Padding(36, 32, 36, 32), Radio = 18 };
 
     public FrmLogin(Apis apis, Sesion sesion)
     {
@@ -24,9 +26,9 @@ public class FrmLogin : Form
         MaximizeBox = false;
         MinimizeBox = false;
         StartPosition = FormStartPosition.CenterScreen;
-        AutoSize = true;
-        AutoSizeMode = AutoSizeMode.GrowAndShrink;
-        BackColor = Ui.Superficie;
+        BackColor = Ui.Fondo;
+        DoubleBuffered = true;
+        Ui.EfectoVentana(this);
         AcceptButton = _entrar;
 
         var contenido = new FlowLayoutPanel
@@ -34,7 +36,7 @@ public class FrmLogin : Form
             FlowDirection = FlowDirection.TopDown,
             AutoSize = true,
             WrapContents = false,
-            Padding = new Padding(44, 40, 44, 40)
+            BackColor = Color.Transparent
         };
         var logo = Ui.Logo(56);
         logo.Margin = new Padding(3, 0, 3, 18);
@@ -50,7 +52,13 @@ public class FrmLogin : Form
         _entrar.AutoSize = false;
         _entrar.Size = new Size(_email.Width, 38);
         contenido.Controls.Add(_entrar);
-        Controls.Add(contenido);
+
+        // Tarjeta de vidrio centrada en la ventana (como d-flex + justify-content-center + align-items-center).
+        _tarjeta.Controls.Add(contenido);
+        Controls.Add(_tarjeta);
+        ClientSize = new Size(_tarjeta.PreferredSize.Width + 120, _tarjeta.PreferredSize.Height + 100);
+        Resize += (_, _) => Centrar();
+        Load += (_, _) => Centrar();
 
         _entrar.Click += async (_, _) => await Entrar();
     }
@@ -88,5 +96,22 @@ public class FrmLogin : Form
             _entrar.Enabled = true;
             UseWaitCursor = false;
         }
+    }
+
+    private void Centrar()
+    {
+        _tarjeta.Location = new Point(
+            Math.Max(0, (ClientSize.Width - _tarjeta.Width) / 2),
+            Math.Max(0, (ClientSize.Height - _tarjeta.Height) / 2));
+        Invalidate();
+    }
+
+    protected override void OnPaintBackground(PaintEventArgs e) => _fondo.Pintar(e.Graphics, ClientRectangle);
+
+    protected override void Dispose(bool disposing)
+    {
+        if (disposing)
+            _fondo.Dispose();
+        base.Dispose(disposing);
     }
 }

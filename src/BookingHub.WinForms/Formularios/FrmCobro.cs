@@ -35,6 +35,7 @@ public class FrmCobro : Form
         MinimumSize = new Size(700, 560);
         BackColor = Ui.Superficie;
         Icon = Ui.Icono();
+        Ui.EfectoVentana(this);
 
         var encabezado = new Label
         {

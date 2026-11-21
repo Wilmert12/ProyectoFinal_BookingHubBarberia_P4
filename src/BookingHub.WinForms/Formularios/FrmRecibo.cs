@@ -20,6 +20,7 @@ public class FrmRecibo : Form
         Size = new Size(480, 620);
         BackColor = Ui.Superficie;
         Icon = Ui.Icono();
+        Ui.EfectoVentana(this);
 
         var texto = new TextBox
         {

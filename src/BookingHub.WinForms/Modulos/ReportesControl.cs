@@ -45,11 +45,13 @@ public class ReportesControl : UserControl
         tablas.Controls.Add(Subtitulo("Ingresos por barbero"), 0, 0);
         tablas.Controls.Add(Subtitulo("Servicios y productos más vendidos"), 1, 0);
         tablas.Controls.Add(Subtitulo("Por método de pago"), 2, 0);
-        tablas.Controls.Add(_porBarbero, 0, 1);
-        tablas.Controls.Add(_porServicio, 1, 1);
-        tablas.Controls.Add(_porMetodo, 2, 1);
+        var columna = 0;
         foreach (var grilla in new[] { _porBarbero, _porServicio, _porMetodo })
-            grilla.Margin = new Padding(0, 0, 10, 0);
+        {
+            var tarjeta = Ui.EnVidrio(grilla);
+            tarjeta.Margin = new Padding(0, 0, 12, 0);
+            tablas.Controls.Add(tarjeta, columna++, 1);
+        }
 
         Controls.Add(tablas);
         Controls.Add(tarjetas);
@@ -75,7 +77,7 @@ public class ReportesControl : UserControl
     {
         AutoSize = false,
         Size = new Size(220, 72),
-        BackColor = Ui.Superficie,
+        BackColor = Ui.Vidrio,
         ForeColor = Ui.Tinta,
         Padding = new Padding(16, 12, 16, 12),
         Margin = new Padding(0, 0, 12, 0),

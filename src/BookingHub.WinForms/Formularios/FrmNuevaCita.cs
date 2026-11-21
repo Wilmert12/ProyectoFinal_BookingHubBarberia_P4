@@ -48,6 +48,7 @@ public class FrmNuevaCita : Form
         ClientSize = new Size(560, 700);
         BackColor = Ui.Superficie;
         Icon = Ui.Icono();
+        Ui.EfectoVentana(this);
         AcceptButton = _guardar;
 
         _fecha.Value = fecha.Date < DateTime.Today ? DateTime.Today : fecha.Date;
