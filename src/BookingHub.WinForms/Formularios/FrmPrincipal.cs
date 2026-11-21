@@ -62,6 +62,7 @@ public class FrmPrincipal : Form
 
         AgregarSeccion("Agenda", new AgendaControl(apis));
         AgregarSeccion("Caja", new CajaControl(apis));
+        AgregarSeccion("Clientes", new ClientesControl(apis));
         if (sesion.EsAdmin)
         {
             AgregarSeccion("Catálogo", new CatalogoControl(apis));
@@ -76,9 +77,11 @@ public class FrmPrincipal : Form
             hijo.BackColor = Color.Transparent;
         encabezado.Resize += (_, _) =>
         {
-            _menu.Location = new Point(Math.Max(marca.Right + 40, 200), 0);
+            _menu.Location = new Point(Math.Max(marca.Right + 28, 190), 0);
             cerrarSesion.Location = new Point(encabezado.Width - cerrarSesion.Width - 24, (encabezado.Height - cerrarSesion.Height) / 2);
             usuario.Location = new Point(cerrarSesion.Left - usuario.Width - 8, (encabezado.Height - usuario.Height) / 2);
+            // Con muchos módulos el menú puede llegar hasta el nombre: se oculta el nombre, nunca "Cerrar sesión".
+            usuario.Visible = usuario.Left > _menu.Right + 8;
         };
 
         Controls.Add(_contenido);
@@ -143,7 +146,7 @@ public class FrmPrincipal : Form
             AutoSizeMode = AutoSizeMode.GrowAndShrink,
             Height = 64,
             MinimumSize = new Size(0, 64),
-            Padding = new Padding(14, 0, 14, 0),
+            Padding = new Padding(11, 0, 11, 0),
             Margin = Padding.Empty,
             FlatStyle = FlatStyle.Flat,
             BackColor = Color.Transparent,
@@ -159,7 +162,7 @@ public class FrmPrincipal : Form
             if (_secciones.Count > indice && _secciones[indice].Modulo.Visible)
             {
                 using var pincel = new SolidBrush(Ui.Acento);
-                e.Graphics.FillRectangle(pincel, 14, boton.Height - 3, boton.Width - 28, 3);
+                e.Graphics.FillRectangle(pincel, 11, boton.Height - 3, boton.Width - 22, 3);
             }
         };
         boton.Click += (_, _) => Mostrar(indice);

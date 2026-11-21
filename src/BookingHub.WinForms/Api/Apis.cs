@@ -17,6 +17,10 @@ public interface ICitaApi
     [Get("/api/Citas/{id}")]
     Task<CitaDto> GetCita(int id);
 
+    /// <summary>Historial de un cliente (el personal no necesita su teléfono).</summary>
+    [Get("/api/Citas")]
+    Task<List<CitaDto>> GetCitasCliente(int clienteId);
+
     [Post("/api/Citas")]
     Task<CitaDto> CrearCita([Body] CitaDto cita);
 
@@ -30,7 +34,10 @@ public interface ICitaApi
 public interface IClienteApi
 {
     [Get("/api/Clientes")]
-    Task<List<ClienteDto>> GetClientes();
+    Task<List<ClienteDto>> GetClientes(bool incluirInactivos = false);
+
+    [Put("/api/Clientes/{id}")]
+    Task ModificarCliente(int id, [Body] ClienteDto cliente);
 
     [Post("/api/Clientes")]
     Task<ClienteDto> CrearCliente([Body] ClienteDto cliente);
@@ -94,6 +101,9 @@ public interface IPagoApi
 
     [Post("/api/Pagos")]
     Task<PagoDto> CrearPago([Body] PagoDto pago);
+
+    [Delete("/api/Pagos/{id}")]
+    Task EliminarPago(int id);
 }
 
 public interface ICatalogosApi

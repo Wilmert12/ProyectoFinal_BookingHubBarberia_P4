@@ -32,9 +32,10 @@ public class AgendaControl : UserControl
         var nueva = Ui.Boton("Nueva cita / walk-in");
         var cobrar = Ui.Boton("Cobrar", primario: true);
         var eliminar = Ui.Boton("Eliminar");
+        var reprogramar = Ui.Boton("Reprogramar");
 
         var filtros = Ui.Barra(Ui.Etiqueta("Fecha"), _fecha, Ui.Etiqueta("Barbero"), _barbero, actualizar);
-        var acciones = Ui.Barra(nueva, cobrar, Ui.Etiqueta("Estado"), _estado, cambiarEstado, eliminar);
+        var acciones = Ui.Barra(nueva, cobrar, reprogramar, Ui.Etiqueta("Estado"), _estado, cambiarEstado, eliminar);
         acciones.Dock = DockStyle.Bottom;
 
         Controls.Add(Ui.EnVidrio(_grilla));
@@ -51,6 +52,7 @@ public class AgendaControl : UserControl
         nueva.Click += async (_, _) => await NuevaCita();
         cobrar.Click += async (_, _) => await Cobrar();
         eliminar.Click += async (_, _) => await Eliminar();
+        reprogramar.Click += async (_, _) => await Reprogramar();
         _grilla.CellDoubleClick += async (_, e) => { if (e.RowIndex >= 0) await Cobrar(); };
         _grilla.CellFormatting += ColorearEstado;
         _grilla.SelectionChanged += (_, _) => SincronizarEstado();
@@ -239,6 +241,24 @@ public class AgendaControl : UserControl
         {
             Mensajes.Error(this, ex);
         }
+    }
+
+    private async Task Reprogramar()
+    {
+        if (CitaSeleccionada() is not { } cita)
+        {
+            Mensajes.Informacion(this, "Selecciona la cita que vas a reprogramar.");
+            return;
+        }
+        if (cita.Estado is "Cancelada" or "NoShow" or "Completada")
+        {
+            Mensajes.Informacion(this, "Solo se reprograman citas que todavía no se han hecho.");
+            return;
+        }
+
+        using var dialogo = new FrmReprogramar(_apis, cita);
+        if (dialogo.ShowDialog(this) == DialogResult.OK)
+            await Cargar();
     }
 
     private async Task Eliminar()
