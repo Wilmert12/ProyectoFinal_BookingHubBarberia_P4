@@ -35,11 +35,14 @@ else
                             {
                                 <p class="card-text text-body-secondary mb-0">@servicio.Descripcion</p>
                             }
-                            <div class="d-flex justify-content-between align-items-center mt-auto">
-                                <span class="fw-semibold">@Formato.Precio(servicio.Precio)</span>
-                                <span class="text-body-secondary small">@servicio.DuracionMin min</span>
+                            @* Como la tarjeta de perfil: datos en columna con flex-grow-1 y el botón empujado a la derecha. *@
+                            <div class="d-flex align-items-center gap-3 mt-auto">
+                                <div class="d-flex flex-column flex-grow-1">
+                                    <span class="fw-semibold">@Formato.Precio(servicio.Precio)</span>
+                                    <small class="text-body-secondary">@servicio.DuracionMin min</small>
+                                </div>
+                                <a class="btn btn-primary btn-sm" href="reservar?servicioId=@servicio.CatalogoItemId">Reservar</a>
                             </div>
-                            <a class="btn btn-primary btn-sm align-self-start" href="reservar?servicioId=@servicio.CatalogoItemId">Reservar</a>
                         </div>
                     </article>
                 </div>

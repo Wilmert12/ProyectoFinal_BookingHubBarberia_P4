@@ -40,9 +40,9 @@ public class CatalogoControl : UserControl
             ("", _activo));
 
         var panelFormulario = new Panel { Dock = DockStyle.Right, Width = 380, Padding = new Padding(16, 0, 0, 0) };
-        panelFormulario.Controls.Add(Ui.Columna(_modo, formulario, Ui.Barra(nuevo, guardar, eliminar)));
+        panelFormulario.Controls.Add(Ui.EnVidrio(Ui.Columna(_modo, formulario, Ui.Barra(nuevo, guardar, eliminar)), llenar: false));
 
-        Controls.Add(_grilla);
+        Controls.Add(Ui.EnVidrio(_grilla));
         Controls.Add(panelFormulario);
         Controls.Add(Ui.TituloModulo("Catálogo de servicios y productos"));
 

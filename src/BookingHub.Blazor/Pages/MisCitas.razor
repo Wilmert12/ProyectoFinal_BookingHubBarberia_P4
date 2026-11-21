@@ -7,7 +7,7 @@
 <h1 class="mb-2">Mis Citas</h1>
 <p class="text-body-secondary mb-4">Escribe tu número de cliente y el teléfono con el que te registraste.</p>
 
-<form class="d-flex flex-wrap align-items-end gap-3 mb-4" @onsubmit="Buscar">
+<form class="vidrio d-flex flex-column flex-md-row align-items-md-end gap-3 p-3 mb-4" @onsubmit="Buscar">
     <div class="d-flex flex-column gap-1">
         <label class="form-label fw-semibold mb-0" for="clienteId">Número de cliente</label>
         <input id="clienteId" class="form-control" type="number" min="1" @bind="clienteId" />
@@ -47,9 +47,11 @@ else if (citas is not null)
                 {
                     @if (confirmandoId == cita.CitaId)
                     {
-                        <span class="small me-2">¿Cancelar?</span>
-                        <button type="button" class="btn btn-sm btn-danger" disabled="@cancelando" @onclick="() => Cancelar(cita)">Sí</button>
-                        <button type="button" class="btn btn-sm btn-link" disabled="@cancelando" @onclick="() => confirmandoId = null">No</button>
+                        <div class="d-inline-flex align-items-center gap-2">
+                            <span class="small">¿Cancelar?</span>
+                            <button type="button" class="btn btn-sm btn-danger" disabled="@cancelando" @onclick="() => Cancelar(cita)">Sí</button>
+                            <button type="button" class="btn btn-sm btn-link" disabled="@cancelando" @onclick="() => confirmandoId = null">No</button>
+                        </div>
                     }
                     else
                     {

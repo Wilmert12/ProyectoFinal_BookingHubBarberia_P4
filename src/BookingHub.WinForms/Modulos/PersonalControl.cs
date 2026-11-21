@@ -43,10 +43,10 @@ public class PersonalControl : UserControl
             ("Contraseña", _password),
             ("", _activo));
 
-        var panelFormulario = new Panel { Dock = DockStyle.Right, Width = 400, Padding = new Padding(16, 0, 0, 0), AutoScroll = true };
-        panelFormulario.Controls.Add(Ui.Columna(_modo, formulario, _grupoBarbero, Ui.Barra(nuevo, guardar)));
+        var panelFormulario = new Panel { Dock = DockStyle.Right, Width = 400, Padding = new Padding(16, 0, 0, 0) };
+        panelFormulario.Controls.Add(Ui.EnVidrio(Ui.Columna(_modo, formulario, _grupoBarbero, Ui.Barra(nuevo, guardar)), llenar: false));
 
-        Controls.Add(_grilla);
+        Controls.Add(Ui.EnVidrio(_grilla));
         Controls.Add(panelFormulario);
         Controls.Add(Ui.TituloModulo("Personal y usuarios del sistema"));
 

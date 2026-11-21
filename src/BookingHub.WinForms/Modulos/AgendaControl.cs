@@ -33,7 +33,7 @@ public class AgendaControl : UserControl
         var acciones = Ui.Barra(nueva, cobrar, Ui.Etiqueta("Estado"), _estado, cambiarEstado, eliminar);
         acciones.Dock = DockStyle.Bottom;
 
-        Controls.Add(_grilla);
+        Controls.Add(Ui.EnVidrio(_grilla));
         Controls.Add(acciones);
         Controls.Add(_resumen);
         Controls.Add(filtros);

@@ -23,10 +23,17 @@ public class CajaControl : UserControl
         var cargar = Ui.Boton("Cargar");
         var imprimir = Ui.Boton("Imprimir cierre de caja", primario: true);
 
-        var division = new SplitContainer { Dock = DockStyle.Fill, Orientation = Orientation.Vertical, SplitterDistance = 640 };
-        division.Panel1.Controls.Add(_pagos);
-        division.Panel2.Controls.Add(_porMetodo);
-        division.Panel2.Padding = new Padding(10, 0, 0, 0);
+        // Dos tarjetas de vidrio: cobros del día (65 %) y resumen por método de pago (35 %).
+        var division = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 2, RowCount = 1 };
+        division.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 65f));
+        division.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 35f));
+        division.RowStyles.Add(new RowStyle(SizeType.Percent, 100f));
+        var tarjetaPagos = Ui.EnVidrio(_pagos);
+        tarjetaPagos.Margin = new Padding(0, 0, 8, 0);
+        var tarjetaMetodos = Ui.EnVidrio(_porMetodo);
+        tarjetaMetodos.Margin = new Padding(8, 0, 0, 0);
+        division.Controls.Add(tarjetaPagos, 0, 0);
+        division.Controls.Add(tarjetaMetodos, 1, 0);
 
         Controls.Add(division);
         Controls.Add(_totales);

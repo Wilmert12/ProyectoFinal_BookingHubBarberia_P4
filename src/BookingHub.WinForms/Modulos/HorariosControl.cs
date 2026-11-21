@@ -40,7 +40,7 @@ public class HorariosControl : UserControl
         var guardarSemana = Ui.Boton("Guardar horario", primario: true);
         var porDefecto = Ui.Boton("Usar horario por defecto");
         var panelSemana = new Panel { Dock = DockStyle.Fill, Padding = new Padding(0, 0, 16, 0) };
-        panelSemana.Controls.Add(_semana);
+        panelSemana.Controls.Add(Ui.EnVidrio(_semana));
         panelSemana.Controls.Add(Ui.Columna(
             Ui.Barra(Ui.Etiqueta("Barbero"), _barbero),
             _avisoSemana));
@@ -59,7 +59,7 @@ public class HorariosControl : UserControl
             ("Hasta", _hasta),
             ("Motivo", _descripcion));
         var panelLibres = new Panel { Dock = DockStyle.Fill, Padding = new Padding(16, 0, 0, 0) };
-        panelLibres.Controls.Add(_libres);
+        panelLibres.Controls.Add(Ui.EnVidrio(_libres));
         panelLibres.Controls.Add(Ui.Columna(formularioLibre, Ui.Barra(agregar, eliminar)));
         panelLibres.Controls.Add(Subtitulo("Días libres y cierres"));
 

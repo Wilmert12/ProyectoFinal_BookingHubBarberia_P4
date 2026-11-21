@@ -88,29 +88,110 @@ code {
     text-align: start;
 }
 
+/* ============================================================
+   CerquilloApp · glassmorfismo minimalista
+   Fondo cálido con dos manchas de color muy suaves y superficies
+   de vidrio esmerilado. La distribución la hacen las utilidades
+   flex de Bootstrap (d-flex, gap-*, justify-content-*, align-items-*).
+   ============================================================ */
+
 :root {
     --tinta: #17150F;
     --acento: #C9A15B;
-    --papel: #FAF8F3;
-    --borde: #E6E3DC;
-    --texto-suave: #78736A;
+    --papel: #F6F3EC;
+    --borde: rgba(23, 21, 15, .08);
+    --texto-suave: #6F6A60;
+
+    --vidrio-fondo: rgba(255, 255, 255, .55);
+    --vidrio-fondo-fuerte: rgba(255, 255, 255, .72);
+    --vidrio-borde: rgba(255, 255, 255, .7);
+    --vidrio-sombra: 0 8px 32px rgba(23, 21, 15, .06);
+    --vidrio-desenfoque: blur(18px) saturate(150%);
+    --radio: 1rem;
+
     --bs-body-bg: var(--papel);
     --bs-body-color: var(--tinta);
     --bs-secondary-color: var(--texto-suave);
     --bs-border-color: var(--borde);
     --bs-link-color: var(--tinta);
     --bs-link-hover-color: #000;
-    --bs-border-radius: .625rem;
+    --bs-link-color-rgb: 23, 21, 15;
+    --bs-link-hover-color-rgb: 0, 0, 0;
+    --bs-primary-rgb: 23, 21, 15;
+    --bs-border-radius: .75rem;
+    --bs-border-radius-sm: .5rem;
+    --bs-border-radius-lg: var(--radio);
 }
 
 body {
+    min-height: 100vh;
     background: var(--papel);
     -webkit-font-smoothing: antialiased;
 }
 
+    /* Dos manchas de color fijas detrás de todo: dan algo que "ver" a través del vidrio. */
+    body::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        z-index: -1;
+        pointer-events: none;
+        background:
+            radial-gradient(38rem 38rem at 8% -6%, rgba(201, 161, 91, .42), transparent 62%),
+            radial-gradient(34rem 34rem at 100% 30%, rgba(140, 165, 155, .32), transparent 62%),
+            radial-gradient(30rem 30rem at 40% 110%, rgba(201, 161, 91, .2), transparent 62%);
+    }
+
+/* ---------- Superficie de vidrio ---------- */
+
+.vidrio,
+.card,
+.list-group,
+.alert,
+.dropdown-menu {
+    background: var(--vidrio-fondo);
+    -webkit-backdrop-filter: var(--vidrio-desenfoque);
+    backdrop-filter: var(--vidrio-desenfoque);
+    border: 1px solid var(--vidrio-borde);
+    border-radius: var(--radio);
+    box-shadow: var(--vidrio-sombra);
+}
+
+.card {
+    box-shadow: var(--vidrio-sombra) !important;
+    transition: transform .2s ease, box-shadow .2s ease;
+}
+
+    a.card:hover,
+    .card:has(.btn):hover {
+        transform: translateY(-2px);
+        box-shadow: 0 12px 36px rgba(23, 21, 15, .09) !important;
+    }
+
+/* Sin soporte de desenfoque: vidrio más opaco para que se lea bien. */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+    .vidrio, .card, .list-group, .alert, .marca-encabezado {
+        background: rgba(255, 255, 255, .9);
+    }
+}
+
+/* ---------- Encabezado ---------- */
+
 .marca-encabezado {
-    background: #fff;
-    border-bottom: 1px solid var(--borde);
+    position: sticky;
+    top: 0;
+    z-index: 1020;
+    background: rgba(246, 243, 236, .6);
+    -webkit-backdrop-filter: var(--vidrio-desenfoque);
+    backdrop-filter: var(--vidrio-desenfoque);
+    border-bottom: 1px solid var(--vidrio-borde);
+}
+
+/* En el teléfono el menú ocupa dos líneas: mejor que no quede fijo arriba. */
+@media (max-width: 767.98px) {
+    .marca-encabezado {
+        position: static;
+    }
 }
 
 .marca-nombre {
@@ -122,19 +203,50 @@ body {
 
 .marca-menu .nav-link {
     color: var(--texto-suave);
-    padding: .35rem .75rem;
-    border-bottom: 2px solid transparent;
-    border-radius: 0;
+    padding: .4rem .9rem;
+    border-radius: 999px;
+    border: 1px solid transparent;
+    transition: background-color .15s ease, color .15s ease;
 }
 
     .marca-menu .nav-link:hover {
         color: var(--tinta);
+        background: rgba(255, 255, 255, .45);
     }
 
     .marca-menu .nav-link.active {
         color: var(--tinta);
-        border-bottom-color: var(--acento);
+        background: var(--vidrio-fondo-fuerte);
+        border-color: var(--vidrio-borde);
+        box-shadow: 0 2px 10px rgba(23, 21, 15, .06);
     }
+
+/* ---------- Tipografía ---------- */
+
+h1, .h1 {
+    font-weight: 600;
+    letter-spacing: -.02em;
+}
+
+h2, .h2, h3, .h3, h4, .h4, h5, .h5 {
+    font-weight: 600;
+    letter-spacing: -.01em;
+}
+
+/* ---------- Botones ---------- */
+
+.btn {
+    border-radius: 999px;
+    padding-inline: 1.1rem;
+}
+
+.btn-sm {
+    padding-inline: .8rem;
+}
+
+.btn-link {
+    padding-inline: 0;
+}
 
 .btn-primary {
     --bs-btn-bg: var(--tinta);
@@ -147,17 +259,98 @@ body {
     --bs-btn-disabled-border-color: var(--tinta);
 }
 
-.card {
-    border: 1px solid var(--borde);
-    box-shadow: none !important;
+.btn-outline-primary {
+    --bs-btn-color: var(--tinta);
+    --bs-btn-border-color: rgba(23, 21, 15, .25);
+    --bs-btn-bg: rgba(255, 255, 255, .4);
+    --bs-btn-hover-color: #fff;
+    --bs-btn-hover-bg: var(--tinta);
+    --bs-btn-hover-border-color: var(--tinta);
+    --bs-btn-active-bg: #000;
+    --bs-btn-active-border-color: #000;
 }
 
-.form-control:focus,
-.form-select:focus {
-    border-color: var(--acento);
-    box-shadow: 0 0 0 .2rem rgba(201, 161, 91, .2);
+/* ---------- Formularios ---------- */
+
+.form-control,
+.form-select {
+    background-color: rgba(255, 255, 255, .65);
+    border-color: rgba(23, 21, 15, .1);
+}
+
+    .form-control:focus,
+    .form-select:focus {
+        background-color: rgba(255, 255, 255, .9);
+        border-color: var(--acento);
+        box-shadow: 0 0 0 .2rem rgba(201, 161, 91, .2);
+    }
+
+/* ---------- Tablas y listas ---------- */
+
+.table {
+    --bs-table-bg: transparent;
+    --bs-table-hover-bg: rgba(255, 255, 255, .45);
+    margin-bottom: 0;
+}
+
+    .table > thead {
+        --bs-table-bg: transparent;
+    }
+
+        .table > thead th {
+            color: var(--texto-suave);
+            font-weight: 500;
+            font-size: .85rem;
+            border-bottom-color: var(--borde);
+        }
+
+.table-responsive.vidrio {
+    padding: .25rem .5rem;
+}
+
+.list-group-item {
+    background: transparent;
+    border-color: var(--borde);
+}
+
+/* ---------- Alertas: vidrio con un toque de color ---------- */
+
+.alert-success { background: rgba(214, 236, 221, .6); }
+.alert-danger  { background: rgba(248, 220, 220, .6); }
+.alert-info    { background: rgba(219, 234, 242, .6); }
+
+/* ---------- Enlaces ---------- */
+
+main a:not(.btn):not(.nav-link) {
+    text-decoration-color: var(--acento);
+    text-underline-offset: .2em;
+}
+
+.link-primary {
+    color: var(--tinta) !important;
+}
+
+/* ---------- Varios ---------- */
+
+.badge {
+    font-weight: 500;
+}
+
+/* Centrado vertical de formularios cortos (ingresar, página no encontrada). */
+.zona-centrada {
+    min-height: calc(100vh - 14rem);
 }
 
 .agenda-hora {
     min-width: 3.5rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .card, .marca-menu .nav-link {
+        transition: none;
+    }
+
+    a.card:hover, .card:has(.btn):hover {
+        transform: none;
+    }
 }
