@@ -5,9 +5,11 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -277,10 +279,14 @@ private fun ChipVista(texto: String, seleccionado: Boolean, onClick: () -> Unit)
 
 @Composable
 private fun Resumen(estado: AgendaBarberoUiState) {
-    Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-        Dato("Citas", estado.activas.size.toString(), Modifier.weight(1f))
-        Dato("Completadas", estado.completadas.toString(), Modifier.weight(1f))
-        Dato(if (estado.semana) "Total semana" else "Total del día", pesos(estado.total), Modifier.weight(1.4f))
+    // Las tres tarjetas con la misma altura, aunque el teléfono use letra grande
+    Row(
+        modifier = Modifier.fillMaxWidth().height(IntrinsicSize.Min),
+        horizontalArrangement = Arrangement.spacedBy(10.dp)
+    ) {
+        Dato("Citas", estado.activas.size.toString(), Modifier.weight(0.85f).fillMaxHeight())
+        Dato("Completadas", estado.completadas.toString(), Modifier.weight(1.15f).fillMaxHeight())
+        Dato(if (estado.semana) "Total semana" else "Total del día", pesos(estado.total), Modifier.weight(1.4f).fillMaxHeight())
     }
 }
 
@@ -292,8 +298,15 @@ private fun Dato(titulo: String, valor: String, modifier: Modifier = Modifier) {
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         border = BorderStroke(1.dp, VidrioBorde)
     ) {
-        Column(modifier = Modifier.padding(horizontal = 14.dp, vertical = 12.dp)) {
-            Text(titulo, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Column(modifier = Modifier.padding(horizontal = 12.dp, vertical = 12.dp)) {
+            Text(
+                titulo,
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1,
+                softWrap = false,
+                overflow = TextOverflow.Ellipsis
+            )
             Text(valor, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold, maxLines = 1)
         }
     }
