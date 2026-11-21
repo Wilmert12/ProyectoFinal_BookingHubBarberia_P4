@@ -74,6 +74,10 @@ public partial class BookingHubContext : DbContext
                 .HasDefaultValueSql("(sysdatetime())")
                 .HasColumnName("fechaRegistro");
             entity.Property(e => e.UsuarioId).HasColumnName("usuarioId");
+            // Sin HasDefaultValue: así un 0 % se guarda tal cual y no lo reemplaza el valor por defecto.
+            entity.Property(e => e.ComisionPorcentaje)
+                .HasColumnType("decimal(5, 2)")
+                .HasColumnName("comisionPorcentaje");
 
             entity.HasOne(d => d.Usuario).WithOne(p => p.Barbero)
                 .HasForeignKey<Barbero>(d => d.UsuarioId)

@@ -33,6 +33,10 @@ public class ReporteService(
             })
             .ToListAsync();
 
+        var comisiones = await contexto.Barberos
+            .AsNoTracking()
+            .ToDictionaryAsync(b => b.BarberoId, b => b.ComisionPorcentaje);
+
         var citasPagadas = pagos.Select(p => p.CitaId).Distinct().ToList();
 
         var detalles = await contexto.CitaDetalles
@@ -77,7 +81,16 @@ public class ReporteService(
                 .ToList(),
             PorBarbero = pagos
                 .GroupBy(p => new { p.BarberoId, p.Barbero })
-                .Select(g => new IngresoPorBarberoDto(g.Key.BarberoId, g.Key.Barbero, g.Select(p => p.CitaId).Distinct().Count(), g.Sum(p => p.Monto)))
+                .Select(g =>
+                {
+                    var ingresos = g.Sum(p => p.Monto);
+                    var propinas = g.Sum(p => p.Propina);
+                    var porcentaje = comisiones.GetValueOrDefault(g.Key.BarberoId, 50m);
+                    // La comisión es sobre lo cobrado sin ITBIS; la propina es toda del barbero.
+                    var comision = Math.Round(Impuestos.SinItbis(ingresos) * porcentaje / 100m, 2, MidpointRounding.AwayFromZero);
+                    return new IngresoPorBarberoDto(g.Key.BarberoId, g.Key.Barbero, g.Select(p => p.CitaId).Distinct().Count(), ingresos,
+                        porcentaje, comision, propinas, comision + propinas);
+                })
                 .OrderByDescending(b => b.Ingresos)
                 .ToList(),
             PorServicio = detalles

@@ -218,8 +218,12 @@ public static class Ui
         }
     }
 
+    /// <summary>
+    /// Fila elegida. Primero SelectedRows: al seleccionar desde el código, el evento
+    /// SelectionChanged llega antes de que CurrentRow cambie a la nueva fila.
+    /// </summary>
     public static T? Seleccionado<T>(DataGridView grilla) where T : class =>
-        grilla.CurrentRow?.DataBoundItem as T;
+        (grilla.SelectedRows.Count > 0 ? grilla.SelectedRows[0] : grilla.CurrentRow)?.DataBoundItem as T;
 
     private static string Encabezado(string propiedad)
     {

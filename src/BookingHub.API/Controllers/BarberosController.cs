@@ -50,7 +50,7 @@ public class BarberosController(
         if (result.IsFailure)
             return BadRequest(result.Error);
 
-        return Ok(result.Value);
+        return Ok(result.Value!.Select(OcultarSiNoEsPersonal).ToList());
     }
 
     [HttpGet("{id}")]
@@ -64,8 +64,14 @@ public class BarberosController(
         if (result.Value == null)
             return NotFound();
 
-        return Ok(result.Value);
+        return Ok(OcultarSiNoEsPersonal(result.Value));
     }
+
+    // La comisión es un dato interno del negocio: la web pública no la recibe.
+    private BarberoDto OcultarSiNoEsPersonal(BarberoDto barbero) =>
+        User.IsInRole(RolesSistema.Admin) || User.IsInRole(RolesSistema.Recepcion)
+            ? barbero
+            : barbero with { ComisionPorcentaje = null };
 
     /// <summary>Horas en las que el barbero puede empezar una cita de la duración indicada.</summary>
     [HttpGet("{id}/disponibilidad")]

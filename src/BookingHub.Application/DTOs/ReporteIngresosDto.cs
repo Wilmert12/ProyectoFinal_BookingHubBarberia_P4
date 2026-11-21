@@ -20,6 +20,8 @@ public record ReporteIngresosDto
 
 public record IngresoPorMetodoDto(string MetodoPago, int Cantidad, decimal Total);
 
-public record IngresoPorBarberoDto(int BarberoId, string Nombre, int Citas, decimal Ingresos);
+/// <summary>Ingresos (con ITBIS), comisión sobre lo cobrado sin ITBIS, propinas (100 % del barbero) y lo que hay que pagarle.</summary>
+public record IngresoPorBarberoDto(int BarberoId, string Nombre, int Citas, decimal Ingresos,
+    decimal ComisionPorcentaje = 0, decimal Comision = 0, decimal Propinas = 0, decimal APagar = 0);
 
 public record IngresoPorServicioDto(int CatalogoItemId, string Nombre, bool EsServicio, int Cantidad, decimal Ingresos);

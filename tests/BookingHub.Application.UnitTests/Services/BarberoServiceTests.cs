@@ -63,4 +63,28 @@ public class BarberoServiceTests : IDisposable
     }
 
     public void Dispose() => _baseDeDatos.Dispose();
+
+    [Theory]
+    [InlineData(-1)]
+    [InlineData(101)]
+    public async Task Guardar_ComisionFueraDeRango_Falla(decimal porcentaje)
+    {
+        var barbero = (await _service.Buscar(1)).Value! with { ComisionPorcentaje = porcentaje };
+
+        var result = await _service.Guardar(barbero);
+
+        Assert.True(result.IsFailure);
+        Assert.Equal("BARBERO_COMISION", result.Error.Code);
+    }
+
+    [Fact]
+    public async Task Guardar_ComisionNula_ConservaLaAnterior()
+    {
+        var barbero = (await _service.Buscar(1)).Value!;
+        Assert.True((await _service.Guardar(barbero with { ComisionPorcentaje = 35m })).IsSuccess);
+
+        Assert.True((await _service.Guardar(barbero with { ComisionPorcentaje = null, Apodo = "Otro" })).IsSuccess);
+
+        Assert.Equal(35m, (await _service.Buscar(1)).Value!.ComisionPorcentaje);
+    }
 }

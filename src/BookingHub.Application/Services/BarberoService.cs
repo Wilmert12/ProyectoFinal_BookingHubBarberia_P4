@@ -15,6 +15,9 @@ public class BarberoService(
 {
     public async Task<Result> Guardar(BarberoDto barbero)
     {
+        if (barbero.ComisionPorcentaje is < 0 or > 100)
+            return Result.Failure(new Error("BARBERO_COMISION", "La comisión debe estar entre 0 % y 100 %."));
+
         if (!await Existe(barbero.BarberoId))
         {
             var inserto = await Insertar(barbero);
@@ -55,7 +58,8 @@ public class BarberoService(
                 .SetProperty(b => b.Apodo, barberoDto.Apodo)
                 .SetProperty(b => b.Cedula, b => barberoDto.Cedula ?? b.Cedula)
                 .SetProperty(b => b.ColorHex, barberoDto.ColorHex)
-                .SetProperty(b => b.Activo, barberoDto.Activo)) > 0;
+                .SetProperty(b => b.Activo, barberoDto.Activo)
+                .SetProperty(b => b.ComisionPorcentaje, b => barberoDto.ComisionPorcentaje ?? b.ComisionPorcentaje)) > 0;
         barberoDto.Cedula = null;
         return modifico;
     }

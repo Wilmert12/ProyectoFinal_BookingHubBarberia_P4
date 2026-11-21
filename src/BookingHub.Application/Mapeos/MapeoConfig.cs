@@ -42,7 +42,8 @@ public static class MapeoConfig
             .Ignore(dto => dto.Cedula);
 
         config.NewConfig<BarberoDto, Barbero>()
-            .Map(barbero => barbero.Cedula, dto => dto.Cedula ?? string.Empty);
+            .Map(barbero => barbero.Cedula, dto => dto.Cedula ?? string.Empty)
+            .Map(barbero => barbero.ComisionPorcentaje, dto => dto.ComisionPorcentaje ?? 50m);
 
         config.Compile();
         return config;
