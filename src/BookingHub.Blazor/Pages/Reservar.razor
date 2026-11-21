@@ -44,7 +44,7 @@
                         <dt class="col-5 fw-normal text-body-secondary">Hora</dt>
                         <dd class="col-7">@hora a @TimeOnly.Parse(hora).AddMinutes(resumen.DuracionMin ?? 30).ToString("HH:mm")</dd>
                         <dt class="col-5 fw-normal text-body-secondary">Total</dt>
-                        <dd class="col-7 fw-semibold">@Formato.Precio(resumen.Precio)</dd>
+                        <dd class="col-7"><span class="fw-semibold">@Formato.Precio(resumen.Precio)</span> <small class="text-body-secondary">ITBIS incluido</small></dd>
                         @if (!string.IsNullOrWhiteSpace(notas))
                         {
                             <dt class="col-5 fw-normal text-body-secondary">Notas</dt>

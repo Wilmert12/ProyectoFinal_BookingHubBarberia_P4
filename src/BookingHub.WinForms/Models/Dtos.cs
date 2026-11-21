@@ -102,6 +102,7 @@ public record ReporteIngresosDto
     public DateOnly Hasta { get; set; }
     public decimal TotalIngresos { get; set; }
     public decimal TotalPropinas { get; set; }
+    public decimal TotalItbis { get; set; }
     public int CantidadPagos { get; set; }
     public int CitasCompletadas { get; set; }
     public int CitasPorCobrar { get; set; }

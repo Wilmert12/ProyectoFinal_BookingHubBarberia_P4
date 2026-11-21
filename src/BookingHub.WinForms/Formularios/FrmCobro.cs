@@ -16,6 +16,7 @@ public class FrmCobro : Form
     private readonly NumericUpDown _propina = Ui.Numero(100000);
     private readonly TextBox _referencia = new() { Width = 200 };
     private readonly Label _total = new() { AutoSize = true, Font = Ui.Titulo };
+    private readonly Label _itbis = new() { AutoSize = true, ForeColor = Ui.TextoSuave };
     private readonly Button _cobrar = Ui.Boton("Cobrar y emitir recibo", primario: true);
     private List<CatalogoItemDto> _catalogo = [];
     private int _estadoCompletadaId;
@@ -61,7 +62,7 @@ public class FrmCobro : Form
         CancelButton = cancelar;
         var barraPago = Ui.Barra(Ui.Etiqueta("Método de pago"), _metodo, Ui.Etiqueta("Propina"), _propina, Ui.Etiqueta("Referencia"), _referencia);
         barraPago.Dock = DockStyle.Bottom;
-        var barraTotal = Ui.Barra(_total, _cobrar, cancelar);
+        var barraTotal = Ui.Barra(_total, _itbis, _cobrar, cancelar);
         barraTotal.Dock = DockStyle.Bottom;
 
         var contenedor = new Panel { Dock = DockStyle.Fill, Padding = new Padding(20) };
@@ -123,6 +124,7 @@ public class FrmCobro : Form
             nameof(FilaDetalle.Precio), nameof(FilaDetalle.Descuento), nameof(FilaDetalle.Subtotal));
         _grilla.Columns[nameof(FilaDetalle.Indice)]!.Visible = false;
         _total.Text = $"Total: {Mensajes.Precio(Total)}";
+        _itbis.Text = $"Incluye ITBIS (18 %): {Mensajes.Precio(Impuestos.ItbisIncluido(Total))}";
     }
 
     private void Agregar()

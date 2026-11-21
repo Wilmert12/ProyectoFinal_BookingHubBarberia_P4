@@ -10,6 +10,7 @@ public class ReportesControl : UserControl
     private readonly DateTimePicker _hasta = new() { Format = DateTimePickerFormat.Short, Width = 130 };
     private readonly Label _ingresos = Tarjeta();
     private readonly Label _propinas = Tarjeta();
+    private readonly Label _itbis = Tarjeta();
     private readonly Label _cobros = Tarjeta();
     private readonly Label _completadas = Tarjeta();
     private readonly Label _porCobrar = Tarjeta();
@@ -35,7 +36,7 @@ public class ReportesControl : UserControl
         var hoyBoton = Ui.Boton("Hoy");
 
         var tarjetas = new FlowLayoutPanel { Dock = DockStyle.Top, AutoSize = true, Padding = new Padding(0, 4, 0, 10) };
-        tarjetas.Controls.AddRange([_ingresos, _propinas, _cobros, _completadas, _porCobrar]);
+        tarjetas.Controls.AddRange([_ingresos, _itbis, _propinas, _cobros, _completadas, _porCobrar]);
 
         var tablas = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 3, RowCount = 2 };
         tablas.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 38f));
@@ -82,10 +83,10 @@ public class ReportesControl : UserControl
     private static Label Tarjeta() => new()
     {
         AutoSize = false,
-        Size = new Size(220, 72),
+        Size = new Size(176, 72),
         BackColor = Ui.Vidrio,
         ForeColor = Ui.Tinta,
-        Padding = new Padding(16, 12, 16, 12),
+        Padding = new Padding(14, 12, 14, 12),
         Margin = new Padding(0, 0, 12, 0),
         Font = Ui.Destacado
     };
@@ -125,9 +126,10 @@ public class ReportesControl : UserControl
     private void Mostrar(ReporteIngresosDto reporte)
     {
         _ingresos.Text = $"Ingresos\n{Mensajes.Precio(reporte.TotalIngresos)}";
+        _itbis.Text = $"ITBIS (18 %)\n{Mensajes.Precio(reporte.TotalItbis)}";
         _propinas.Text = $"Propinas\n{Mensajes.Precio(reporte.TotalPropinas)}";
         _cobros.Text = $"Cobros\n{reporte.CantidadPagos}";
-        _completadas.Text = $"Citas completadas\n{reporte.CitasCompletadas}";
+        _completadas.Text = $"Completadas\n{reporte.CitasCompletadas}";
         // Completadas que recepción aún no cobró: todavía no son ingresos.
         _porCobrar.Text = $"Por cobrar ({reporte.CitasPorCobrar})\n{Mensajes.Precio(reporte.PorCobrar)}";
         _porCobrar.ForeColor = reporte.CitasPorCobrar > 0 ? Color.FromArgb(176, 122, 20) : Ui.Tinta;

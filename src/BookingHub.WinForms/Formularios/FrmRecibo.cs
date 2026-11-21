@@ -111,6 +111,8 @@ public static class Recibos
                 Columnas(texto, "   descuento", "-" + Mensajes.Precio(detalle.Descuento));
         }
         texto.AppendLine(new string('-', Ancho));
+        Columnas(texto, "Subtotal sin ITBIS", Mensajes.Precio(Impuestos.SinItbis(pago.Monto)));
+        Columnas(texto, "ITBIS (18 %)", Mensajes.Precio(Impuestos.ItbisIncluido(pago.Monto)));
         Columnas(texto, "TOTAL", Mensajes.Precio(pago.Monto));
         if (pago.Propina > 0)
             Columnas(texto, "Propina", Mensajes.Precio(pago.Propina));
@@ -118,6 +120,7 @@ public static class Recibos
         if (!string.IsNullOrWhiteSpace(pago.Referencia))
             Columnas(texto, "Referencia", pago.Referencia);
         texto.AppendLine(new string('=', Ancho));
+        Centrado(texto, "Precios con ITBIS incluido.");
         Centrado(texto, "¡Gracias por su visita!");
         return texto.ToString();
     }
@@ -134,6 +137,7 @@ public static class Recibos
         texto.AppendLine(new string('-', Ancho));
         Columnas(texto, "Cobros", pagos.Count.ToString());
         Columnas(texto, "Total ventas", Mensajes.Precio(pagos.Sum(p => p.Monto)));
+        Columnas(texto, "  ITBIS incluido (18 %)", Mensajes.Precio(Impuestos.ItbisIncluido(pagos.Sum(p => p.Monto))));
         Columnas(texto, "Total propinas", Mensajes.Precio(pagos.Sum(p => p.Propina)));
         Columnas(texto, "TOTAL EN CAJA", Mensajes.Precio(pagos.Sum(p => p.Monto + p.Propina)));
         texto.AppendLine(new string('=', Ancho));
