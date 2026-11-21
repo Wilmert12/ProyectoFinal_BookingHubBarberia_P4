@@ -5,8 +5,9 @@ namespace BookingHub.Blazor.Services;
 
 public interface ICitaApi
 {
+    /// <summary>Citas de un cliente; la API pide su teléfono para confirmar que es él.</summary>
     [Get("/api/Citas")]
-    Task<List<CitaDto>> GetCitas(int? clienteId = null, int? barberoId = null);
+    Task<List<CitaDto>> GetCitasCliente(int clienteId, [Header("X-Cliente-Telefono")] string telefono);
 
     [Get("/api/Citas/mias")]
     Task<List<CitaDto>> GetMisCitas([Query(Format = "yyyy-MM-dd")] DateOnly fecha);
@@ -15,5 +16,5 @@ public interface ICitaApi
     Task<CitaDto> GetCita(int id);
 
     [Post("/api/Citas")]
-    Task<CitaDto> CrearCita([Body] CitaDto cita);
+    Task<CitaDto> CrearCita([Body] CitaDto cita, [Header("X-Cliente-Telefono")] string telefono);
 }

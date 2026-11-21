@@ -16,6 +16,7 @@ public static class DependencyInjection
         services.AddScoped<ReporteService>();
         services.AddScoped<UsuarioService>();
         services.AddScoped<DisponibilidadService>();
+        services.AddScoped<ReservaService>();
 
         return services;
     }

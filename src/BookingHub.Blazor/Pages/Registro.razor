@@ -12,7 +12,7 @@
         {
             <div class="alert alert-success">
                 <p class="mb-1">¡Listo, @registrado.Nombre! Tu número de cliente es <strong>@registrado.ClienteId</strong>.</p>
-                <p class="mb-3">Guárdalo: lo necesitas para reservar y ver tus citas.</p>
+                <p class="mb-3">Guárdalo: con ese número y tu teléfono reservas y ves tus citas.</p>
                 <div class="d-flex flex-wrap align-items-center gap-3">
                     <a class="btn btn-primary" href="reservar">Reservar una cita</a>
                     <a class="link-primary" href="mis-citas">Ver mis citas</a>
@@ -70,6 +70,7 @@
             cliente.Email = string.IsNullOrWhiteSpace(cliente.Email) ? null : cliente.Email.Trim();
             registrado = await ClienteApi.CrearCliente(cliente);
             Sesion.ClienteId = registrado.ClienteId;
+            Sesion.Telefono = registrado.Telefono;
         }
         catch (Exception ex) when (Formato.EsErrorDeApi(ex))
         {

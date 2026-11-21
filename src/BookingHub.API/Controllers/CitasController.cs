@@ -8,13 +8,26 @@ namespace BookingHub.API.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-public class CitasController(CitaService citaService, BarberoService barberoService) : ControllerBase
+public class CitasController(CitaService citaService, BarberoService barberoService, ReservaService reservaService) : ControllerBase
 {
+    private bool EsPersonal => User.IsInRole(RolesSistema.Admin) || User.IsInRole(RolesSistema.Recepcion);
+
+    private string? TelefonoCliente => Request.Headers[ReservaService.EncabezadoTelefono].FirstOrDefault();
+
+    /// <summary>
+    /// El personal ve cualquier agenda. Un cliente solo ve sus citas y tiene que mandar
+    /// su teléfono en el encabezado X-Cliente-Telefono.
+    /// </summary>
     [HttpGet]
     public async Task<ActionResult<List<CitaDto>>> GetCitas(int? clienteId, int? barberoId, DateOnly? fecha)
     {
-        if (clienteId is null && !User.IsInRole(RolesSistema.Admin) && !User.IsInRole(RolesSistema.Recepcion))
-            return Unauthorized("Para ver la agenda completa hay que iniciar sesión como personal.");
+        if (!EsPersonal)
+        {
+            if (clienteId is null)
+                return Unauthorized("Para ver la agenda completa hay que iniciar sesión como personal.");
+            if (!await reservaService.TelefonoCoincide(clienteId.Value, TelefonoCliente))
+                return Unauthorized(new Aplicada1.Core.Error(ReservaService.ErrorNoVerificado, "El número de cliente y el teléfono no coinciden."));
+        }
 
         var desde = fecha?.ToDateTime(TimeOnly.MinValue);
         var hasta = desde?.AddDays(1);
@@ -73,15 +86,23 @@ public class CitasController(CitaService citaService, BarberoService barberoServ
         return Ok(result.Value);
     }
 
+    /// <summary>
+    /// El personal crea citas libremente. Un cliente manda su teléfono en X-Cliente-Telefono;
+    /// el servidor pone los precios, la duración y el estado Pendiente, y valida la hora.
+    /// </summary>
     [HttpPost]
     public async Task<ActionResult<CitaDto>> PostCita(CitaDto cita)
     {
         cita.CitaId = 0;
 
-        var result = await citaService.Guardar(cita);
+        var result = EsPersonal
+            ? await citaService.Guardar(cita)
+            : await reservaService.Reservar(cita, TelefonoCliente);
 
         if (result.IsFailure)
-            return BadRequest(result.Error);
+            return result.Error.Code == ReservaService.ErrorNoVerificado
+                ? Unauthorized(result.Error)
+                : BadRequest(result.Error);
 
         var creada = await citaService.Buscar(cita.CitaId);
 

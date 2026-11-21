@@ -2,6 +2,7 @@ package com.bookinghub.app.data.api
 
 import com.bookinghub.app.BuildConfig
 import com.bookinghub.app.util.SesionBarbero
+import com.bookinghub.app.util.SesionCliente
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
@@ -22,12 +23,16 @@ object ApiClient {
             val request = chain.request()
             val token = SesionBarbero.sesionActual?.token
             val esLogin = request.url.encodedPath.endsWith("/api/Auth/login")
-            val requestAutenticado = if (token.isNullOrBlank() || esLogin) {
-                request
-            } else {
-                request.newBuilder().header("Authorization", "Bearer $token").build()
+            val builder = request.newBuilder()
+            if (!token.isNullOrBlank() && !esLogin) {
+                builder.header("Authorization", "Bearer $token")
             }
-            chain.proceed(requestAutenticado)
+            // Las citas del cliente se validan con su teléfono.
+            val telefono = SesionCliente.clienteActual?.telefono
+            if (!telefono.isNullOrBlank() && request.url.encodedPath.contains("/api/Citas")) {
+                builder.header("X-Cliente-Telefono", telefono)
+            }
+            chain.proceed(builder.build())
         }
         .addInterceptor(loggingInterceptor)
         .connectTimeout(30, TimeUnit.SECONDS)
