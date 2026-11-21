@@ -150,7 +150,7 @@ public class HorariosControl : UserControl
 
             _libreBarbero.DisplayMember = nameof(OpcionBarbero.Nombre);
             _libreBarbero.DataSource = new List<OpcionBarbero> { new(null, "Toda la barbería") }
-                .Concat(barberos.Select(b => new OpcionBarbero(b.BarberoId, b.Nombre)))
+                .Concat(barberos.Select(b => new OpcionBarbero(b.BarberoId, b.Nombre ?? string.Empty)))
                 .ToList();
 
             _libreTipo.DisplayMember = nameof(TipoIndisponibilidadDto.Descripcion);
