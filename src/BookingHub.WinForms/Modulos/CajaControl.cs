@@ -153,17 +153,17 @@ public class CajaControl : UserControl
 
         var ventas = _lista.Sum(p => p.Monto);
         var propinas = _lista.Sum(p => p.Propina);
-        Exportar.Csv(this, $"Caja {_fecha.Value:yyyy-MM-dd}.csv",
-            new Exportar.Seccion($"Cobros del {_fecha.Value:dd/MM/yyyy}",
+        Exportar.Excel(this, $"Caja {_fecha.Value:yyyy-MM-dd}.xlsx",
+            new Exportar.Seccion("Cobros", $"Cobros del {_fecha.Value:dd/MM/yyyy}",
                 ["Hora", "Recibo", "Cliente", "Barbero", "Método", "Monto", "ITBIS incluido", "Propina", "Referencia"],
                 _lista.OrderBy(p => p.FechaPago).Select(p => new object?[]
                 {
                     p.FechaPago.ToString("HH:mm"), p.PagoId, p.ClienteNombre, p.BarberoNombre, p.MetodoPago,
                     p.Monto, Impuestos.ItbisIncluido(p.Monto), p.Propina, p.Referencia
                 })),
-            new Exportar.Seccion("Por método de pago", ["Método", "Cobros", "Total"],
+            new Exportar.Seccion("Métodos de pago", $"Por método de pago · {_fecha.Value:dd/MM/yyyy}", ["Método", "Cobros", "Total"],
                 _lista.GroupBy(p => p.MetodoPago ?? "Sin método").Select(g => new object?[] { g.Key, g.Count(), g.Sum(p => p.Monto) })),
-            new Exportar.Seccion("Totales", ["Concepto", "Valor"],
+            new Exportar.Seccion("Totales", $"Cierre de caja · {_fecha.Value:dd/MM/yyyy}", ["Concepto", "Valor"],
             [
                 ["Ventas (ITBIS incluido)", ventas],
                 ["ITBIS (18 %)", Impuestos.ItbisIncluido(ventas)],

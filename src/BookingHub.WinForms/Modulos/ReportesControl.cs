@@ -167,8 +167,8 @@ public class ReportesControl : UserControl
             return;
         }
 
-        Exportar.Csv(this, $"Reporte de ingresos {r.Desde:yyyy-MM-dd} a {r.Hasta:yyyy-MM-dd}.csv",
-            new Exportar.Seccion($"Reporte de ingresos del {r.Desde:dd/MM/yyyy} al {r.Hasta:dd/MM/yyyy}", ["Concepto", "Valor"],
+        Exportar.Excel(this, $"Reporte de ingresos {r.Desde:yyyy-MM-dd} a {r.Hasta:yyyy-MM-dd}.xlsx",
+            new Exportar.Seccion("Resumen", $"Reporte de ingresos del {r.Desde:dd/MM/yyyy} al {r.Hasta:dd/MM/yyyy}", ["Concepto", "Valor"],
             [
                 ["Ingresos (ITBIS incluido)", r.TotalIngresos],
                 ["ITBIS (18 %)", r.TotalItbis],
@@ -179,11 +179,11 @@ public class ReportesControl : UserControl
                 ["Por cobrar", r.PorCobrar],
                 ["Citas por cobrar", r.CitasPorCobrar]
             ]),
-            new Exportar.Seccion("Por barbero", ["Barbero", "Citas", "Ingresos", "Comisión %", "Comisión", "Propinas", "A pagar"],
+            new Exportar.Seccion("Por barbero", "Por barbero: comisión sobre lo cobrado sin ITBIS + propinas = a pagar", ["Barbero", "Citas", "Ingresos", "Comisión %", "Comisión", "Propinas", "A pagar"],
                 r.PorBarbero.Select(b => new object?[] { b.Nombre, b.Citas, b.Ingresos, b.ComisionPorcentaje, b.Comision, b.Propinas, b.APagar })),
-            new Exportar.Seccion("Servicios y productos", ["Ítem", "Tipo", "Cantidad", "Ingresos"],
+            new Exportar.Seccion("Servicios", "Servicios y productos más vendidos", ["Ítem", "Tipo", "Cantidad", "Ingresos"],
                 r.PorServicio.Select(s => new object?[] { s.Nombre, s.EsServicio ? "Servicio" : "Producto", s.Cantidad, s.Ingresos })),
-            new Exportar.Seccion("Por método de pago", ["Método", "Cobros", "Total"],
+            new Exportar.Seccion("Métodos de pago", "Por método de pago", ["Método", "Cobros", "Total"],
                 r.PorMetodo.Select(m => new object?[] { m.MetodoPago, m.Cantidad, m.Total })));
     }
 }
