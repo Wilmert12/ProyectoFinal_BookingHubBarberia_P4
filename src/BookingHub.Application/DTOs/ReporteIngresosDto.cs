@@ -6,6 +6,8 @@ public record ReporteIngresosDto
     public DateOnly Hasta { get; set; }
     public decimal TotalIngresos { get; set; }
     public decimal TotalPropinas { get; set; }
+    /// <summary>ITBIS (18 %) incluido en los ingresos; las propinas no llevan ITBIS.</summary>
+    public decimal TotalItbis { get; set; }
     public int CantidadPagos { get; set; }
     public int CitasCompletadas { get; set; }
     /// <summary>Citas completadas en el rango a las que les falta pago, y cuánto falta.</summary>

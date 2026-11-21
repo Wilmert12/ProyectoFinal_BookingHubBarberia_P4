@@ -65,6 +65,7 @@ public class ReporteService(
             Hasta = hasta,
             TotalIngresos = pagos.Sum(p => p.Monto),
             TotalPropinas = pagos.Sum(p => p.Propina),
+            TotalItbis = Impuestos.ItbisIncluido(pagos.Sum(p => p.Monto)),
             CantidadPagos = pagos.Count,
             CitasCompletadas = citasCompletadas,
             CitasPorCobrar = porCobrar.Count,

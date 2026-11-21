@@ -85,7 +85,7 @@ public class CajaControl : UserControl
 
             var ventas = _lista.Sum(p => p.Monto);
             var propinas = _lista.Sum(p => p.Propina);
-            _totales.Text = $"{_lista.Count} cobros   ·   Ventas {Mensajes.Precio(ventas)}   ·   Propinas {Mensajes.Precio(propinas)}   ·   Total en caja {Mensajes.Precio(ventas + propinas)}";
+            _totales.Text = $"{_lista.Count} cobros   ·   Ventas {Mensajes.Precio(ventas)} (ITBIS {Mensajes.Precio(Impuestos.ItbisIncluido(ventas))})   ·   Propinas {Mensajes.Precio(propinas)}   ·   Total en caja {Mensajes.Precio(ventas + propinas)}";
         }
         catch (Exception ex)
         {
