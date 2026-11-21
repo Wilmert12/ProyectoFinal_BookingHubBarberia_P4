@@ -19,7 +19,7 @@ public class CatalogoControl : UserControl
     private List<CatalogoItemDto> _items = [];
     private int _itemId;
 
-    private record FilaItem(int Id, string Nombre, string Tipo, decimal Precio, string Duracion, bool Activo);
+    private sealed record FilaItem(int Id, string Nombre, string Tipo, decimal Precio, string Duracion, bool Activo);
 
     public CatalogoControl(Apis apis)
     {

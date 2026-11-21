@@ -17,11 +17,10 @@ public static class HoraLocal
             {
                 return TimeZoneInfo.FindSystemTimeZoneById(id);
             }
-            catch (TimeZoneNotFoundException)
+            catch (Exception ex) when (ex is TimeZoneNotFoundException or InvalidTimeZoneException)
             {
-            }
-            catch (InvalidTimeZoneException)
-            {
+                // Este sistema no conoce ese nombre de zona; se prueba el siguiente.
+                continue;
             }
         }
         return null;

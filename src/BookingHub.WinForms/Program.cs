@@ -24,7 +24,8 @@ static class Program
             // Archivo personal fuera de Git para apuntar a otra API sin tocar los demás.
             .AddJsonFile("appsettings.Local.json", optional: true)
             .Build();
-        var apiBaseUrl = new Uri(configuracion["ApiBaseUrl"] ?? "https://localhost:7109/");
+        var apiBaseUrl = new Uri(configuracion["ApiBaseUrl"]
+            ?? throw new InvalidOperationException("Falta ApiBaseUrl en appsettings.json."));
 
         var servicios = new ServiceCollection();
         servicios.AddSingleton<Sesion>();

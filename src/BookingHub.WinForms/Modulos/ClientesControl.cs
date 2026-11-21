@@ -25,9 +25,9 @@ public class ClientesControl : UserControl
     private int _clienteId;
     private int _consultaHistorial;
 
-    private record FilaCliente(int Id, int Numero, string Nombre, string Telefono, string Correo, bool Activo);
+    private sealed record FilaCliente(int Id, int Numero, string Nombre, string Telefono, string Correo, bool Activo);
 
-    private record FilaHistorial(string Fecha, string Servicios, string Estado, decimal Total);
+    private sealed record FilaHistorial(string Fecha, string Servicios, string Estado, decimal Total);
 
     public ClientesControl(Apis apis)
     {
@@ -160,10 +160,10 @@ public class ClientesControl : UserControl
             var completadas = citas.Where(c => c.Estado == "Completada").ToList();
             var noVino = citas.Count(c => c.Estado == "NoShow");
             var ultima = completadas.FirstOrDefault();
+            var visita = ultima is null ? "" : $"\nÚltima visita: {ultima.FechaInicio:dd/MM/yyyy} con {ultima.BarberoNombre}";
             _resumen.Text = citas.Count == 0
                 ? "Todavía no tiene citas."
-                : $"{citas.Count} citas · {completadas.Count} completadas · {noVino} no asistió · Pagado {Mensajes.Precio(citas.Sum(c => c.Pagado))}"
-                  + (ultima is null ? "" : $"\nÚltima visita: {ultima.FechaInicio:dd/MM/yyyy} con {ultima.BarberoNombre}");
+                : $"{citas.Count} citas · {completadas.Count} completadas · {noVino} no asistió · Pagado {Mensajes.Precio(citas.Sum(c => c.Pagado))}{visita}";
         }
         catch (Exception ex)
         {

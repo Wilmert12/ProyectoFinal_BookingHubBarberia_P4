@@ -8,40 +8,8 @@ namespace BookingHub.API.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-public class BarberosController(
-    BarberoService barberoService,
-    DisponibilidadService disponibilidadService,
-    AgendaBarberoService agendaService) : ControllerBase
+public class BarberosController(BarberoService barberoService) : ControllerBase
 {
-    /// <summary>Horario semanal del barbero. Vacío = horario por defecto (lunes a sábado, 9:00 a 18:00).</summary>
-    [Authorize(Roles = RolesSistema.Personal)]
-    [HttpGet("{id}/horarios")]
-    public async Task<ActionResult<List<HorarioDto>>> GetHorarios(int id)
-    {
-        var result = await agendaService.GetHorarios(id);
-
-        if (result.IsFailure)
-            return BadRequest(result.Error);
-
-        if (result.Value == null)
-            return NotFound();
-
-        return Ok(result.Value);
-    }
-
-    /// <summary>Reemplaza el horario semanal completo del barbero.</summary>
-    [Authorize(Roles = RolesSistema.Admin)]
-    [HttpPut("{id}/horarios")]
-    public async Task<IActionResult> PutHorarios(int id, List<HorarioDto> horarios)
-    {
-        var result = await agendaService.GuardarHorarios(id, horarios);
-
-        if (result.IsFailure)
-            return result.Error.Code == "BARBERO_NO_EXISTE" ? NotFound() : BadRequest(result.Error);
-
-        return NoContent();
-    }
-
     [HttpGet]
     public async Task<ActionResult<List<BarberoDto>>> GetBarberos(bool incluirInactivos = false)
     {
@@ -72,21 +40,6 @@ public class BarberosController(
         User.IsInRole(RolesSistema.Admin) || User.IsInRole(RolesSistema.Recepcion)
             ? barbero
             : barbero with { ComisionPorcentaje = null };
-
-    /// <summary>Horas en las que el barbero puede empezar una cita de la duración indicada.</summary>
-    [HttpGet("{id}/disponibilidad")]
-    public async Task<ActionResult<DisponibilidadDto>> GetDisponibilidad(int id, DateOnly fecha, int duracionMin = DisponibilidadService.IntervaloMin)
-    {
-        var result = await disponibilidadService.Calcular(id, fecha, duracionMin);
-
-        if (result.IsFailure)
-            return BadRequest(result.Error);
-
-        if (result.Value == null)
-            return NotFound();
-
-        return Ok(result.Value);
-    }
 
     [Authorize(Roles = RolesSistema.Admin)]
     [HttpPost]

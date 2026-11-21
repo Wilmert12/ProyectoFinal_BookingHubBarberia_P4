@@ -15,7 +15,7 @@ public class AgendaControl : UserControl
     private List<CitaDto> _citas = [];
     private bool _cargado;
 
-    private record FilaCita(int Id, string Hora, string Cliente, string Barbero, string Servicios, string Estado, decimal Total, string Cobro);
+    private sealed record FilaCita(int Id, string Hora, string Cliente, string Barbero, string Servicios, string Estado, decimal Total, string Cobro);
 
     // Se refresca sola para ver lo que el barbero marca desde la web.
     private readonly System.Windows.Forms.Timer _reloj = new() { Interval = 30_000 };
@@ -115,10 +115,10 @@ public class AgendaControl : UserControl
                 $"{c.FechaInicio:HH:mm} - {c.FechaFin:HH:mm}",
                 c.ClienteNombre ?? "",
                 c.BarberoNombre ?? "",
-                Servicios(c),
+                TextoServicios(c),
                 c.Estado ?? "",
                 c.Total,
-                Cobro(c))), nameof(FilaCita.Total));
+                TextoCobro(c))), nameof(FilaCita.Total));
             Reseleccionar(seleccionada, primeraVisible);
 
             var activas = _citas.Count(c => c.Estado is not ("Cancelada" or "NoShow"));
@@ -143,14 +143,18 @@ public class AgendaControl : UserControl
         }
     }
 
-    /// <summary>Completada (o en proceso) y sin pagar todo: recepción tiene que cobrarla.</summary>
+    /// <summary>Completada (o en proceso) y sin pagar completa: recepción tiene que cobrarla.</summary>
     private static bool FaltaCobrar(CitaDto cita) =>
         cita.Estado is "Completada" or "EnProceso" && cita.Pagado < cita.Total;
 
-    private static string Cobro(CitaDto cita) =>
-        cita.Pagado >= cita.Total && cita.Pagado > 0 ? "Cobrada"
-        : FaltaCobrar(cita) ? (cita.Pagado > 0 ? $"Falta {Mensajes.Precio(cita.Total - cita.Pagado)}" : "Por cobrar")
-        : cita.Pagado > 0 ? "Abono" : "";
+    private static string TextoCobro(CitaDto cita)
+    {
+        if (cita.Pagado >= cita.Total && cita.Pagado > 0)
+            return "Cobrada";
+        if (FaltaCobrar(cita))
+            return cita.Pagado > 0 ? $"Falta {Mensajes.Precio(cita.Total - cita.Pagado)}" : "Por cobrar";
+        return cita.Pagado > 0 ? "Abono" : "";
+    }
 
     private void Reseleccionar(int? citaId, int primeraVisible)
     {
@@ -171,7 +175,7 @@ public class AgendaControl : UserControl
             _grilla.FirstDisplayedScrollingRowIndex = primeraVisible;
     }
 
-    private static string Servicios(CitaDto cita) =>
+    private static string TextoServicios(CitaDto cita) =>
         cita.Detalles is { Count: > 0 }
             ? string.Join(", ", cita.Detalles.Select(d => d.Cantidad > 1 ? $"{d.Nombre} x{d.Cantidad}" : d.Nombre))
             : cita.Notas ?? "";
@@ -207,10 +211,13 @@ public class AgendaControl : UserControl
         }
     }
 
+    /// <summary>Abre el formulario como ventana modal y dice si el usuario lo aceptó.</summary>
+    private bool Aceptado(Form dialogo) => dialogo.ShowDialog(this) == DialogResult.OK;
+
     private async Task NuevaCita()
     {
         using var dialogo = new FrmNuevaCita(_apis, _fecha.Value.Date);
-        if (dialogo.ShowDialog(this) == DialogResult.OK)
+        if (Aceptado(dialogo))
             await Cargar();
     }
 
@@ -234,7 +241,7 @@ public class AgendaControl : UserControl
                 return;
 
             using var dialogo = new FrmCobro(_apis, cita);
-            if (dialogo.ShowDialog(this) == DialogResult.OK)
+            if (Aceptado(dialogo))
                 await Cargar();
         }
         catch (Exception ex)
@@ -257,7 +264,7 @@ public class AgendaControl : UserControl
         }
 
         using var dialogo = new FrmReprogramar(_apis, cita);
-        if (dialogo.ShowDialog(this) == DialogResult.OK)
+        if (Aceptado(dialogo))
             await Cargar();
     }
 

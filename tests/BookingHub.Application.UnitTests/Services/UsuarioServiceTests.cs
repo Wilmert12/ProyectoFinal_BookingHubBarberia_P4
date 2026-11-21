@@ -5,7 +5,7 @@ using BookingHub.Infrastructure.Models;
 
 namespace BookingHub.Application.UnitTests.Services;
 
-public class UsuarioServiceTests : IDisposable
+public sealed class UsuarioServiceTests : IDisposable
 {
     private const string Password = "Secreta-123";
 

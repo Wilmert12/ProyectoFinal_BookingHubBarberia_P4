@@ -4,7 +4,7 @@ using BookingHub.Application.UnitTests.Infraestructura;
 
 namespace BookingHub.Application.UnitTests.Services;
 
-public class CatalogoItemServiceTests : IDisposable
+public sealed class CatalogoItemServiceTests : IDisposable
 {
     private readonly BaseDeDatosDePrueba _baseDeDatos = new();
     private readonly CatalogoItemService _service;

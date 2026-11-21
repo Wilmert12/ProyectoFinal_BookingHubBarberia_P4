@@ -13,9 +13,9 @@ public class CajaControl : UserControl
     private readonly Label _totales = new() { AutoSize = true, Font = Ui.Destacado, Dock = DockStyle.Bottom, Padding = new Padding(0, 10, 0, 0) };
     private List<PagoDto> _lista = [];
 
-    private record FilaPago(int Id, string Hora, string Cliente, string Barbero, string Metodo, decimal Monto, decimal Propina, string Referencia);
+    private sealed record FilaPago(int Id, string Hora, string Cliente, string Barbero, string Metodo, decimal Monto, decimal Propina, string Referencia);
 
-    private record FilaMetodo(string Metodo, int Cobros, decimal Total);
+    private sealed record FilaMetodo(string Metodo, int Cobros, decimal Total);
 
     public CajaControl(Apis apis)
     {

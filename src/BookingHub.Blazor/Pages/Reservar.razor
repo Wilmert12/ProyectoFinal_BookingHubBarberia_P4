@@ -1,4 +1,5 @@
 @page "/reservar"
+@using System.Globalization
 @inject ICatalogoItemApi CatalogoItemApi
 @inject IBarberoApi BarberoApi
 @inject ICitaApi CitaApi
@@ -42,7 +43,7 @@
                         <dt class="col-5 fw-normal text-body-secondary">Fecha</dt>
                         <dd class="col-7">@Formato.FechaLarga(fecha)</dd>
                         <dt class="col-5 fw-normal text-body-secondary">Hora</dt>
-                        <dd class="col-7">@hora a @TimeOnly.Parse(hora).AddMinutes(resumen.DuracionMin ?? 30).ToString("HH:mm")</dd>
+                        <dd class="col-7">@hora a @TimeOnly.Parse(hora, CultureInfo.InvariantCulture).AddMinutes(resumen.DuracionMin ?? 30).ToString("HH:mm")</dd>
                         <dt class="col-5 fw-normal text-body-secondary">Total</dt>
                         <dd class="col-7"><span class="fw-semibold">@Formato.Precio(resumen.Precio)</span> <small class="text-body-secondary">ITBIS incluido</small></dd>
                         @if (!string.IsNullOrWhiteSpace(notas))
@@ -132,7 +133,7 @@
                 {
                     <div class="alert alert-info d-flex justify-content-between align-items-center py-2 mb-0">
                         <span>Total: <strong>@Formato.Precio(seleccionado.Precio)</strong></span>
-                        <span>Termina a las @TimeOnly.Parse(hora).AddMinutes(seleccionado.DuracionMin ?? 0).ToString("HH:mm")</span>
+                        <span>Termina a las @TimeOnly.Parse(hora, CultureInfo.InvariantCulture).AddMinutes(seleccionado.DuracionMin ?? 0).ToString("HH:mm")</span>
                     </div>
                 }
 
@@ -248,7 +249,7 @@
         }
 
         var servicio = ServicioSeleccionado!;
-        var inicio = fecha.ToDateTime(TimeOnly.Parse(hora!));
+        var inicio = fecha.ToDateTime(TimeOnly.Parse(hora!, CultureInfo.InvariantCulture));
 
         var cita = new CitaDto
         {
@@ -300,7 +301,7 @@
             return "Elige un barbero.";
         if (hora is null)
             return "Elige una hora.";
-        if (fecha.ToDateTime(TimeOnly.Parse(hora)) <= Formato.Ahora)
+        if (fecha.ToDateTime(TimeOnly.Parse(hora, CultureInfo.InvariantCulture)) <= Formato.Ahora)
             return "Elige una fecha y hora futuras.";
         return null;
     }

@@ -144,7 +144,4 @@ else
 
     private static string Inicial(string? nombre) =>
         string.IsNullOrWhiteSpace(nombre) ? "?" : nombre[..1].ToUpperInvariant();
-
-    private static string PrimerNombre(string? nombre) =>
-        nombre?.Split(' ', StringSplitOptions.RemoveEmptyEntries).FirstOrDefault() ?? "este barbero";
 }

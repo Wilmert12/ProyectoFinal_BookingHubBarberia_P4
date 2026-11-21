@@ -18,19 +18,19 @@ public class ReportesControl : UserControl
     private readonly DataGridView _porServicio = Ui.Grilla();
     private readonly DataGridView _porMetodo = Ui.Grilla();
 
-    private record FilaBarbero(string Barbero, int Citas, decimal Ingresos, decimal Comision, decimal Propinas, decimal APagar);
+    private sealed record FilaBarbero(string Barbero, int Citas, decimal Ingresos, decimal Comision, decimal Propinas, decimal APagar);
 
     private ReporteIngresosDto? _reporte;
 
-    private record FilaServicio(string Item, string Tipo, int Cantidad, decimal Ingresos);
+    private sealed record FilaServicio(string Item, string Tipo, int Cantidad, decimal Ingresos);
 
-    private record FilaMetodo(string Metodo, int Cobros, decimal Total);
+    private sealed record FilaMetodo(string Metodo, int Cobros, decimal Total);
 
     public ReportesControl(Apis apis)
     {
         _apis = apis;
         var hoy = DateTime.Today;
-        _desde.Value = new DateTime(hoy.Year, hoy.Month, 1);
+        _desde.Value = new DateTime(hoy.Year, hoy.Month, 1, 0, 0, 0, DateTimeKind.Local);
         _hasta.Value = hoy;
 
         var generar = Ui.Boton("Generar reporte", primario: true);
@@ -38,9 +38,9 @@ public class ReportesControl : UserControl
         var hoyBoton = Ui.Boton("Hoy");
 
         var tarjetas = new FlowLayoutPanel { Dock = DockStyle.Top, AutoSize = true, Padding = new Padding(0, 4, 0, 10) };
-        tarjetas.Controls.AddRange([_ingresos, _itbis, _propinas, _cobros, _completadas, _porCobrar]);
+        tarjetas.Controls.AddRange(_ingresos, _itbis, _propinas, _cobros, _completadas, _porCobrar);
 
-        // Arriba, a todo el ancho, lo que se le paga a cada barbero; debajo, servicios y métodos de pago.
+        // Arriba, a lo ancho, lo que se le paga a cada barbero; debajo, servicios y métodos de pago.
         var tablas = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 2, RowCount = 4 };
         tablas.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 62f));
         tablas.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 38f));
@@ -87,7 +87,7 @@ public class ReportesControl : UserControl
         };
         mes.Click += async (_, _) =>
         {
-            _desde.Value = new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1);
+            _desde.Value = new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1, 0, 0, 0, DateTimeKind.Local);
             _hasta.Value = DateTime.Today;
             await Generar();
         };

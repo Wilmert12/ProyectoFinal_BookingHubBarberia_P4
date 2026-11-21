@@ -20,7 +20,7 @@ public class FrmReprogramar : Form
     private bool _cargado;
     private int _consulta;
 
-    private record OpcionHora(DateTime Inicio, string Texto);
+    private sealed record OpcionHora(DateTime Inicio, string Texto);
 
     public FrmReprogramar(Apis apis, CitaDto cita)
     {

@@ -21,7 +21,7 @@ public class FrmCobro : Form
     private List<CatalogoItemDto> _catalogo = [];
     private int _estadoCompletadaId;
 
-    private record FilaDetalle(int Indice, string Item, int Cantidad, decimal Precio, decimal Descuento, decimal Subtotal);
+    private sealed record FilaDetalle(int Indice, string Item, int Cantidad, decimal Precio, decimal Descuento, decimal Subtotal);
 
     public FrmCobro(Apis apis, CitaDto cita)
     {
@@ -194,8 +194,7 @@ public class FrmCobro : Form
                 Referencia = string.IsNullOrWhiteSpace(_referencia.Text) ? null : _referencia.Text.Trim()
             });
 
-            using var recibo = new FrmRecibo("Recibo", Recibos.DeCobro(cita, _detalles, pago));
-            recibo.ShowDialog(this);
+            MostrarRecibo(cita, pago);
 
             DialogResult = DialogResult.OK;
             Close();
@@ -208,5 +207,11 @@ public class FrmCobro : Form
         {
             _cobrar.Enabled = true;
         }
+    }
+
+    private void MostrarRecibo(CitaDto cita, PagoDto pago)
+    {
+        using var recibo = new FrmRecibo("Recibo", Recibos.DeCobro(cita, _detalles, pago));
+        recibo.ShowDialog(this);
     }
 }

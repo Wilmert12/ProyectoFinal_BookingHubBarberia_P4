@@ -13,21 +13,19 @@ public class CitasController(CitaService citaService, BarberoService barberoServ
 {
     private bool EsPersonal => User.IsInRole(RolesSistema.Admin) || User.IsInRole(RolesSistema.Recepcion);
 
-    private string? TelefonoCliente => Request.Headers[ReservaService.EncabezadoTelefono].FirstOrDefault();
-
     /// <summary>
     /// El personal ve cualquier agenda. Un cliente solo ve sus citas y tiene que mandar
     /// su teléfono en el encabezado X-Cliente-Telefono.
     /// </summary>
     [EnableRateLimiting(LimiteDeIntentos.Clientes)]
     [HttpGet]
-    public async Task<ActionResult<List<CitaDto>>> GetCitas(int? clienteId, int? barberoId, DateOnly? fecha)
+    public async Task<ActionResult<List<CitaDto>>> GetCitas(int? clienteId, int? barberoId, DateOnly? fecha, [FromHeader(Name = ReservaService.EncabezadoTelefono)] string? telefonoCliente)
     {
         if (!EsPersonal)
         {
             if (clienteId is null)
                 return Unauthorized("Para ver la agenda completa hay que iniciar sesión como personal.");
-            if (!await reservaService.TelefonoCoincide(clienteId.Value, TelefonoCliente))
+            if (!await reservaService.TelefonoCoincide(clienteId.Value, telefonoCliente))
                 return Unauthorized(new Aplicada1.Core.Error(ReservaService.ErrorNoVerificado, "El número de cliente y el teléfono no coinciden."));
         }
 
@@ -94,13 +92,13 @@ public class CitasController(CitaService citaService, BarberoService barberoServ
     /// </summary>
     [EnableRateLimiting(LimiteDeIntentos.Clientes)]
     [HttpPost]
-    public async Task<ActionResult<CitaDto>> PostCita(CitaDto cita)
+    public async Task<ActionResult<CitaDto>> PostCita(CitaDto cita, [FromHeader(Name = ReservaService.EncabezadoTelefono)] string? telefonoCliente)
     {
         cita.CitaId = 0;
 
         var result = EsPersonal
             ? await citaService.Guardar(cita)
-            : await reservaService.Reservar(cita, TelefonoCliente);
+            : await reservaService.Reservar(cita, telefonoCliente);
 
         if (result.IsFailure)
             return result.Error.Code == ReservaService.ErrorNoVerificado
@@ -115,9 +113,9 @@ public class CitasController(CitaService citaService, BarberoService barberoServ
     /// <summary>El cliente cancela una cita suya; manda su teléfono en X-Cliente-Telefono.</summary>
     [EnableRateLimiting(LimiteDeIntentos.Clientes)]
     [HttpPost("{id}/cancelar")]
-    public async Task<IActionResult> CancelarCita(int id)
+    public async Task<IActionResult> CancelarCita(int id, [FromHeader(Name = ReservaService.EncabezadoTelefono)] string? telefonoCliente)
     {
-        var result = await reservaService.Cancelar(id, TelefonoCliente);
+        var result = await reservaService.Cancelar(id, telefonoCliente);
 
         if (result.IsFailure)
             return result.Error.Code == ReservaService.ErrorNoVerificado

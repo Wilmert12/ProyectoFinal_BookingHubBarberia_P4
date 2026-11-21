@@ -111,8 +111,12 @@ public static class Exportar
         var limpio = new string(nombre.Where(c => !"[]*?/\\:".Contains(c)).ToArray()).Trim();
         limpio = limpio.Length == 0 ? "Hoja" : limpio[..Math.Min(limpio.Length, 31)];
         var final = limpio;
-        for (var i = 2; libro.Worksheets.Contains(final); i++)
-            final = $"{limpio[..Math.Min(limpio.Length, 28)]} {i}";
+        var numero = 2;
+        while (libro.Worksheets.Contains(final))
+        {
+            final = $"{limpio[..Math.Min(limpio.Length, 28)]} {numero}";
+            numero++;
+        }
         return final;
     }
 }

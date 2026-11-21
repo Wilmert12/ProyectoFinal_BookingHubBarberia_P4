@@ -26,7 +26,7 @@ public class PersonalControl : UserControl
     private int _usuarioId;
     private string _colorHex = "#1E88E5";
 
-    private record FilaUsuario(int Id, string Nombre, string Email, string Rol, string Barbero, bool Activo, string UltimoLogin);
+    private sealed record FilaUsuario(int Id, string Nombre, string Email, string Rol, string Barbero, bool Activo, string UltimoLogin);
 
     public PersonalControl(Apis apis)
     {

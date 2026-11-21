@@ -98,7 +98,7 @@
             <div class="col-6 col-md-3">
                 <div class="card h-100"><div class="card-body">
                     <div class="text-body-secondary small">Citas</div>
-                    <div class="fs-4 fw-semibold">@Activas.Count</div>
+                    <div class="fs-4 fw-semibold">@CitasActivas().Count</div>
                 </div></div>
             </div>
             <div class="col-6 col-md-3">
@@ -116,7 +116,7 @@
             <div class="col-6 col-md-3">
                 <div class="card h-100"><div class="card-body">
                     <div class="text-body-secondary small">Total del día</div>
-                    <div class="fs-4 fw-semibold">@Formato.Precio(Activas.Sum(c => c.Total))</div>
+                    <div class="fs-4 fw-semibold">@Formato.Precio(CitasActivas().Sum(c => c.Total))</div>
                 </div></div>
             </div>
         </div>
@@ -204,11 +204,11 @@
 
     private static DateOnly Hoy => Formato.Hoy;
 
-    private List<CitaDto> Activas => citas.Where(c => !EsLibre(c)).ToList();
+    private List<CitaDto> CitasActivas() => citas.Where(c => !EsLibre(c)).ToList();
 
     private CitaDto? Proxima => fecha == Hoy
-        ? Activas.FirstOrDefault(c => c.FechaInicio >= Formato.Ahora)
-        : Activas.FirstOrDefault();
+        ? CitasActivas().FirstOrDefault(c => c.FechaInicio >= Formato.Ahora)
+        : CitasActivas().FirstOrDefault();
 
     protected override async Task OnInitializedAsync()
     {

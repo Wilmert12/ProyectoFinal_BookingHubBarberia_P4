@@ -8,7 +8,7 @@ namespace BookingHub.Application.UnitTests.Services;
 /// Reglas de agenda: horas libres, reservas de clientes (verificadas con el teléfono),
 /// cancelaciones, horarios y días libres, y lo que el barbero puede marcar.
 /// </summary>
-public class AgendaYReservasTests : IDisposable
+public sealed class AgendaYReservasTests : IDisposable
 {
     private const int Carlos = 1;
     private const int Luis = 2;
@@ -80,8 +80,8 @@ public class AgendaYReservasTests : IDisposable
         var libres = await HorasLibres(Carlos, _lunes);
 
         Assert.Equal(18, libres.Count);
-        Assert.Equal(A(9), libres.First());
-        Assert.Equal(A(17, 30), libres.Last());
+        Assert.Equal(A(9), libres[0]);
+        Assert.Equal(A(17, 30), libres[^1]);
         Assert.Empty(await HorasLibres(Carlos, _lunes.AddDays(6)));
     }
 

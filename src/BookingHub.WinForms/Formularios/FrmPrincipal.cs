@@ -31,7 +31,7 @@ public class FrmPrincipal : Form
         DoubleBuffered = true;
         Ui.EfectoVentana(this);
 
-        // El vidrio del encabezado lo pinta la ventana (OnPaintBackground); aquí todo es transparente
+        // El vidrio del encabezado lo pinta la ventana (OnPaintBackground); aquí lo demás es transparente
         // para que el blanco translúcido no se aplique dos veces sobre el menú y el usuario.
         var encabezado = new Panel { Dock = DockStyle.Top, Height = AltoEncabezado, BackColor = Color.Transparent };
         var linea = new Panel { Dock = DockStyle.Top, Height = 1, BackColor = Color.Transparent };
@@ -71,7 +71,7 @@ public class FrmPrincipal : Form
             AgregarSeccion("Reportes", new ReportesControl(apis));
         }
 
-        encabezado.Controls.AddRange([logo, marca, _menu, usuario, cerrarSesion]);
+        encabezado.Controls.AddRange(logo, marca, _menu, usuario, cerrarSesion);
         // Si heredan el blanco semitransparente del encabezado, se ve un recuadro doble.
         foreach (Control hijo in encabezado.Controls)
             hijo.BackColor = Color.Transparent;

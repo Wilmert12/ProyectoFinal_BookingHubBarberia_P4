@@ -39,7 +39,7 @@ public class FrmLogin : Form
             BackColor = Color.Transparent
         };
         // En una columna (FlowDirection.TopDown) Anchor = None centra el control en el ancho de la columna:
-        // logo, nombre y subtítulo quedan centrados; los campos ocupan todo el ancho.
+        // logo, nombre y subtítulo quedan centrados; los campos ocupan el ancho completo.
         var logo = Ui.Logo(56);
         logo.Anchor = AnchorStyles.None;
         logo.Margin = new Padding(0, 0, 0, 14);
@@ -55,7 +55,7 @@ public class FrmLogin : Form
         _entrar.AutoSize = false;
         _entrar.Size = new Size(_email.Width, 40);
 
-        contenido.Controls.AddRange([logo, nombre, subtitulo, correo, _email, clave, _password, _error, _entrar]);
+        contenido.Controls.AddRange(logo, nombre, subtitulo, correo, _email, clave, _password, _error, _entrar);
 
         // Tarjeta de vidrio centrada en la ventana (como d-flex + justify-content-center + align-items-center).
         contenido.Location = new Point(_tarjeta.Padding.Left, _tarjeta.Padding.Top);

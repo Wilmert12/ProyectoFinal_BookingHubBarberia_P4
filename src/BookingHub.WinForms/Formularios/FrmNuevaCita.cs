@@ -28,10 +28,10 @@ public class FrmNuevaCita : Form
     // Si el cliente nuevo se creó pero la cita falló, al reintentar se usa el mismo cliente.
     private int? _clienteCreadoId;
 
-    private record OpcionCliente(int ClienteId, string Texto);
-    private record OpcionHora(DateTime Inicio, string Texto);
+    private sealed record OpcionCliente(int ClienteId, string Texto);
+    private sealed record OpcionHora(DateTime Inicio, string Texto);
 
-    private record OpcionServicio(CatalogoItemDto Item)
+    private sealed record OpcionServicio(CatalogoItemDto Item)
     {
         public override string ToString() => $"{Item.Nombre} · {Mensajes.Precio(Item.Precio)} · {Item.DuracionMin ?? 30} min";
     }
@@ -142,13 +142,13 @@ public class FrmNuevaCita : Form
         }
     }
 
-    private List<CatalogoItemDto> ServiciosElegidos =>
+    private List<CatalogoItemDto> ServiciosElegidos() =>
         _servicio.CheckedItems.Cast<OpcionServicio>().Select(o => o.Item).ToList();
 
     /// <summary>La cita dura lo que suman los servicios elegidos.</summary>
-    private int DuracionMin => Math.Max(ServiciosElegidos.Sum(s => s.DuracionMin ?? 30), 5);
+    private int DuracionMin => Math.Max(ServiciosElegidos().Sum(s => s.DuracionMin ?? 30), 5);
 
-    private decimal Total => ServiciosElegidos.Sum(s => s.Precio);
+    private decimal Total => ServiciosElegidos().Sum(s => s.Precio);
 
     /// <summary>Pide a la API las horas libres del barbero para el servicio y la fecha elegidos.</summary>
     private async Task CargarHoras()
@@ -159,7 +159,7 @@ public class FrmNuevaCita : Form
         var consulta = ++_consultaHoras;
         _horaLibre.DataSource = null;
 
-        if (ServiciosElegidos.Count == 0 || _barbero.SelectedValue is not int barberoId)
+        if (ServiciosElegidos().Count == 0 || _barbero.SelectedValue is not int barberoId)
         {
             _infoHoras.Text = "Elige al menos un servicio y el barbero para ver las horas libres.";
             ActualizarResumen();
@@ -208,11 +208,12 @@ public class FrmNuevaCita : Form
 
     private void ActualizarResumen()
     {
-        if (ServiciosElegidos.Count == 0)
+        if (ServiciosElegidos().Count == 0)
         {
-            _resumen.Text = !_cargado ? string.Empty
-                : _servicios.Count == 0 ? "No hay servicios activos en el catálogo."
-                : "Elige al menos un servicio.";
+            if (!_cargado)
+                _resumen.Text = string.Empty;
+            else
+                _resumen.Text = _servicios.Count == 0 ? "No hay servicios activos en el catálogo." : "Elige al menos un servicio.";
             return;
         }
         _resumen.Text = InicioElegido is { } inicio
@@ -222,7 +223,7 @@ public class FrmNuevaCita : Form
 
     private async Task Guardar()
     {
-        var servicios = ServiciosElegidos;
+        var servicios = ServiciosElegidos();
         if (servicios.Count == 0 || _barbero.SelectedValue is not int barberoId || _estado.SelectedValue is not int estadoId)
         {
             Mensajes.Informacion(this, "Elige al menos un servicio, el barbero y el estado.");

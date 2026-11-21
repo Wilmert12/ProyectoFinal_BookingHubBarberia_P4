@@ -1,5 +1,6 @@
 using BookingHub.WinForms.Infraestructura;
 using BookingHub.WinForms.Models;
+using System.Globalization;
 
 namespace BookingHub.WinForms.Modulos;
 
@@ -26,10 +27,8 @@ public class HorariosControl : UserControl
     private readonly CheckBox _diaCompleto = new() { Text = "Días completos", AutoSize = true, Checked = true };
     private readonly TextBox _descripcion = new() { MaxLength = 500 };
 
-    private List<IndisponibilidadDto> _indisponibilidades = [];
-
-    private record OpcionBarbero(int? BarberoId, string Nombre);
-    private record FilaLibre(int Id, string Barbero, string Tipo, string Desde, string Hasta, string Descripcion);
+    private sealed record OpcionBarbero(int? BarberoId, string Nombre);
+    private sealed record FilaLibre(int Id, string Barbero, string Tipo, string Desde, string Hasta, string Descripcion);
 
     public HorariosControl(Apis apis)
     {
@@ -196,11 +195,12 @@ public class HorariosControl : UserControl
             fila.Cells["Salida"].Value = trabaja ? salida.ToString("HH:mm") : "";
         }
 
-        _avisoSemana.Text = porDefecto
-            ? "Sin horario propio: usa el de la barbería (lunes a sábado, 9:00 a 18:00). Cámbialo y pulsa Guardar."
-            : horarios.GroupBy(h => h.DiaSemana).Any(g => g.Count() > 1)
-                ? "Algunos días tenían varios bloques; aquí se muestran de la primera entrada a la última salida."
-                : "Marca los días que trabaja y escribe las horas como 09:00.";
+        if (porDefecto)
+            _avisoSemana.Text = "Sin horario propio: usa el de la barbería (lunes a sábado, 9:00 a 18:00). Cámbialo y pulsa Guardar.";
+        else if (horarios.GroupBy(h => h.DiaSemana).Any(g => g.Count() > 1))
+            _avisoSemana.Text = "Algunos días tenían varios bloques; aquí se muestran de la primera entrada a la última salida.";
+        else
+            _avisoSemana.Text = "Marca los días que trabaja y escribe las horas como 09:00.";
     }
 
     private async Task GuardarSemana()
@@ -216,8 +216,8 @@ public class HorariosControl : UserControl
                 continue;
 
             var dia = (byte)fila.Tag!;
-            if (!TimeOnly.TryParse(fila.Cells["Entrada"].Value as string, out var entrada)
-                || !TimeOnly.TryParse(fila.Cells["Salida"].Value as string, out var salida))
+            if (!TimeOnly.TryParse(fila.Cells["Entrada"].Value as string, CultureInfo.InvariantCulture, out var entrada)
+                || !TimeOnly.TryParse(fila.Cells["Salida"].Value as string, CultureInfo.InvariantCulture, out var salida))
             {
                 Mensajes.Informacion(this, $"Revisa las horas del {Dias[dia].ToLower()}: escríbelas como 09:00.");
                 return;
@@ -255,8 +255,8 @@ public class HorariosControl : UserControl
     {
         try
         {
-            _indisponibilidades = await _apis.Indisponibilidades.GetIndisponibilidades();
-            Ui.Mostrar(_libres, _indisponibilidades.Select(i => new FilaLibre(
+            var indisponibilidades = await _apis.Indisponibilidades.GetIndisponibilidades();
+            Ui.Mostrar(_libres, indisponibilidades.Select(i => new FilaLibre(
                 i.IndisponibilidadId,
                 i.BarberoNombre ?? "Toda la barbería",
                 i.Tipo ?? "",
@@ -278,7 +278,7 @@ public class HorariosControl : UserControl
             return;
         }
 
-        // Con días completos, "hasta" incluye todo ese día.
+        // Con días completos, "hasta" incluye ese día completo.
         var desde = _diaCompleto.Checked ? _desde.Value.Date : Redondear(_desde.Value);
         var hasta = _diaCompleto.Checked ? _hasta.Value.Date.AddDays(1) : Redondear(_hasta.Value);
         if (hasta <= desde)

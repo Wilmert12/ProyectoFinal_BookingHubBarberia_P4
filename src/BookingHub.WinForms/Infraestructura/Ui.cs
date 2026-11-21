@@ -285,6 +285,8 @@ public static class Ui
             }
             catch (Exception ex) when (ex is DllNotFoundException or EntryPointNotFoundException)
             {
+                // Windows antiguo sin estos efectos: la ventana se queda con el estilo normal.
+                return;
             }
         }
 
@@ -414,21 +416,18 @@ public class BotonRedondo : Button
 
     protected override void OnMouseEnter(EventArgs e) { _encima = true; Invalidate(); base.OnMouseEnter(e); }
     protected override void OnMouseLeave(EventArgs e) { _encima = _presionado = false; Invalidate(); base.OnMouseLeave(e); }
-    protected override void OnMouseDown(MouseEventArgs e) { _presionado = true; Invalidate(); base.OnMouseDown(e); }
-    protected override void OnMouseUp(MouseEventArgs e) { _presionado = false; Invalidate(); base.OnMouseUp(e); }
+    protected override void OnMouseDown(MouseEventArgs mevent) { _presionado = true; Invalidate(); base.OnMouseDown(mevent); }
+    protected override void OnMouseUp(MouseEventArgs mevent) { _presionado = false; Invalidate(); base.OnMouseUp(mevent); }
     protected override void OnEnabledChanged(EventArgs e) { Invalidate(); base.OnEnabledChanged(e); }
 
-    protected override void OnPaint(PaintEventArgs e)
+    protected override void OnPaint(PaintEventArgs pevent)
     {
-        PintarFondoDelPadre(e);
+        PintarFondoDelPadre(pevent);
 
-        var g = e.Graphics;
+        var g = pevent.Graphics;
         g.SmoothingMode = SmoothingMode.AntiAlias;
 
-        var relleno = !Enabled ? Color.FromArgb(120, BackColor)
-            : _presionado && !FlatAppearance.MouseDownBackColor.IsEmpty ? FlatAppearance.MouseDownBackColor
-            : _encima && !FlatAppearance.MouseOverBackColor.IsEmpty ? FlatAppearance.MouseOverBackColor
-            : BackColor;
+        var relleno = ColorDeRelleno();
 
         var area = new RectangleF(0.5f, 0.5f, Width - 1.5f, Height - 1.5f);
         using var camino = Redondeado(area, Math.Min(Radio, (int)(area.Height / 2)));
@@ -451,6 +450,17 @@ public class BotonRedondo : Button
         var texto = Enabled ? ForeColor : Color.FromArgb(150, ForeColor);
         TextRenderer.DrawText(g, Text, Font, ClientRectangle, texto,
             TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter | TextFormatFlags.SingleLine | TextFormatFlags.EndEllipsis);
+    }
+
+    private Color ColorDeRelleno()
+    {
+        if (!Enabled)
+            return Color.FromArgb(120, BackColor);
+        if (_presionado && !FlatAppearance.MouseDownBackColor.IsEmpty)
+            return FlatAppearance.MouseDownBackColor;
+        if (_encima && !FlatAppearance.MouseOverBackColor.IsEmpty)
+            return FlatAppearance.MouseOverBackColor;
+        return BackColor;
     }
 
     // Las esquinas fuera del redondeo muestran lo que hay detrás (el vidrio o el fondo).

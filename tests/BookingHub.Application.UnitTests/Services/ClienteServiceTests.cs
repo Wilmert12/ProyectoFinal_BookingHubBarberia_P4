@@ -4,7 +4,7 @@ using BookingHub.Application.UnitTests.Infraestructura;
 
 namespace BookingHub.Application.UnitTests.Services;
 
-public class ClienteServiceTests : IDisposable
+public sealed class ClienteServiceTests : IDisposable
 {
     private readonly BaseDeDatosDePrueba _baseDeDatos = new();
     private readonly ClienteService _service;

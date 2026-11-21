@@ -32,7 +32,7 @@ var claveJwt = builder.Configuration["Jwt:Clave"];
 if (string.IsNullOrWhiteSpace(claveJwt))
 {
     claveJwt = Convert.ToBase64String(RandomNumberGenerator.GetBytes(64));
-    Console.Error.WriteLine("ADVERTENCIA: falta la configuración Jwt:Clave. Se usará una clave temporal y las sesiones se perderán al reiniciar la API.");
+    await Console.Error.WriteLineAsync("ADVERTENCIA: falta la configuración Jwt:Clave. Se usará una clave temporal y las sesiones se perderán al reiniciar la API.");
 }
 else if (Encoding.UTF8.GetByteCount(claveJwt) < 32)
 {
@@ -72,4 +72,4 @@ app.UseAuthorization();
 app.UseRateLimiter();
 app.MapControllers();
 
-app.Run();
+await app.RunAsync();

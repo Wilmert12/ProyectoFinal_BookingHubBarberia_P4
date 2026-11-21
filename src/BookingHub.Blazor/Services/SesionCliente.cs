@@ -18,7 +18,7 @@ public class SesionCliente(IJSRuntime js)
 
     public bool Recordado => ClienteId is not null && !string.IsNullOrWhiteSpace(Telefono);
 
-    private record Datos(int ClienteId, string Telefono);
+    private sealed record Datos(int ClienteId, string Telefono);
 
     public Task Cargar() => carga ??= Leer();
 

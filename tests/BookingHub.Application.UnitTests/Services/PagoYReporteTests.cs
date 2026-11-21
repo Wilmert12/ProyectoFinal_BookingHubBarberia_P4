@@ -4,7 +4,7 @@ using BookingHub.Application.UnitTests.Infraestructura;
 
 namespace BookingHub.Application.UnitTests.Services;
 
-public class PagoYReporteTests : IDisposable
+public sealed class PagoYReporteTests : IDisposable
 {
     private readonly BaseDeDatosDePrueba _baseDeDatos = new();
     private readonly CitaService _citaService;
@@ -50,7 +50,7 @@ public class PagoYReporteTests : IDisposable
     [Fact]
     public async Task Guardar_PagoNuevo_AsignaIdYFechaYDevuelveMetodoYCliente()
     {
-        var citaId = await CitaCobrada(1, 2, new DateTime(2026, 11, 20, 9, 0, 0), 0m,
+        var citaId = await CitaCobrada(1, 2, new DateTime(2026, 11, 20, 9, 0, 0, DateTimeKind.Unspecified), 0m,
             new CitaDetalleDto { CatalogoItemId = _corteId, Cantidad = 1, PrecioUnitario = 8m });
         var pago = new PagoDto { CitaId = citaId, MetodoPagoId = 1, Monto = 5m };
 
@@ -76,7 +76,7 @@ public class PagoYReporteTests : IDisposable
     [Fact]
     public async Task GetIngresos_SumaPorMetodoBarberoYServicioDentroDelRango()
     {
-        var dia = new DateTime(2026, 11, 20, 9, 0, 0);
+        var dia = new DateTime(2026, 11, 20, 9, 0, 0, DateTimeKind.Unspecified);
         await CitaCobrada(1, 1, dia, 2m,
             new CitaDetalleDto { CatalogoItemId = _corteId, Cantidad = 1, PrecioUnitario = 8m });
         await CitaCobrada(2, 2, dia.AddHours(2), 0m,
@@ -106,10 +106,10 @@ public class PagoYReporteTests : IDisposable
     {
         using (var contexto = _baseDeDatos.CrearContexto())
         {
-            contexto.Barberos.Find(2)!.ComisionPorcentaje = 40m;
-            contexto.SaveChanges();
+            (await contexto.Barberos.FindAsync(2))!.ComisionPorcentaje = 40m;
+            await contexto.SaveChangesAsync();
         }
-        var dia = new DateTime(2026, 11, 20, 9, 0, 0);
+        var dia = new DateTime(2026, 11, 20, 9, 0, 0, DateTimeKind.Unspecified);
         // Carlos: RD$118 con 50 % (por defecto) y RD$20 de propina.
         await CitaCobrada(1, 1, dia, 20m,
             new CitaDetalleDto { CatalogoItemId = _corteId, Cantidad = 1, PrecioUnitario = 118m });

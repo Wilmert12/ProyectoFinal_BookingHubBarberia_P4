@@ -4,7 +4,7 @@ using BookingHub.Application.UnitTests.Infraestructura;
 
 namespace BookingHub.Application.UnitTests.Services;
 
-public class CitaDetalleTests : IDisposable
+public sealed class CitaDetalleTests : IDisposable
 {
     private readonly BaseDeDatosDePrueba _baseDeDatos = new();
     private readonly CitaService _citaService;
@@ -25,8 +25,8 @@ public class CitaDetalleTests : IDisposable
         ClienteId = 1,
         BarberoId = 1,
         EstadoCitaId = 1,
-        FechaInicio = new DateTime(2026, 11, 20, 10, 0, 0),
-        FechaFin = new DateTime(2026, 11, 20, 10, 30, 0),
+        FechaInicio = new DateTime(2026, 11, 20, 10, 0, 0, DateTimeKind.Unspecified),
+        FechaFin = new DateTime(2026, 11, 20, 10, 30, 0, DateTimeKind.Unspecified),
         Total = 0,
         Detalles = detalles.ToList()
     };
