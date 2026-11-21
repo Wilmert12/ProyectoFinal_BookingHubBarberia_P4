@@ -38,22 +38,27 @@ public class FrmLogin : Form
             WrapContents = false,
             BackColor = Color.Transparent
         };
+        // En una columna (FlowDirection.TopDown) Anchor = None centra el control en el ancho de la columna:
+        // logo, nombre y subtítulo quedan centrados; los campos ocupan todo el ancho.
         var logo = Ui.Logo(56);
-        logo.Margin = new Padding(3, 0, 3, 18);
-        contenido.Controls.Add(logo);
-        contenido.Controls.Add(new Label { Text = Ui.Marca, Font = Ui.Titulo, ForeColor = Ui.Tinta, AutoSize = true });
-        contenido.Controls.Add(new Label { Text = "Recepción y caja", ForeColor = Ui.TextoSuave, AutoSize = true, Margin = new Padding(3, 2, 3, 24) });
-        contenido.Controls.Add(Ui.Etiqueta("Correo"));
-        contenido.Controls.Add(_email);
-        contenido.Controls.Add(Ui.Etiqueta("Contraseña"));
-        contenido.Controls.Add(_password);
-        contenido.Controls.Add(_error);
-        _entrar.Margin = new Padding(3, 20, 3, 3);
+        logo.Anchor = AnchorStyles.None;
+        logo.Margin = new Padding(0, 0, 0, 14);
+        var nombre = new Label { Text = Ui.Marca, Font = Ui.Titulo, ForeColor = Ui.Tinta, AutoSize = true, Anchor = AnchorStyles.None, Margin = Padding.Empty };
+        var subtitulo = new Label { Text = "Recepción y caja", ForeColor = Ui.TextoSuave, AutoSize = true, Anchor = AnchorStyles.None, Margin = new Padding(0, 2, 0, 22) };
+        var correo = Ui.Etiqueta("Correo");
+        var clave = Ui.Etiqueta("Contraseña");
+        foreach (var etiqueta in new[] { correo, clave })
+            etiqueta.Margin = new Padding(0, 6, 0, 4);
+        _email.Margin = _password.Margin = new Padding(0, 0, 0, 6);
+        _error.Margin = new Padding(0, 4, 0, 0);
+        _entrar.Margin = new Padding(0, 16, 0, 0);
         _entrar.AutoSize = false;
-        _entrar.Size = new Size(_email.Width, 38);
-        contenido.Controls.Add(_entrar);
+        _entrar.Size = new Size(_email.Width, 40);
+
+        contenido.Controls.AddRange([logo, nombre, subtitulo, correo, _email, clave, _password, _error, _entrar]);
 
         // Tarjeta de vidrio centrada en la ventana (como d-flex + justify-content-center + align-items-center).
+        contenido.Location = new Point(_tarjeta.Padding.Left, _tarjeta.Padding.Top);
         _tarjeta.Controls.Add(contenido);
         Controls.Add(_tarjeta);
         ClientSize = new Size(_tarjeta.PreferredSize.Width + 120, _tarjeta.PreferredSize.Height + 100);

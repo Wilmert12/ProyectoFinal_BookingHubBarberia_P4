@@ -31,9 +31,10 @@ public class FrmPrincipal : Form
         DoubleBuffered = true;
         Ui.EfectoVentana(this);
 
-        // Encabezado de vidrio sobre el fondo con manchas de color.
-        var encabezado = new Panel { Dock = DockStyle.Top, Height = 64, BackColor = Color.FromArgb(140, 255, 255, 255) };
-        var linea = new Panel { Dock = DockStyle.Top, Height = 1, BackColor = Ui.VidrioBorde };
+        // El vidrio del encabezado lo pinta la ventana (OnPaintBackground); aquí todo es transparente
+        // para que el blanco translúcido no se aplique dos veces sobre el menú y el usuario.
+        var encabezado = new Panel { Dock = DockStyle.Top, Height = AltoEncabezado, BackColor = Color.Transparent };
+        var linea = new Panel { Dock = DockStyle.Top, Height = 1, BackColor = Color.Transparent };
 
         var logo = Ui.Logo(30);
         logo.Location = new Point(28, 17);
@@ -183,7 +184,17 @@ public class FrmPrincipal : Form
         }
     }
 
-    protected override void OnPaintBackground(PaintEventArgs e) => _fondo.Pintar(e.Graphics, ClientRectangle);
+    private const int AltoEncabezado = 64;
+
+    protected override void OnPaintBackground(PaintEventArgs e)
+    {
+        _fondo.Pintar(e.Graphics, ClientRectangle);
+
+        using var vidrio = new SolidBrush(Color.FromArgb(140, 255, 255, 255));
+        e.Graphics.FillRectangle(vidrio, 0, 0, ClientSize.Width, AltoEncabezado);
+        using var linea = new Pen(Ui.VidrioBorde);
+        e.Graphics.DrawLine(linea, 0, AltoEncabezado, ClientSize.Width, AltoEncabezado);
+    }
 
     protected override void OnResize(EventArgs e)
     {

@@ -75,7 +75,7 @@ public static class Ui
 
     public static Button Boton(string texto, bool primario = false)
     {
-        var boton = new Button
+        var boton = new BotonRedondo
         {
             Text = texto,
             AutoSize = true,
@@ -373,6 +373,102 @@ public class PanelVidrio : Panel
     {
         var d = radio * 2;
         var camino = new GraphicsPath();
+        camino.AddArc(r.X, r.Y, d, d, 180, 90);
+        camino.AddArc(r.Right - d, r.Y, d, d, 270, 90);
+        camino.AddArc(r.Right - d, r.Bottom - d, d, d, 0, 90);
+        camino.AddArc(r.X, r.Bottom - d, d, d, 90, 90);
+        camino.CloseFigure();
+        return camino;
+    }
+}
+
+/// <summary>
+/// Botón con esquinas redondeadas y bordes suavizados. Usa los colores normales del botón:
+/// BackColor de relleno, FlatAppearance.MouseOverBackColor / MouseDownBackColor al pasar o presionar
+/// y FlatAppearance.BorderColor para el borde (BorderSize 0 = sin borde).
+/// </summary>
+public class BotonRedondo : Button
+{
+    private bool _encima;
+    private bool _presionado;
+
+    [System.ComponentModel.DesignerSerializationVisibility(System.ComponentModel.DesignerSerializationVisibility.Hidden)]
+    public int Radio { get; set; } = 10;
+
+    public BotonRedondo()
+    {
+        SetStyle(ControlStyles.UserPaint
+            | ControlStyles.AllPaintingInWmPaint
+            | ControlStyles.OptimizedDoubleBuffer
+            | ControlStyles.ResizeRedraw
+            | ControlStyles.SupportsTransparentBackColor, true);
+        FlatStyle = FlatStyle.Flat;
+    }
+
+    protected override void OnMouseEnter(EventArgs e) { _encima = true; Invalidate(); base.OnMouseEnter(e); }
+    protected override void OnMouseLeave(EventArgs e) { _encima = _presionado = false; Invalidate(); base.OnMouseLeave(e); }
+    protected override void OnMouseDown(MouseEventArgs e) { _presionado = true; Invalidate(); base.OnMouseDown(e); }
+    protected override void OnMouseUp(MouseEventArgs e) { _presionado = false; Invalidate(); base.OnMouseUp(e); }
+    protected override void OnEnabledChanged(EventArgs e) { Invalidate(); base.OnEnabledChanged(e); }
+
+    protected override void OnPaint(PaintEventArgs e)
+    {
+        PintarFondoDelPadre(e);
+
+        var g = e.Graphics;
+        g.SmoothingMode = SmoothingMode.AntiAlias;
+
+        var relleno = !Enabled ? Color.FromArgb(120, BackColor)
+            : _presionado && !FlatAppearance.MouseDownBackColor.IsEmpty ? FlatAppearance.MouseDownBackColor
+            : _encima && !FlatAppearance.MouseOverBackColor.IsEmpty ? FlatAppearance.MouseOverBackColor
+            : BackColor;
+
+        var area = new RectangleF(0.5f, 0.5f, Width - 1.5f, Height - 1.5f);
+        using var camino = Redondeado(area, Math.Min(Radio, (int)(area.Height / 2)));
+        if (relleno.A > 0)
+        {
+            using var pincel = new SolidBrush(relleno);
+            g.FillPath(pincel, camino);
+        }
+        if (FlatAppearance.BorderSize > 0 && !FlatAppearance.BorderColor.IsEmpty)
+        {
+            using var lapiz = new Pen(FlatAppearance.BorderColor, 1f);
+            g.DrawPath(lapiz, camino);
+        }
+        if (Focused && ShowFocusCues)
+        {
+            using var foco = new Pen(Color.FromArgb(160, Ui.Acento), 2f);
+            g.DrawPath(foco, camino);
+        }
+
+        var texto = Enabled ? ForeColor : Color.FromArgb(150, ForeColor);
+        TextRenderer.DrawText(g, Text, Font, ClientRectangle, texto,
+            TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter | TextFormatFlags.SingleLine | TextFormatFlags.EndEllipsis);
+    }
+
+    // Las esquinas fuera del redondeo muestran lo que hay detrás (el vidrio o el fondo).
+    private void PintarFondoDelPadre(PaintEventArgs e)
+    {
+        if (Parent is null)
+            return;
+
+        var estado = e.Graphics.Save();
+        e.Graphics.TranslateTransform(-Left, -Top);
+        using var pe = new PaintEventArgs(e.Graphics, new Rectangle(Left, Top, Width, Height));
+        InvokePaintBackground(Parent, pe);
+        InvokePaint(Parent, pe);
+        e.Graphics.Restore(estado);
+    }
+
+    internal static GraphicsPath Redondeado(RectangleF r, float radio)
+    {
+        var camino = new GraphicsPath();
+        if (radio <= 0)
+        {
+            camino.AddRectangle(r);
+            return camino;
+        }
+        var d = radio * 2;
         camino.AddArc(r.X, r.Y, d, d, 180, 90);
         camino.AddArc(r.Right - d, r.Y, d, d, 270, 90);
         camino.AddArc(r.Right - d, r.Bottom - d, d, d, 0, 90);
