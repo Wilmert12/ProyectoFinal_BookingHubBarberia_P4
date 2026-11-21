@@ -12,6 +12,7 @@ public class ReportesControl : UserControl
     private readonly Label _propinas = Tarjeta();
     private readonly Label _cobros = Tarjeta();
     private readonly Label _completadas = Tarjeta();
+    private readonly Label _porCobrar = Tarjeta();
     private readonly DataGridView _porBarbero = Ui.Grilla();
     private readonly DataGridView _porServicio = Ui.Grilla();
     private readonly DataGridView _porMetodo = Ui.Grilla();
@@ -34,7 +35,7 @@ public class ReportesControl : UserControl
         var hoyBoton = Ui.Boton("Hoy");
 
         var tarjetas = new FlowLayoutPanel { Dock = DockStyle.Top, AutoSize = true, Padding = new Padding(0, 4, 0, 10) };
-        tarjetas.Controls.AddRange([_ingresos, _propinas, _cobros, _completadas]);
+        tarjetas.Controls.AddRange([_ingresos, _propinas, _cobros, _completadas, _porCobrar]);
 
         var tablas = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 3, RowCount = 2 };
         tablas.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 38f));
@@ -59,6 +60,11 @@ public class ReportesControl : UserControl
         Controls.Add(Ui.TituloModulo("Reporte de ingresos"));
 
         Load += async (_, _) => await Generar();
+        VisibleChanged += async (_, _) =>
+        {
+            if (Visible && IsHandleCreated)
+                await Generar();
+        };
         generar.Click += async (_, _) => await Generar();
         hoyBoton.Click += async (_, _) =>
         {
@@ -122,6 +128,9 @@ public class ReportesControl : UserControl
         _propinas.Text = $"Propinas\n{Mensajes.Precio(reporte.TotalPropinas)}";
         _cobros.Text = $"Cobros\n{reporte.CantidadPagos}";
         _completadas.Text = $"Citas completadas\n{reporte.CitasCompletadas}";
+        // Completadas que recepción aún no cobró: todavía no son ingresos.
+        _porCobrar.Text = $"Por cobrar ({reporte.CitasPorCobrar})\n{Mensajes.Precio(reporte.PorCobrar)}";
+        _porCobrar.ForeColor = reporte.CitasPorCobrar > 0 ? Color.FromArgb(176, 122, 20) : Ui.Tinta;
 
         Ui.Mostrar(_porBarbero, reporte.PorBarbero.Select(b => new FilaBarbero(b.Nombre, b.Citas, b.Ingresos)), nameof(FilaBarbero.Ingresos));
         Ui.Mostrar(_porServicio, reporte.PorServicio.Select(s => new FilaServicio(s.Nombre, s.EsServicio ? "Servicio" : "Producto", s.Cantidad, s.Ingresos)), nameof(FilaServicio.Ingresos));

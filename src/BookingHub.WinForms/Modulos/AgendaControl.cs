@@ -15,7 +15,11 @@ public class AgendaControl : UserControl
     private List<CitaDto> _citas = [];
     private bool _cargado;
 
-    private record FilaCita(int Id, string Hora, string Cliente, string Barbero, string Servicios, string Estado, decimal Total);
+    private record FilaCita(int Id, string Hora, string Cliente, string Barbero, string Servicios, string Estado, decimal Total, string Cobro);
+
+    // Se refresca sola para ver lo que el barbero marca desde la web.
+    private readonly System.Windows.Forms.Timer _reloj = new() { Interval = 30_000 };
+    private bool _cargando;
 
     public AgendaControl(Apis apis)
     {
@@ -50,6 +54,20 @@ public class AgendaControl : UserControl
         _grilla.CellDoubleClick += async (_, e) => { if (e.RowIndex >= 0) await Cobrar(); };
         _grilla.CellFormatting += ColorearEstado;
         _grilla.SelectionChanged += (_, _) => SincronizarEstado();
+
+        _reloj.Tick += async (_, _) =>
+        {
+            // Aunque WinForms esté detrás del navegador; solo se pausa con un diálogo abierto.
+            if (Visible && !Ui.HayDialogoAbierto)
+                await Cargar(silencioso: true);
+        };
+        VisibleChanged += async (_, _) =>
+        {
+            if (Visible)
+                await Cargar(silencioso: true);
+        };
+        _reloj.Start();
+        Disposed += (_, _) => _reloj.Dispose();
     }
 
     private async Task Inicializar()
@@ -76,14 +94,17 @@ public class AgendaControl : UserControl
         }
     }
 
-    private async Task Cargar()
+    private async Task Cargar(bool silencioso = false)
     {
-        if (!_cargado)
+        if (!_cargado || _cargando)
             return;
 
+        _cargando = true;
+        var seleccionada = Ui.Seleccionado<FilaCita>(_grilla)?.Id;
+        var primeraVisible = _grilla.FirstDisplayedScrollingRowIndex;
         try
         {
-            UseWaitCursor = true;
+            UseWaitCursor = !silencioso;
             int? barberoId = _barbero.SelectedValue is int id && id > 0 ? id : null;
             _citas = await _apis.Citas.GetCitas(barberoId, Mensajes.Fecha(_fecha.Value));
 
@@ -94,20 +115,58 @@ public class AgendaControl : UserControl
                 c.BarberoNombre ?? "",
                 Servicios(c),
                 c.Estado ?? "",
-                c.Total)), nameof(FilaCita.Total));
+                c.Total,
+                Cobro(c))), nameof(FilaCita.Total));
+            Reseleccionar(seleccionada, primeraVisible);
 
             var activas = _citas.Count(c => c.Estado is not ("Cancelada" or "NoShow"));
-            _resumen.Text = $"{_citas.Count} citas · {activas} activas · {_citas.Count(c => c.Estado == "Completada")} completadas";
+            var porCobrar = _citas.Where(FaltaCobrar).ToList();
+            var textoCobro = porCobrar.Count == 0
+                ? ""
+                : $" · {porCobrar.Count} por cobrar ({Mensajes.Precio(porCobrar.Sum(c => c.Total - c.Pagado))})";
+            _resumen.Text = $"{_citas.Count} citas · {activas} activas · {_citas.Count(c => c.Estado == "Completada")} completadas{textoCobro} · Actualizado {DateTime.Now:HH:mm}";
             SincronizarEstado();
         }
         catch (Exception ex)
         {
-            Mensajes.Error(this, ex);
+            if (silencioso)
+                _resumen.Text = $"No se pudo actualizar la agenda ({DateTime.Now:HH:mm}). Se reintentará sola.";
+            else
+                Mensajes.Error(this, ex);
         }
         finally
         {
             UseWaitCursor = false;
+            _cargando = false;
         }
+    }
+
+    /// <summary>Completada (o en proceso) y sin pagar todo: recepción tiene que cobrarla.</summary>
+    private static bool FaltaCobrar(CitaDto cita) =>
+        cita.Estado is "Completada" or "EnProceso" && cita.Pagado < cita.Total;
+
+    private static string Cobro(CitaDto cita) =>
+        cita.Pagado >= cita.Total && cita.Pagado > 0 ? "Cobrada"
+        : FaltaCobrar(cita) ? (cita.Pagado > 0 ? $"Falta {Mensajes.Precio(cita.Total - cita.Pagado)}" : "Por cobrar")
+        : cita.Pagado > 0 ? "Abono" : "";
+
+    private void Reseleccionar(int? citaId, int primeraVisible)
+    {
+        if (citaId is null)
+        {
+            _grilla.ClearSelection();
+            return;
+        }
+        foreach (DataGridViewRow fila in _grilla.Rows)
+        {
+            if (fila.DataBoundItem is FilaCita f && f.Id == citaId)
+            {
+                _grilla.CurrentCell = fila.Cells[nameof(FilaCita.Hora)];
+                break;
+            }
+        }
+        if (primeraVisible >= 0 && primeraVisible < _grilla.RowCount)
+            _grilla.FirstDisplayedScrollingRowIndex = primeraVisible;
     }
 
     private static string Servicios(CitaDto cita) =>
@@ -202,7 +261,22 @@ public class AgendaControl : UserControl
 
     private void ColorearEstado(object? sender, DataGridViewCellFormattingEventArgs e)
     {
-        if (e.RowIndex < 0 || _grilla.Columns[e.ColumnIndex].Name != nameof(FilaCita.Estado) || e.CellStyle is null)
+        if (e.RowIndex < 0 || e.CellStyle is null)
+            return;
+
+        if (_grilla.Columns[e.ColumnIndex].Name == nameof(FilaCita.Cobro))
+        {
+            var colorCobro = (e.Value as string) switch
+            {
+                "Cobrada" => Color.FromArgb(46, 125, 80),
+                "" or null => e.CellStyle.ForeColor,
+                _ => Color.FromArgb(176, 122, 20)
+            };
+            e.CellStyle.ForeColor = colorCobro;
+            e.CellStyle.SelectionForeColor = colorCobro;
+            return;
+        }
+        if (_grilla.Columns[e.ColumnIndex].Name != nameof(FilaCita.Estado))
             return;
 
         var color = (e.Value as string) switch

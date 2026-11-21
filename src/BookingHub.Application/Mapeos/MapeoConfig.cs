@@ -16,7 +16,8 @@ public static class MapeoConfig
             .Map(dto => dto.ClienteNombre, cita => cita.Cliente.Nombre)
             .Map(dto => dto.BarberoNombre, cita => cita.Barbero.Usuario.Nombre)
             .Map(dto => dto.Estado, cita => cita.EstadoCita.Descripcion)
-            .Map(dto => dto.Detalles, cita => cita.CitaDetalles);
+            .Map(dto => dto.Detalles, cita => cita.CitaDetalles)
+            .Map(dto => dto.Pagado, cita => cita.Pagos.Sum(p => (decimal?)p.Monto) ?? 0m);
 
         config.NewConfig<CitaDetalle, CitaDetalleDto>()
             .Map(dto => dto.Nombre, detalle => detalle.CatalogoItem.Nombre)
