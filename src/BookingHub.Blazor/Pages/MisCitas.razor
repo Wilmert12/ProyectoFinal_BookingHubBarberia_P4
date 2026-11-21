@@ -4,11 +4,18 @@
 
 <PageTitle>Mis Citas</PageTitle>
 
-<h1 class="mb-4">Mis Citas</h1>
+<h1 class="mb-2">Mis Citas</h1>
+<p class="text-body-secondary mb-4">Escribe tu número de cliente y el teléfono con el que te registraste.</p>
 
-<form class="d-flex flex-wrap align-items-center gap-2 mb-4" @onsubmit="Buscar">
-    <label class="form-label fw-semibold mb-0" for="clienteId">Número de cliente</label>
-    <input id="clienteId" class="form-control w-auto" type="number" min="1" @bind="clienteId" />
+<form class="d-flex flex-wrap align-items-end gap-3 mb-4" @onsubmit="Buscar">
+    <div class="d-flex flex-column gap-1">
+        <label class="form-label fw-semibold mb-0" for="clienteId">Número de cliente</label>
+        <input id="clienteId" class="form-control" type="number" min="1" @bind="clienteId" />
+    </div>
+    <div class="d-flex flex-column gap-1">
+        <label class="form-label fw-semibold mb-0" for="telefono">Teléfono</label>
+        <input id="telefono" class="form-control" type="tel" autocomplete="tel" maxlength="20" @bind="telefono" />
+    </div>
     <button class="btn btn-primary" type="submit" disabled="@cargando">Buscar</button>
 </form>
 
@@ -24,7 +31,7 @@ else if (citas is not null)
 {
     @if (citas.Count == 0)
     {
-        <p class="text-body-secondary">Este cliente no tiene citas.</p>
+        <p class="text-body-secondary">Todavía no tienes citas.</p>
     }
     else
     {
@@ -37,31 +44,45 @@ else if (citas is not null)
 }
 
 @code {
-    private int clienteId = 1;
+    private int? clienteId;
+    private string? telefono;
     private List<CitaDto>? citas;
     private bool cargando;
     private string? error;
 
-    protected override Task OnInitializedAsync()
+    protected override async Task OnInitializedAsync()
     {
-        clienteId = Sesion.ClienteId ?? clienteId;
-        return Buscar();
+        clienteId = Sesion.ClienteId;
+        telefono = Sesion.Telefono;
+
+        if (clienteId is not null && !string.IsNullOrWhiteSpace(telefono))
+            await Buscar();
     }
 
     private async Task Buscar()
     {
-        cargando = true;
         error = null;
+        citas = null;
+        if (clienteId is null or < 1 || string.IsNullOrWhiteSpace(telefono))
+        {
+            error = "Escribe tu número de cliente y tu teléfono.";
+            return;
+        }
 
+        cargando = true;
         try
         {
-            citas = await CitaApi.GetCitas(clienteId: clienteId);
+            citas = await CitaApi.GetCitasCliente(clienteId.Value, telefono.Trim());
             Sesion.ClienteId = clienteId;
+            Sesion.Telefono = telefono.Trim();
+        }
+        catch (Refit.ApiException ex) when (ex.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+        {
+            error = "El número de cliente y el teléfono no coinciden.";
         }
         catch (Exception ex) when (Formato.EsErrorDeApi(ex))
         {
-            citas = null;
-            error = "No se pudo conectar con la API. Verifica que esté en ejecución.";
+            error = "No se pudo conectar con la API. Intenta de nuevo.";
         }
         finally
         {

@@ -39,6 +39,12 @@
                 </div>
 
                 <div class="d-flex flex-column gap-1">
+                    <label class="form-label fw-semibold mb-0" for="telefono">Teléfono</label>
+                    <input id="telefono" class="form-control" type="tel" autocomplete="tel" maxlength="20" @bind="telefono" />
+                    <small class="text-body-secondary">El mismo con el que te registraste.</small>
+                </div>
+
+                <div class="d-flex flex-column gap-1">
                     <label class="form-label fw-semibold mb-0" for="servicio">Servicio</label>
                     <select id="servicio" class="form-select" @bind="ServicioId" @bind:after="CargarHoras">
                         <option value="">Elige un servicio</option>
@@ -117,6 +123,7 @@
     private List<CatalogoItemDto> servicios = [];
     private List<BarberoDto> barberos = [];
     private int? clienteId;
+    private string? telefono;
     private DateOnly fecha = DateOnly.FromDateTime(DateTime.Today.AddDays(1));
     private string? hora;
     private List<string> horas = [];
@@ -136,6 +143,7 @@
     protected override async Task OnInitializedAsync()
     {
         clienteId = Sesion.ClienteId;
+        telefono = Sesion.Telefono;
 
         try
         {
@@ -210,8 +218,13 @@
 
         try
         {
-            reservada = await CitaApi.CrearCita(cita);
+            reservada = await CitaApi.CrearCita(cita, telefono!.Trim());
             Sesion.ClienteId = clienteId;
+            Sesion.Telefono = telefono.Trim();
+        }
+        catch (Refit.ApiException ex) when (ex.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+        {
+            error = "El número de cliente y el teléfono no coinciden.";
         }
         catch (Refit.ApiException ex) when (ex.Content?.Contains("CITA_CHOQUE") == true)
         {
@@ -232,6 +245,8 @@
     {
         if (clienteId is null or < 1)
             return "Escribe tu número de cliente.";
+        if (string.IsNullOrWhiteSpace(telefono))
+            return "Escribe tu teléfono.";
         if (ServicioSeleccionado is null)
             return "Elige un servicio.";
         if (BarberoId is null)

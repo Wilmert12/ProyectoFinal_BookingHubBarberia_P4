@@ -6,7 +6,10 @@ import com.google.gson.Gson
 
 data class ClienteSesion(
     val clienteId: Int,
-    val nombre: String
+    val nombre: String,
+    // La API pide el teléfono para mostrar y crear citas del cliente.
+    // Puede faltar en perfiles guardados antes de este cambio.
+    val telefono: String? = null
 )
 
 object SesionCliente {
@@ -32,7 +35,7 @@ object SesionCliente {
     }
 
     fun guardarPerfil(context: Context, cliente: ClienteDto) {
-        val sesion = ClienteSesion(cliente.clienteId, cliente.nombre)
+        val sesion = ClienteSesion(cliente.clienteId, cliente.nombre, cliente.telefono)
         clienteActual = sesion
         runCatching {
             val cifrado = cifrar(gson.toJson(sesion))

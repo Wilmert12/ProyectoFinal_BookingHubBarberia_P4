@@ -64,7 +64,8 @@ La compilación limita el paralelismo de Gradle para reducir el consumo de memor
 ## Comprobar la integración
 
 - Android guarda el `ClienteId` que devuelve `POST /api/Clientes`; en **Inicio** aparece como **Número de cliente** y se puede copiar. Es el identificador de cliente, no un `UsuarioId` ni una cuenta con contraseña.
-- En Blazor abre **Mis Citas**, pega ese número en **Número de cliente** y pulsa **Buscar**. La página consulta `GET /api/Citas?clienteId=<id>`.
+- En Blazor abre **Mis Citas**, pega ese número en **Número de cliente**, escribe el teléfono del registro y pulsa **Buscar**. La página consulta `GET /api/Citas?clienteId=<id>`.
+- La API solo muestra o crea citas de un cliente si recibe su teléfono en el encabezado `X-Cliente-Telefono`. Android lo guarda al registrarse y lo envía solo; un perfil guardado antes de este cambio no tiene teléfono y hay que borrarlo y registrarse de nuevo.
 - Android y Blazor publicado usan por defecto la misma API de Azure. WinForms y Blazor en desarrollo apuntan a `https://localhost:7109/`; para probar Android contra esa API local, configura `bookinghubApiBaseUrl=http://<IP_DE_TU_PC>:5058/` en el `local.properties` de Android. Los tres clientes solo comparten citas si consultan el mismo servidor y la misma base de datos.
 - En **Mis Citas** de Android también aparece el ID de cada cita, para poder contrastarlo con la agenda del personal en WinForms.
 
